@@ -1,6 +1,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
+import { Users, UserPlus, UserCheck, HeadsetIcon } from "lucide-react";
 
 const Index = () => {
   return (

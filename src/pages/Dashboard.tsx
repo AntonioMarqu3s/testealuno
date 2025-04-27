@@ -5,7 +5,7 @@ import { AgentGrid } from "@/components/dashboard/AgentGrid";
 import MainLayout from "@/components/layout/MainLayout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
-import { Plus } from "lucide-react";
+import { Plus, Users } from "lucide-react";
 
 const Dashboard = () => {
   return (
