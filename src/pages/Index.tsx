@@ -27,7 +27,14 @@ const Index = () => {
 
       {/* Hero Section */}
       <section className="flex-1 flex flex-col items-center justify-center px-4 md:px-6 py-12 bg-gradient-radial from-primary/5 to-background">
-        <div className="max-w-4xl mx-auto text-center">
+        <div className="max-w-4xl mx-auto text-center relative">
+          <div className="absolute right-0 -top-32 w-48 h-48 md:w-64 md:h-64">
+            <img
+              src="/lovable-uploads/acab647a-5eb7-4930-ae7d-923dc70090c8.png"
+              alt="WhatsApp Bot"
+              className="w-full h-full object-contain"
+            />
+          </div>
           <h1 className="text-4xl md:text-6xl font-bold tracking-tight">
             Crie agentes de IA <span className="text-primary">personalizados</span> para seu negócio
           </h1>
