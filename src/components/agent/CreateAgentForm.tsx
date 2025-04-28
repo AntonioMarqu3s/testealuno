@@ -1,5 +1,6 @@
 
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -16,6 +17,7 @@ import { Input } from "@/components/ui/input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
+import { useToast } from "@/hooks/use-toast";
 
 const formSchema = z.object({
   agentName: z.string().min(2, "Nome do agente é obrigatório"),
@@ -41,7 +43,11 @@ interface CreateAgentFormProps {
 }
 
 const CreateAgentForm = ({ agentType }: CreateAgentFormProps) => {
+  const navigate = useNavigate();
+  const { toast } = useToast();
   const [step, setStep] = useState(1);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -65,8 +71,26 @@ const CreateAgentForm = ({ agentType }: CreateAgentFormProps) => {
   });
 
   function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log(values);
-    // Aqui você implementará a lógica de criação do agente
+    setIsSubmitting(true);
+    
+    // Simulação - normalmente aqui você faria uma chamada à API
+    setTimeout(() => {
+      // Salvar os dados do agente na sessão para exibir na página de agentes
+      sessionStorage.setItem('newAgent', JSON.stringify({
+        ...values,
+        agentType
+      }));
+      
+      toast({
+        title: "Agente criado com sucesso",
+        description: `O agente ${values.agentName} foi criado e está pronto para uso.`,
+      });
+      
+      // Redirecionar para a página de agentes
+      navigate('/agents');
+      
+      setIsSubmitting(false);
+    }, 1500);
   }
 
   const renderStep1 = () => (
@@ -386,8 +410,8 @@ const CreateAgentForm = ({ agentType }: CreateAgentFormProps) => {
               Próximo
             </Button>
           ) : (
-            <Button type="submit">
-              Criar Agente
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting ? "Criando Agente..." : "Criar Agente"}
             </Button>
           )}
         </div>

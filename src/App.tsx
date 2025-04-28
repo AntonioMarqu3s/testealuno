@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -8,6 +9,7 @@ import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import NotFound from "./pages/NotFound";
 import CreateAgent from "./pages/CreateAgent";
+import Agents from "./pages/Agents";
 
 const queryClient = new QueryClient();
 
@@ -22,6 +24,7 @@ const App = () => (
           <Route path="/auth" element={<Auth />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/create-agent" element={<CreateAgent />} />
+          <Route path="/agents" element={<Agents />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
