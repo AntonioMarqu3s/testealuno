@@ -8,6 +8,14 @@ import { Separator } from "@/components/ui/separator";
 import { Plus, Users } from "lucide-react";
 
 const Dashboard = () => {
+  const navigate = useNavigate();
+  const searchParams = new URLSearchParams(location.search);
+  const currentTab = searchParams.get('tab') || 'agents';
+
+  const handleCreateAgent = () => {
+    navigate('/dashboard?tab=agents');
+  };
+
   return (
     <MainLayout title="Dashboard">
       <div className="space-y-8">
@@ -18,7 +26,7 @@ const Dashboard = () => {
               Crie e personalize seus agentes de IA para diferentes finalidades.
             </p>
           </div>
-          <Button className="md:w-auto w-full">
+          <Button className="md:w-auto w-full" onClick={handleCreateAgent}>
             <Plus className="mr-2 h-4 w-4" /> Criar Novo Agente
           </Button>
         </div>
