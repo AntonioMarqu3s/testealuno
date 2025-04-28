@@ -18,6 +18,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 
 const formSchema = z.object({
+  agentName: z.string().min(2, "Nome do agente é obrigatório"),
   personality: z.string(),
   customPersonality: z.string().optional(),
   companyName: z.string().min(2, "Nome da empresa é obrigatório"),
@@ -44,6 +45,7 @@ const CreateAgentForm = ({ agentType }: CreateAgentFormProps) => {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
+      agentName: "",
       personality: "consultor",
       customPersonality: "",
       companyName: "",
@@ -70,6 +72,20 @@ const CreateAgentForm = ({ agentType }: CreateAgentFormProps) => {
   const renderStep1 = () => (
     <Card>
       <CardContent className="pt-6">
+        <FormField
+          control={form.control}
+          name="agentName"
+          render={({ field }) => (
+            <FormItem className="mb-4">
+              <FormLabel>Nome do agente</FormLabel>
+              <FormControl>
+                <Input placeholder="Ex: Assistente de Vendas" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        
         <FormField
           control={form.control}
           name="personality"
