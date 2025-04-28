@@ -1,7 +1,6 @@
-
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { Users, UserPlus, UserCheck, HeadsetIcon } from "lucide-react";
+import { Users, UserPlus, UserCheck, HeadsetIcon, BarChart3, MessageCircle, Target, TrendingUp } from "lucide-react";
 
 const Index = () => {
   return (
@@ -44,6 +43,45 @@ const Index = () => {
             <Button variant="outline" size="lg" className="w-full sm:w-auto">
               Ver demonstração
             </Button>
+          </div>
+        </div>
+      </section>
+
+      {/* Benefits Section */}
+      <section className="px-4 md:px-6 py-16 bg-gradient-to-b from-background to-muted/30">
+        <div className="max-w-7xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className="p-6 rounded-lg bg-card border transition-all hover:shadow-lg">
+              <div className="w-12 h-12 bg-primary/10 text-primary rounded-lg flex items-center justify-center mb-4">
+                <BarChart3 className="h-6 w-6" />
+              </div>
+              <h3 className="text-xl font-semibold mb-2">Aumente seu faturamento com nossos robôs de atendimento e vendedores especialistas</h3>
+              <p className="text-muted-foreground">Maximize suas vendas com atendimento automatizado 24/7 e vendedores virtuais treinados para converter.</p>
+            </div>
+
+            <div className="p-6 rounded-lg bg-card border transition-all hover:shadow-lg">
+              <div className="w-12 h-12 bg-primary/10 text-primary rounded-lg flex items-center justify-center mb-4">
+                <MessageCircle className="h-6 w-6" />
+              </div>
+              <h3 className="text-xl font-semibold mb-2">Melhore a experiência do seu cliente com os atendimentos Humanizados</h3>
+              <p className="text-muted-foreground">Ofereça um atendimento personalizado e natural, fazendo seus clientes se sentirem verdadeiramente compreendidos.</p>
+            </div>
+
+            <div className="p-6 rounded-lg bg-card border transition-all hover:shadow-lg">
+              <div className="w-12 h-12 bg-primary/10 text-primary rounded-lg flex items-center justify-center mb-4">
+                <Target className="h-6 w-6" />
+              </div>
+              <h3 className="text-xl font-semibold mb-2">Aumente seu ROI levando todo o tráfego de leads para o WhatsApp</h3>
+              <p className="text-muted-foreground">Centralize seus leads no WhatsApp e ofereça um atendimento exclusivo e personalizado para cada cliente.</p>
+            </div>
+
+            <div className="p-6 rounded-lg bg-card border transition-all hover:shadow-lg">
+              <div className="w-12 h-12 bg-primary/10 text-primary rounded-lg flex items-center justify-center mb-4">
+                <TrendingUp className="h-6 w-6" />
+              </div>
+              <h3 className="text-xl font-semibold mb-2">Aumente a eficiência da sua equipe de vendas com nosso SDR especialista</h3>
+              <p className="text-muted-foreground">Automatize a prospecção e qualificação de leads, permitindo que sua equipe foque nas negociações mais importantes.</p>
+            </div>
           </div>
         </div>
       </section>
