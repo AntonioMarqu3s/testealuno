@@ -2,14 +2,20 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import MainLayout from "@/components/layout/MainLayout";
 import CreateAgentForm from "@/components/agent/CreateAgentForm";
+import { useToast } from "@/hooks/use-toast";
 
 const CreateAgent = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { toast } = useToast();
   const searchParams = new URLSearchParams(location.search);
   const type = searchParams.get('type');
 
   if (!type) {
+    toast({
+      title: "Selecione um tipo de agente",
+      description: "Por favor, escolha um tipo de agente antes de prosseguir com a criação.",
+    });
     navigate('/dashboard?tab=agents');
     return null;
   }
