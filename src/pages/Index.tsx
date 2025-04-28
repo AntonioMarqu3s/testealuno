@@ -34,6 +34,9 @@ const Index = () => {
           <p className="mt-6 text-xl text-muted-foreground">
             Automatize vendas, prospecção e atendimento com agentes inteligentes adaptados às suas necessidades
           </p>
+          <p className="mt-4 text-2xl text-primary font-medium">
+            Conecte seu Whatsapp direto com o Agente e se surpreenda!
+          </p>
           <div className="mt-10 flex flex-col sm:flex-row gap-4 justify-center">
             <Link to="/auth?tab=register">
               <Button size="lg" className="w-full sm:w-auto">
