@@ -4,8 +4,9 @@ import { Link, useNavigate } from "react-router-dom";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { BarChart, QrCode, MessageSquare, WifiOff, Wifi, Trash2, Edit } from "lucide-react";
+import { BarChart, QrCode, MessageSquare, WifiOff, Wifi, Trash2, Edit, Mail } from "lucide-react";
 import { toast } from "sonner";
+import { getCurrentUserEmail } from "@/services/userPlanService";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -44,6 +45,7 @@ const agentTypeMap: Record<string, string> = {
 export const AgentPanel: React.FC<AgentPanelProps> = ({ agent, onDelete }) => {
   const navigate = useNavigate();
   const [isGeneratingQR, setIsGeneratingQR] = useState(false);
+  const userEmail = getCurrentUserEmail();
 
   const handleGenerateQrCode = () => {
     setIsGeneratingQR(true);
@@ -127,6 +129,10 @@ export const AgentPanel: React.FC<AgentPanelProps> = ({ agent, onDelete }) => {
       </CardHeader>
       <CardContent className="pb-2 flex-grow">
         <p className="text-sm mb-2">Tipo: <span className="font-medium">{agentTypeName}</span></p>
+        <div className="flex items-center text-xs text-muted-foreground mb-2">
+          <Mail className="h-3 w-3 mr-1" />
+          <span>{userEmail}</span>
+        </div>
         {agent.instanceId && (
           <p className="text-xs text-muted-foreground mb-2">
             ID da Instância: <span className="font-mono">{agent.instanceId}</span>

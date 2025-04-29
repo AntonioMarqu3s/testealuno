@@ -7,6 +7,7 @@ import { AgentConversationChart } from "@/components/agent/analytics/AgentConver
 import { AgentSatisfactionChart } from "@/components/agent/analytics/AgentSatisfactionChart";
 import { AgentRecentConversations } from "@/components/agent/analytics/AgentRecentConversations";
 import { useParams } from "react-router-dom";
+import { getCurrentUserEmail } from "@/services/userPlanService";
 
 interface AgentAnalyticsData {
   agentId: string;
@@ -38,6 +39,7 @@ const AgentAnalytics = () => {
   const { agentId } = useParams();
   const [isLoading, setIsLoading] = useState(true);
   const [agentData, setAgentData] = useState<AgentAnalyticsData | null>(null);
+  const userEmail = getCurrentUserEmail();
 
   useEffect(() => {
     // Simulate API call to fetch agent analytics data
@@ -127,6 +129,9 @@ const AgentAnalytics = () => {
             </div>
             <p className="text-muted-foreground">
               Visão geral de desempenho e estatísticas de conversas
+            </p>
+            <p className="text-sm mt-2">
+              <span className="font-medium">Email do Usuário:</span> {userEmail}
             </p>
           </div>
         </div>
