@@ -1,131 +1,146 @@
 
 import { getStorageItem, setStorageItem, STORAGE_KEY } from '../storage/localStorageService';
-import { transferUserAgentData } from '../agent/agentStorageService';
-import { generateInstanceId } from '../agent/agentInstanceService';
 
-// Interfaces
+// Plan types
 export interface UserPlan {
   email: string;
-  plano: number; // 1 = basic (1 agent), 2 = premium (unlimited agents)
-  agentCount: number;
-  checkout?: string; // URL or code for checkout (admin use)
+  planType: 'free' | 'premium';
+  maxAgents: number;
+  agentsCreated: number;
+  features: string[];
+  expiresAt?: Date;
 }
 
-/**
- * Initialize user plan if it doesn't exist
- */
-export const initializeUserPlan = (email: string): void => {
-  const plans = getStorageItem<Record<string, UserPlan>>(STORAGE_KEY, {});
-  
-  if (!plans[email]) {
-    plans[email] = {
-      email,
-      plano: 1, // Basic plan
-      agentCount: 0
-    };
-    setStorageItem(STORAGE_KEY, plans);
+// Default plans configuration
+const PLANS = {
+  free: {
+    maxAgents: 1,
+    features: ['Chat básico', 'Personalização limitada']
+  },
+  premium: {
+    maxAgents: 10,
+    features: [
+      'Chat ilimitado',
+      'Personalização completa',
+      'Integração com APIs',
+      'Suporte prioritário',
+      'Analytics avançado'
+    ]
   }
 };
 
 /**
- * Get current user's plan
+ * Get user plan information
  */
 export const getUserPlan = (email: string): UserPlan => {
-  const plans = getStorageItem<Record<string, UserPlan>>(STORAGE_KEY, {});
+  const allPlans = getStorageItem<Record<string, UserPlan>>(STORAGE_KEY, {});
   
-  // If user doesn't exist, create a basic plan
-  if (!plans[email]) {
-    const newPlan: UserPlan = {
-      email,
-      plano: 1, // Basic plan
-      agentCount: 0
-    };
-    plans[email] = newPlan;
-    setStorageItem(STORAGE_KEY, plans);
+  // Return the user plan if it exists, or initialize a new one
+  if (allPlans[email]) {
+    return allPlans[email];
   }
   
-  return plans[email];
+  return initializeUserPlan(email);
 };
 
 /**
- * Increment agent count for user
+ * Initialize a new user plan
  */
-export const incrementAgentCount = (email: string): UserPlan => {
-  const plans = getStorageItem<Record<string, UserPlan>>(STORAGE_KEY, {});
+export const initializeUserPlan = (email: string): UserPlan => {
+  const allPlans = getStorageItem<Record<string, UserPlan>>(STORAGE_KEY, {});
   
-  const plan = plans[email] || { email, plano: 1, agentCount: 0 };
-  plan.agentCount += 1;
-  plans[email] = plan;
+  // Create default free plan
+  const newPlan: UserPlan = {
+    email,
+    planType: 'free',
+    maxAgents: PLANS.free.maxAgents,
+    agentsCreated: 0,
+    features: PLANS.free.features
+  };
   
-  setStorageItem(STORAGE_KEY, plans);
-  return plan;
+  // Save the new plan
+  allPlans[email] = newPlan;
+  setStorageItem(STORAGE_KEY, allPlans);
+  
+  return newPlan;
+};
+
+/**
+ * Upgrade user to premium plan
+ */
+export const upgradeToPremium = (email: string): UserPlan => {
+  const allPlans = getStorageItem<Record<string, UserPlan>>(STORAGE_KEY, {});
+  const userPlan = allPlans[email] || initializeUserPlan(email);
+  
+  // Set premium features
+  userPlan.planType = 'premium';
+  userPlan.maxAgents = PLANS.premium.maxAgents;
+  userPlan.features = PLANS.premium.features;
+  userPlan.expiresAt = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000); // 1 year
+  
+  // Save updated plan
+  allPlans[email] = userPlan;
+  setStorageItem(STORAGE_KEY, allPlans);
+  
+  return userPlan;
 };
 
 /**
  * Check if user can create more agents
  */
 export const canCreateAgent = (email: string): boolean => {
-  const plan = getUserPlan(email);
+  const userPlan = getUserPlan(email);
+  return userPlan.agentsCreated < userPlan.maxAgents;
+};
+
+/**
+ * Increment agent count for user
+ */
+export const incrementAgentCount = (email: string): void => {
+  const allPlans = getStorageItem<Record<string, UserPlan>>(STORAGE_KEY, {});
+  const userPlan = allPlans[email] || initializeUserPlan(email);
   
-  // Basic plan (1) can only create 1 agent
-  if (plan.plano === 1) {
-    // Check number of actual agents for this user
-    const allAgents = getStorageItem<Record<string, any[]>>("all_agents", {});
-    const userAgents = allAgents[email] || [];
-    return userAgents.length < 1;
+  userPlan.agentsCreated += 1;
+  
+  allPlans[email] = userPlan;
+  setStorageItem(STORAGE_KEY, allPlans);
+};
+
+/**
+ * Decrement agent count for user
+ */
+export const decrementAgentCount = (email: string): void => {
+  const allPlans = getStorageItem<Record<string, UserPlan>>(STORAGE_KEY, {});
+  const userPlan = allPlans[email] || initializeUserPlan(email);
+  
+  if (userPlan.agentsCreated > 0) {
+    userPlan.agentsCreated -= 1;
   }
   
-  // Premium plan (2) can create unlimited agents
-  return true;
-};
-
-/**
- * Save checkout information (for admin)
- */
-export const saveCheckoutInfo = (email: string, checkoutCode: string): void => {
-  const plans = getStorageItem<Record<string, UserPlan>>(STORAGE_KEY, {});
-  
-  const plan = plans[email] || { email, plano: 1, agentCount: 0 };
-  plan.checkout = checkoutCode;
-  plans[email] = plan;
-  
-  setStorageItem(STORAGE_KEY, plans);
-};
-
-/**
- * Upgrade to premium (simulate)
- */
-export const upgradeToPremium = (email: string): void => {
-  const plans = getStorageItem<Record<string, UserPlan>>(STORAGE_KEY, {});
-  
-  const plan = plans[email] || { email, plano: 1, agentCount: 0 };
-  plan.plano = 2; // Premium
-  plans[email] = plan;
-  
-  setStorageItem(STORAGE_KEY, plans);
+  allPlans[email] = userPlan;
+  setStorageItem(STORAGE_KEY, allPlans);
 };
 
 /**
  * Transfer user plan data from old email to new email
  */
 export const transferUserPlanData = (oldEmail: string, newEmail: string): void => {
-  const plans = getStorageItem<Record<string, UserPlan>>(STORAGE_KEY, {});
+  const allPlans = getStorageItem<Record<string, UserPlan>>(STORAGE_KEY, {});
   
-  // If the old email had a plan, transfer it to the new email
-  if (plans[oldEmail]) {
-    plans[newEmail] = {
-      ...plans[oldEmail],
+  // If the old email has plan data, copy it to the new email
+  if (allPlans[oldEmail]) {
+    allPlans[newEmail] = {
+      ...allPlans[oldEmail],
       email: newEmail
     };
     
-    // Remove the old email plan
-    delete plans[oldEmail];
+    // Optionally, delete the old email data
+    delete allPlans[oldEmail];
     
-    // Save updated plans
-    setStorageItem(STORAGE_KEY, plans);
+    // Save the updated plans
+    setStorageItem(STORAGE_KEY, allPlans);
+  } else {
+    // If no old plan exists, initialize a new one for the new email
+    initializeUserPlan(newEmail);
   }
 };
-
-// Register the transferUserPlanData function with the userService
-import { userService } from '../user/index';
-userService.transferUserPlanData = transferUserPlanData;

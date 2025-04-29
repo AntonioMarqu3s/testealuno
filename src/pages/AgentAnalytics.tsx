@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import MainLayout from "@/components/layout/MainLayout";
 import { Badge } from "@/components/ui/badge";
@@ -7,7 +6,7 @@ import { AgentConversationChart } from "@/components/agent/analytics/AgentConver
 import { AgentSatisfactionChart } from "@/components/agent/analytics/AgentSatisfactionChart";
 import { AgentRecentConversations } from "@/components/agent/analytics/AgentRecentConversations";
 import { useParams } from "react-router-dom";
-import { getCurrentUserEmail } from "@/services/userPlanService";
+import { getCurrentUserEmail } from "@/services/user/userService";
 
 interface AgentAnalyticsData {
   agentId: string;

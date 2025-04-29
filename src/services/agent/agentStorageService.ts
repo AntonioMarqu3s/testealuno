@@ -1,84 +1,113 @@
 
 import { getStorageItem, setStorageItem, ALL_AGENTS_KEY } from '../storage/localStorageService';
-import { generateInstanceId } from './agentInstanceService';
 
-/**
- * Initialize agents array if it doesn't exist
- */
-export const initializeUserAgents = (email: string): void => {
-  const allAgents = getStorageItem<Record<string, any[]>>(ALL_AGENTS_KEY, {});
-  
-  if (!allAgents[email]) {
-    allAgents[email] = [];
-    setStorageItem(ALL_AGENTS_KEY, allAgents);
-  }
-};
-
-/**
- * Save agent to localStorage
- */
-export const saveAgent = (email: string, agent: any): void => {
-  const allAgents = getStorageItem<Record<string, any[]>>(ALL_AGENTS_KEY, {});
-  
-  // Get or initialize agents for this email
-  const userAgents = allAgents[email] || [];
-  
-  // Add new agent at the beginning of the array
-  userAgents.unshift(agent);
-  
-  // Save back to localStorage
-  allAgents[email] = userAgents;
-  setStorageItem(ALL_AGENTS_KEY, allAgents);
-};
+export interface Agent {
+  id: string;
+  name: string;
+  type: string;
+  isConnected: boolean;
+  createdAt: Date;
+  instanceId: string;
+}
 
 /**
  * Get all agents for a user
  */
-export const getUserAgents = (email: string): any[] => {
-  const allAgents = getStorageItem<Record<string, any[]>>(ALL_AGENTS_KEY, {});
-  return allAgents[email] || [];
+export const getUserAgents = (email: string): Agent[] => {
+  const allAgentsData = getStorageItem<Record<string, Agent[]>>(ALL_AGENTS_KEY, {});
+  return allAgentsData[email] || [];
 };
 
 /**
- * Delete agent for a user
+ * Initialize user agents array
+ */
+export const initializeUserAgents = (email: string): Agent[] => {
+  const allAgentsData = getStorageItem<Record<string, Agent[]>>(ALL_AGENTS_KEY, {});
+  
+  // If user already has agents, don't overwrite
+  if (!allAgentsData[email]) {
+    allAgentsData[email] = [];
+    setStorageItem(ALL_AGENTS_KEY, allAgentsData);
+  }
+  
+  return allAgentsData[email];
+};
+
+/**
+ * Save a new agent for the user
+ */
+export const saveAgent = (email: string, agent: Agent): void => {
+  const allAgentsData = getStorageItem<Record<string, Agent[]>>(ALL_AGENTS_KEY, {});
+  
+  // Initialize user agents array if it doesn't exist
+  if (!allAgentsData[email]) {
+    allAgentsData[email] = [];
+  }
+  
+  // Add the new agent
+  allAgentsData[email].push(agent);
+  
+  // Save back to storage
+  setStorageItem(ALL_AGENTS_KEY, allAgentsData);
+};
+
+/**
+ * Delete an agent for the user
  */
 export const deleteUserAgent = (email: string, agentId: string): void => {
-  const allAgents = getStorageItem<Record<string, any[]>>(ALL_AGENTS_KEY, {});
-  const userAgents = allAgents[email] || [];
+  const allAgentsData = getStorageItem<Record<string, Agent[]>>(ALL_AGENTS_KEY, {});
   
-  // Filter out the agent with the specified ID
-  const updatedAgents = userAgents.filter(agent => agent.id !== agentId);
+  if (allAgentsData[email]) {
+    // Filter out the agent with the given ID
+    allAgentsData[email] = allAgentsData[email].filter(agent => agent.id !== agentId);
+    
+    // Save back to storage
+    setStorageItem(ALL_AGENTS_KEY, allAgentsData);
+    
+    // Decrement the agent count in the user's plan
+    const decrementAgentCount = require('../plan/userPlanService').decrementAgentCount;
+    decrementAgentCount(email);
+  }
+};
+
+/**
+ * Update an agent for the user
+ */
+export const updateUserAgent = (email: string, agentId: string, updates: Partial<Agent>): void => {
+  const allAgentsData = getStorageItem<Record<string, Agent[]>>(ALL_AGENTS_KEY, {});
   
-  // Save back to localStorage
-  allAgents[email] = updatedAgents;
-  setStorageItem(ALL_AGENTS_KEY, allAgents);
+  if (allAgentsData[email]) {
+    // Find and update the agent
+    allAgentsData[email] = allAgentsData[email].map(agent => {
+      if (agent.id === agentId) {
+        return { ...agent, ...updates };
+      }
+      return agent;
+    });
+    
+    // Save back to storage
+    setStorageItem(ALL_AGENTS_KEY, allAgentsData);
+  }
 };
 
 /**
  * Transfer user agent data from old email to new email
  */
 export const transferUserAgentData = (oldEmail: string, newEmail: string): void => {
-  const allAgents = getStorageItem<Record<string, any[]>>(ALL_AGENTS_KEY, {});
+  const allAgentsData = getStorageItem<Record<string, Agent[]>>(ALL_AGENTS_KEY, {});
   
-  // If the old email had agents, transfer them to the new email
-  if (allAgents[oldEmail]) {
-    allAgents[newEmail] = allAgents[oldEmail].map(agent => ({
-      ...agent,
-      instanceId: generateInstanceId(newEmail, agent.name)
-    }));
+  // If the old email has agent data, copy it to the new email
+  if (allAgentsData[oldEmail] && allAgentsData[oldEmail].length > 0) {
+    // Copy the agents to the new email
+    allAgentsData[newEmail] = [...(allAgentsData[oldEmail] || [])];
     
-    // Remove the old email agents
-    delete allAgents[oldEmail];
+    // Optionally, delete the old email data
+    delete allAgentsData[oldEmail];
     
-    // Save updated agents
-    setStorageItem(ALL_AGENTS_KEY, allAgents);
+    // Save the updated agents
+    setStorageItem(ALL_AGENTS_KEY, allAgentsData);
   } else {
-    // Initialize empty agents array
-    allAgents[newEmail] = [];
-    setStorageItem(ALL_AGENTS_KEY, allAgents);
+    // If no old agents exist, initialize an empty array for the new email
+    initializeUserAgents(newEmail);
   }
 };
-
-// Register the transferUserAgentData function with the userService
-import { userService } from '../user/index';
-userService.transferUserAgentData = transferUserAgentData;

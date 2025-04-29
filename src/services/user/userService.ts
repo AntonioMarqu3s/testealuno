@@ -1,7 +1,5 @@
 
 import { getStorageItem, setStorageItem, USER_EMAIL_KEY } from '../storage/localStorageService';
-import { initializeUserPlan } from '../plan/userPlanService';
-import { initializeUserAgents } from '../agent/agentStorageService';
 
 /**
  * Get current user email (in a real app would come from auth system)
@@ -27,6 +25,10 @@ export const getCurrentUserEmail = (): string => {
  * Initialize user data if it doesn't exist
  */
 export const initializeUserData = (email: string): void => {
+  // These functions need to be imported dynamically to avoid circular references
+  const { initializeUserPlan } = require('../plan/userPlanService');
+  const { initializeUserAgents } = require('../agent/agentStorageService');
+  
   // Initialize user plan if it doesn't exist
   initializeUserPlan(email);
   
@@ -57,11 +59,23 @@ export const updateCurrentUserEmail = (email: string): void => {
  * Transfer user data from old email to new email
  */
 export const transferUserData = (oldEmail: string, newEmail: string): void => {
+  // Import transfer functions dynamically to avoid circular dependencies
+  const { transferUserPlanData } = require('../plan/userPlanService');
+  const { transferUserAgentData } = require('../agent/agentStorageService');
+  
+  // Transfer plan and agent data
   transferUserPlanData(oldEmail, newEmail);
   transferUserAgentData(oldEmail, newEmail);
 };
 
-// These functions will be implemented in their respective service files
-// but declared here to avoid circular references
-export const transferUserPlanData: (oldEmail: string, newEmail: string) => void = () => {};
-export const transferUserAgentData: (oldEmail: string, newEmail: string) => void = () => {};
+// Export functions to be used by other modules, but implement them elsewhere
+// to avoid circular dependencies
+export const transferUserPlanData = (oldEmail: string, newEmail: string): void => {
+  // This is just a placeholder - the actual implementation is in plan/userPlanService.ts
+  // The function is dynamically imported when needed
+};
+
+export const transferUserAgentData = (oldEmail: string, newEmail: string): void => {
+  // This is just a placeholder - the actual implementation is in agent/agentStorageService.ts
+  // The function is dynamically imported when needed
+};
