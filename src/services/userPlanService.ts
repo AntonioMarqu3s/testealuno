@@ -13,3 +13,5 @@ export * from './user/userService';
 export * from './plan/userPlanService';
 export * from './agent/agentInstanceService';
 export * from './agent/agentStorageService';
+// We don't re-export transferUserPlanData and transferUserAgentData as they're 
+// already exported from user/userService.ts
