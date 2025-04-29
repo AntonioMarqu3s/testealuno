@@ -54,35 +54,35 @@ export const AgentPanel: React.FC<AgentPanelProps> = ({ agent, onDelete }) => {
   };
 
   return (
-    <Card className="flex flex-col h-full relative">
-      <div className="absolute top-2 right-2 flex space-x-1">
-        <Button variant="ghost" size="icon" asChild className="h-8 w-8">
-          <Link to={`/edit-agent/${agent.id}`}>
-            <Edit className="h-4 w-4" />
-          </Link>
-        </Button>
-        <AlertDialog>
-          <AlertDialogTrigger asChild>
-            <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive">
-              <Trash2 className="h-4 w-4" />
-            </Button>
-          </AlertDialogTrigger>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
-              <AlertDialogDescription>
-                Tem certeza que deseja excluir o agente "{agent.name}"? Esta ação não pode ser desfeita.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancelar</AlertDialogCancel>
-              <AlertDialogAction onClick={handleDelete}>Excluir</AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
-      </div>
-      <CardHeader className="pb-2 pt-6">
-        <div className="flex justify-between items-center">
+    <Card className="flex flex-col h-full overflow-hidden">
+      <CardHeader className="pb-2 pt-6 relative">
+        <div className="absolute top-2 right-2 flex space-x-1">
+          <Button variant="ghost" size="icon" asChild className="h-8 w-8">
+            <Link to={`/edit-agent/${agent.id}`}>
+              <Edit className="h-4 w-4" />
+            </Link>
+          </Button>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive">
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Tem certeza que deseja excluir o agente "{agent.name}"? Esta ação não pode ser desfeita.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                <AlertDialogAction onClick={handleDelete}>Excluir</AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </div>
+        <div className="flex justify-between items-center mt-2">
           <CardTitle className="text-xl">{agent.name}</CardTitle>
           <Badge variant={agent.isConnected ? "default" : "outline"} className="flex items-center gap-1">
             {agent.isConnected ? (
