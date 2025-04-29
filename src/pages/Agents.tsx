@@ -3,7 +3,12 @@ import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import MainLayout from "@/components/layout/MainLayout";
 import { Agent } from "@/components/agent/AgentPanel";
-import { getUserPlan, getCurrentUserEmail, generateInstanceId } from "@/services/userPlanService";
+import { 
+  getUserPlan, 
+  getCurrentUserEmail, 
+  getUserAgents,
+  initializeUserData
+} from "@/services/userPlanService";
 import { AgentsHeader } from "@/components/agent/AgentsHeader";
 import { AgentsList } from "@/components/agent/AgentsList";
 import { EmptyAgentState } from "@/components/agent/EmptyAgentState";
@@ -21,62 +26,60 @@ const Agents = () => {
   const [userPlan, setUserPlan] = useState(() => getUserPlan(userEmail));
 
   useEffect(() => {
+    console.log("Loading agents for email:", userEmail);
+    
     // Check if we should show the upgrade modal from URL parameter
     const searchParams = new URLSearchParams(location.search);
     if (searchParams.get('showUpgrade') === 'true') {
       setShowUpgradeModal(true);
     }
 
-    // Get the current email when loading agents
-    const currentEmail = getCurrentUserEmail();
-    
     // Load agents for the current user
-    loadUserAgents(currentEmail);
-  }, [location.search]);
+    loadUserAgents();
+  }, [location.search, userEmail]);
 
-  // Function to load agents for a specific user
-  const loadUserAgents = (email: string) => {
+  // Function to load agents for the current user
+  const loadUserAgents = () => {
     setIsLoading(true);
+    
+    // Get the current user's email
+    const currentEmail = getCurrentUserEmail();
+    console.log("Loading agents for:", currentEmail);
     
     // Simulando uma chamada API para obter os agentes
     setTimeout(() => {
-      // Check localStorage for all agents
-      const allAgentsData = localStorage.getItem('all_agents');
-      let allAgents: Record<string, Agent[]> = allAgentsData ? JSON.parse(allAgentsData) : {};
+      // Get agents from localStorage
+      const userAgents = getUserAgents(currentEmail);
+      console.log("User agents loaded:", userAgents);
       
-      // Get agents for current email or initialize empty array
-      let userAgents = allAgents[email] || [];
-      
-      // Se houver um agente na sessão, adicione-o à lista
+      // Check if there's a new agent in session storage to add
       const newAgentData = sessionStorage.getItem('newAgent');
       if (newAgentData) {
         const newAgent = JSON.parse(newAgentData);
+        console.log("New agent found in session:", newAgent);
+        
+        // Create agent object
         const newAgentObj = {
-          id: `${Date.now()}`, // Use timestamp for unique ID
+          id: `${Date.now()}`,
           name: newAgent.agentName,
           type: newAgent.agentType,
           isConnected: false,
           createdAt: new Date(),
-          instanceId: newAgent.instanceId || generateInstanceId(email, newAgent.agentName)
+          instanceId: newAgent.instanceId
         };
         
-        userAgents.unshift(newAgentObj);
+        // Add to beginning of agents list
+        setAgents([newAgentObj, ...userAgents]);
         
-        // Save updated agents list to localStorage
-        allAgents[email] = userAgents;
-        localStorage.setItem('all_agents', JSON.stringify(allAgents));
-        sessionStorage.removeItem('newAgent'); // Limpar após adicionar
+        // Clear session storage
+        sessionStorage.removeItem('newAgent');
+      } else {
+        // Just use the loaded agents
+        setAgents(userAgents);
       }
       
-      // Limitar agentes conforme o plano do usuário
-      const userPlan = getUserPlan(email);
-      let filteredAgents = userAgents;
-      if (userPlan.plano === 1 && userAgents.length > 1) {
-        filteredAgents = userAgents.slice(0, 1);
-      }
-      
-      setAgents(filteredAgents);
-      setUserPlan(userPlan);
+      // Update user plan state
+      setUserPlan(getUserPlan(currentEmail));
       setIsLoading(false);
     }, 1000);
   };
@@ -85,7 +88,8 @@ const Agents = () => {
     // Verificar se o usuário pode criar mais agentes
     const currentEmail = getCurrentUserEmail();
     const userPlan = getUserPlan(currentEmail);
-    if (userPlan.plano === 1 && userPlan.agentCount >= 1) {
+    
+    if (userPlan.plano === 1 && agents.length >= 1) {
       setShowUpgradeModal(true);
       return;
     }
@@ -95,14 +99,18 @@ const Agents = () => {
 
   const handleDeleteAgent = (agentId: string) => {
     const currentEmail = getCurrentUserEmail();
+    
+    // Filter out deleted agent
     const updatedAgents = agents.filter((agent) => agent.id !== agentId);
     setAgents(updatedAgents);
     
-    // Update localStorage with email-specific agents
+    // Update local storage
     const allAgentsData = localStorage.getItem('all_agents');
-    let allAgents: Record<string, Agent[]> = allAgentsData ? JSON.parse(allAgentsData) : {};
-    allAgents[currentEmail] = updatedAgents;
-    localStorage.setItem('all_agents', JSON.stringify(allAgents));
+    if (allAgentsData) {
+      const allAgents: Record<string, Agent[]> = JSON.parse(allAgentsData);
+      allAgents[currentEmail] = updatedAgents;
+      localStorage.setItem('all_agents', JSON.stringify(allAgents));
+    }
   };
 
   const handleUpgrade = () => {

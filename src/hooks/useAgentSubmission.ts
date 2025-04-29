@@ -8,7 +8,9 @@ import {
   incrementAgentCount, 
   canCreateAgent, 
   generateInstanceId,
-  getCurrentUserEmail 
+  getCurrentUserEmail,
+  saveAgent,
+  deleteUserAgent
 } from "@/services/userPlanService";
 
 export const useAgentSubmission = (agentType: string) => {
@@ -40,15 +42,21 @@ export const useAgentSubmission = (agentType: string) => {
     // Incrementar contagem de agentes do usuário
     incrementAgentCount(userEmail);
     
+    // Criar objeto do agente
+    const newAgent = {
+      id: `agent-${Date.now()}`, // Use timestamp for unique ID
+      name: values.agentName,
+      type: agentType,
+      isConnected: false,
+      createdAt: new Date(),
+      instanceId
+    };
+
+    // Salvar agente no localStorage
+    saveAgent(userEmail, newAgent);
+    
     // Simulação - normalmente aqui você faria uma chamada à API
     setTimeout(() => {
-      // Salvar os dados do agente na sessão para exibir na página de agentes
-      sessionStorage.setItem('newAgent', JSON.stringify({
-        ...values,
-        agentType,
-        instanceId
-      }));
-      
       toast({
         title: "Agente criado com sucesso",
         description: `O agente ${values.agentName} foi criado e está pronto para uso.`,
@@ -58,7 +66,7 @@ export const useAgentSubmission = (agentType: string) => {
       navigate('/agents');
       
       setIsSubmitting(false);
-    }, 1500);
+    }, 1000);
   };
 
   const handleUpdateAgent = (values: AgentFormValues, agentId: string) => {
@@ -107,12 +115,25 @@ export const useAgentSubmission = (agentType: string) => {
       navigate('/agents');
       
       setIsSubmitting(false);
-    }, 1500);
+    }, 1000);
+  };
+
+  const handleDeleteAgent = (agentId: string) => {
+    const userEmail = getCurrentUserEmail();
+    
+    // Delete agent from localStorage
+    deleteUserAgent(userEmail, agentId);
+    
+    toast({
+      title: "Agente removido com sucesso",
+      description: "O agente foi excluído com sucesso.",
+    });
   };
 
   return {
     isSubmitting,
     handleSubmitAgent,
-    handleUpdateAgent
+    handleUpdateAgent,
+    handleDeleteAgent
   };
 };

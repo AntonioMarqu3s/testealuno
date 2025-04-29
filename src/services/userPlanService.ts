@@ -10,6 +10,7 @@ interface UserPlan {
 // Use localStorage as a simple database
 const STORAGE_KEY = 'user_plans';
 const USER_EMAIL_KEY = 'current_user_email';
+const ALL_AGENTS_KEY = 'all_agents';
 
 // Get current user email (in a real app would come from auth system)
 export const getCurrentUserEmail = (): string => {
@@ -20,12 +21,37 @@ export const getCurrentUserEmail = (): string => {
   if (!savedEmail) {
     const defaultEmail = 'usuario@exemplo.com';
     localStorage.setItem(USER_EMAIL_KEY, defaultEmail);
-    // Make sure to synchronize with any user instance data
-    syncUserEmail(defaultEmail);
+    // Make sure to initialize user data
+    initializeUserData(defaultEmail);
     return defaultEmail;
   }
   
   return savedEmail;
+};
+
+// Initialize user data if it doesn't exist
+const initializeUserData = (email: string): void => {
+  // Initialize user plan if it doesn't exist
+  const plansData = localStorage.getItem(STORAGE_KEY);
+  const plans: Record<string, UserPlan> = plansData ? JSON.parse(plansData) : {};
+  
+  if (!plans[email]) {
+    plans[email] = {
+      email,
+      plano: 1, // Basic plan
+      agentCount: 0
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(plans));
+  }
+  
+  // Initialize agents array if it doesn't exist
+  const allAgentsData = localStorage.getItem(ALL_AGENTS_KEY);
+  const allAgents: Record<string, any[]> = allAgentsData ? JSON.parse(allAgentsData) : {};
+  
+  if (!allAgents[email]) {
+    allAgents[email] = [];
+    localStorage.setItem(ALL_AGENTS_KEY, JSON.stringify(allAgents));
+  }
 };
 
 // Update current user email
@@ -42,6 +68,9 @@ export const updateCurrentUserEmail = (email: string): void => {
     
     // Update any agent instance IDs
     updateUserAgentInstances(oldEmail, email);
+  } else {
+    // Initialize user data if it's a new email
+    initializeUserData(email);
   }
 };
 
@@ -67,7 +96,7 @@ const transferUserPlanData = (oldEmail: string, newEmail: string): void => {
   }
   
   // Transfer agent data if exists
-  const allAgentsData = localStorage.getItem('all_agents');
+  const allAgentsData = localStorage.getItem(ALL_AGENTS_KEY);
   if (allAgentsData) {
     const allAgents: Record<string, any[]> = JSON.parse(allAgentsData);
     
@@ -82,14 +111,18 @@ const transferUserPlanData = (oldEmail: string, newEmail: string): void => {
       delete allAgents[oldEmail];
       
       // Save updated agents
-      localStorage.setItem('all_agents', JSON.stringify(allAgents));
+      localStorage.setItem(ALL_AGENTS_KEY, JSON.stringify(allAgents));
+    } else {
+      // Initialize empty agents array
+      allAgents[newEmail] = [];
+      localStorage.setItem(ALL_AGENTS_KEY, JSON.stringify(allAgents));
     }
   }
 };
 
 // Update agent instance IDs with new email
 const updateUserAgentInstances = (oldEmail: string, newEmail: string): void => {
-  const allAgentsData = localStorage.getItem('all_agents');
+  const allAgentsData = localStorage.getItem(ALL_AGENTS_KEY);
   if (!allAgentsData) return;
   
   const allAgents: Record<string, any[]> = JSON.parse(allAgentsData);
@@ -105,37 +138,7 @@ const updateUserAgentInstances = (oldEmail: string, newEmail: string): void => {
     delete allAgents[oldEmail];
     
     // Save updated agents
-    localStorage.setItem('all_agents', JSON.stringify(allAgents));
-  }
-};
-
-// Sync user email across all relevant storage locations
-const syncUserEmail = (email: string): void => {
-  // Migrate from old storage scheme if exists
-  const storedAgents = localStorage.getItem('user_agents');
-  if (storedAgents) {
-    const agents = JSON.parse(storedAgents);
-    
-    // Initialize all_agents if needed
-    const allAgentsData = localStorage.getItem('all_agents');
-    const allAgents: Record<string, any[]> = allAgentsData ? JSON.parse(allAgentsData) : {};
-    
-    // Update instances with current email and store in the new format
-    allAgents[email] = agents.map((agent: any) => {
-      if (agent.name) {
-        return {
-          ...agent,
-          instanceId: generateInstanceId(email, agent.name)
-        };
-      }
-      return agent;
-    });
-    
-    // Save in new format
-    localStorage.setItem('all_agents', JSON.stringify(allAgents));
-    
-    // Remove old format
-    localStorage.removeItem('user_agents');
+    localStorage.setItem(ALL_AGENTS_KEY, JSON.stringify(allAgents));
   }
 };
 
@@ -178,7 +181,7 @@ export const canCreateAgent = (email: string): boolean => {
   // Basic plan (1) can only create 1 agent
   if (plan.plano === 1) {
     // Check number of actual agents for this user
-    const allAgentsData = localStorage.getItem('all_agents');
+    const allAgentsData = localStorage.getItem(ALL_AGENTS_KEY);
     if (allAgentsData) {
       const allAgents: Record<string, any[]> = JSON.parse(allAgentsData);
       const userAgents = allAgents[email] || [];
@@ -195,6 +198,47 @@ export const canCreateAgent = (email: string): boolean => {
 export const generateInstanceId = (email: string, agentName: string): string => {
   if (!email || !agentName) return "";
   return `${email}-${agentName}`.replace(/\s+/g, '-').toLowerCase();
+};
+
+// Save agent to localStorage
+export const saveAgent = (email: string, agent: any): void => {
+  const allAgentsData = localStorage.getItem(ALL_AGENTS_KEY);
+  const allAgents: Record<string, any[]> = allAgentsData ? JSON.parse(allAgentsData) : {};
+  
+  // Get or initialize agents for this email
+  const userAgents = allAgents[email] || [];
+  
+  // Add new agent at the beginning of the array
+  userAgents.unshift(agent);
+  
+  // Save back to localStorage
+  allAgents[email] = userAgents;
+  localStorage.setItem(ALL_AGENTS_KEY, JSON.stringify(allAgents));
+};
+
+// Get all agents for a user
+export const getUserAgents = (email: string): any[] => {
+  const allAgentsData = localStorage.getItem(ALL_AGENTS_KEY);
+  if (!allAgentsData) return [];
+  
+  const allAgents: Record<string, any[]> = JSON.parse(allAgentsData);
+  return allAgents[email] || [];
+};
+
+// Delete agent for a user
+export const deleteUserAgent = (email: string, agentId: string): void => {
+  const allAgentsData = localStorage.getItem(ALL_AGENTS_KEY);
+  if (!allAgentsData) return;
+  
+  const allAgents: Record<string, any[]> = JSON.parse(allAgentsData);
+  const userAgents = allAgents[email] || [];
+  
+  // Filter out the agent with the specified ID
+  const updatedAgents = userAgents.filter(agent => agent.id !== agentId);
+  
+  // Save back to localStorage
+  allAgents[email] = updatedAgents;
+  localStorage.setItem(ALL_AGENTS_KEY, JSON.stringify(allAgents));
 };
 
 // Save checkout information (for admin)
