@@ -61,6 +61,12 @@ const Agents = () => {
     navigate('/create-agent');
   };
 
+  const handleDeleteAgent = (agentId: string) => {
+    setAgents((currentAgents) => 
+      currentAgents.filter((agent) => agent.id !== agentId)
+    );
+  };
+
   return (
     <MainLayout title="Meus Agentes">
       <div className="space-y-8">
@@ -87,7 +93,11 @@ const Agents = () => {
             {agents.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {agents.map((agent) => (
-                  <AgentPanel key={agent.id} agent={agent} />
+                  <AgentPanel 
+                    key={agent.id} 
+                    agent={agent} 
+                    onDelete={handleDeleteAgent}
+                  />
                 ))}
               </div>
             ) : (
