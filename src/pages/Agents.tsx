@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import MainLayout from "@/components/layout/MainLayout";
@@ -6,9 +5,8 @@ import { Agent } from "@/components/agent/AgentPanel";
 import { 
   getUserPlan, 
   getCurrentUserEmail, 
-  getUserAgents,
-  initializeUserData
-} from "@/services/userPlanService";
+  getUserAgents
+} from "@/services";
 import { AgentsHeader } from "@/components/agent/AgentsHeader";
 import { AgentsList } from "@/components/agent/AgentsList";
 import { EmptyAgentState } from "@/components/agent/EmptyAgentState";
