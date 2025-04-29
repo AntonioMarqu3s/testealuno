@@ -29,53 +29,39 @@ const Agents = () => {
 
     // Simulando uma chamada API para obter os agentes
     setTimeout(() => {
-      const dummyAgents: Agent[] = [
-        {
-          id: "1",
-          name: "Agente de Vendas",
-          type: "sales",
-          isConnected: false,
-          createdAt: new Date(2023, 2, 15),
-          instanceId: generateInstanceId(userEmail, "Agente de Vendas")
-        },
-        {
-          id: "2",
-          name: "SDR Prospecção",
-          type: "sdr",
-          isConnected: false,
-          createdAt: new Date(2023, 4, 22),
-          instanceId: generateInstanceId(userEmail, "SDR Prospecção")
-        },
-        {
-          id: "3",
-          name: "Atendimento ao Cliente",
-          type: "support",
-          isConnected: false,
-          createdAt: new Date(2023, 5, 10),
-          instanceId: generateInstanceId(userEmail, "Atendimento ao Cliente")
-        }
-      ];
+      // Check localStorage for user agents instead of showing dummy agents
+      const storedAgents = localStorage.getItem('user_agents');
+      let userAgents: Agent[] = [];
+      
+      if (storedAgents) {
+        userAgents = JSON.parse(storedAgents);
+      }
       
       // Se houver um agente na sessão, adicione-o à lista
       const newAgentData = sessionStorage.getItem('newAgent');
       if (newAgentData) {
         const newAgent = JSON.parse(newAgentData);
-        dummyAgents.unshift({
-          id: `${dummyAgents.length + 1}`,
+        const newAgentObj = {
+          id: `${Date.now()}`, // Use timestamp for unique ID
           name: newAgent.agentName,
           type: newAgent.agentType,
           isConnected: false,
           createdAt: new Date(),
           instanceId: newAgent.instanceId
-        });
+        };
+        
+        userAgents.unshift(newAgentObj);
+        
+        // Save updated agents list to localStorage
+        localStorage.setItem('user_agents', JSON.stringify(userAgents));
         sessionStorage.removeItem('newAgent'); // Limpar após adicionar
       }
       
       // Limitar agentes conforme o plano do usuário
       const userPlan = getUserPlan(userEmail);
-      let filteredAgents = dummyAgents;
-      if (userPlan.plano === 1) {
-        filteredAgents = dummyAgents.slice(0, 1);
+      let filteredAgents = userAgents;
+      if (userPlan.plano === 1 && userAgents.length > 1) {
+        filteredAgents = userAgents.slice(0, 1);
       }
       
       setAgents(filteredAgents);
@@ -96,9 +82,11 @@ const Agents = () => {
   };
 
   const handleDeleteAgent = (agentId: string) => {
-    setAgents((currentAgents) => 
-      currentAgents.filter((agent) => agent.id !== agentId)
-    );
+    const updatedAgents = agents.filter((agent) => agent.id !== agentId);
+    setAgents(updatedAgents);
+    
+    // Update localStorage
+    localStorage.setItem('user_agents', JSON.stringify(updatedAgents));
   };
 
   const handleUpgrade = () => {

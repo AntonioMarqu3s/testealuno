@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Form } from "@/components/ui/form";
@@ -18,20 +18,46 @@ import {
 
 interface CreateAgentFormProps {
   agentType: string;
+  isEditing?: boolean;
+  agentId?: string;
+  initialValues?: Partial<AgentFormValues> | null;
 }
 
-const CreateAgentForm = ({ agentType }: CreateAgentFormProps) => {
+const CreateAgentForm = ({ 
+  agentType, 
+  isEditing = false,
+  agentId,
+  initialValues = null
+}: CreateAgentFormProps) => {
   const [step, setStep] = useState(1);
-  const { isSubmitting, handleSubmitAgent } = useAgentSubmission(agentType);
+  const { isSubmitting, handleSubmitAgent, handleUpdateAgent } = useAgentSubmission(agentType);
   const totalSteps = 3;
+  
+  // Use initialValues if provided (for editing)
+  const formDefaultValues = initialValues ? { ...defaultValues, ...initialValues } : defaultValues;
   
   const form = useForm<AgentFormValues>({
     resolver: zodResolver(agentFormSchema),
-    defaultValues,
+    defaultValues: formDefaultValues,
   });
 
+  // Update form values if initialValues changes
+  useEffect(() => {
+    if (initialValues) {
+      Object.entries(initialValues).forEach(([key, value]) => {
+        if (value !== undefined) {
+          form.setValue(key as keyof AgentFormValues, value);
+        }
+      });
+    }
+  }, [initialValues, form]);
+
   const onSubmit = (values: AgentFormValues) => {
-    handleSubmitAgent(values);
+    if (isEditing && agentId) {
+      handleUpdateAgent(values, agentId);
+    } else {
+      handleSubmitAgent(values);
+    }
   };
 
   const handleNext = () => {
@@ -70,6 +96,7 @@ const CreateAgentForm = ({ agentType }: CreateAgentFormProps) => {
           onBack={handleBack} 
           onNext={handleNext}
           isSubmitting={isSubmitting} 
+          isEditing={isEditing}
         />
       </form>
     </Form>

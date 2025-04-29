@@ -61,8 +61,56 @@ export const useAgentSubmission = (agentType: string) => {
     }, 1500);
   };
 
+  const handleUpdateAgent = (values: AgentFormValues, agentId: string) => {
+    setIsSubmitting(true);
+    
+    // Get user email
+    const userEmail = getCurrentUserEmail();
+    
+    // Update instance ID if name changed
+    const instanceId = generateInstanceId(userEmail, values.agentName);
+    
+    setTimeout(() => {
+      // Get existing agents from localStorage
+      const storedAgents = localStorage.getItem('user_agents');
+      if (storedAgents) {
+        const agents = JSON.parse(storedAgents);
+        
+        // Find and update the specific agent
+        const updatedAgents = agents.map((agent: any) => {
+          if (agent.id === agentId) {
+            return {
+              ...agent,
+              name: values.agentName,
+              instanceId,
+              // Update other fields as needed
+            };
+          }
+          return agent;
+        });
+        
+        // Save updated agents back to localStorage
+        localStorage.setItem('user_agents', JSON.stringify(updatedAgents));
+      }
+      
+      toast({
+        title: "Agente atualizado com sucesso",
+        description: `O agente ${values.agentName} foi atualizado com sucesso.`,
+      });
+      
+      // Clear the editing session
+      sessionStorage.removeItem('editingAgent');
+      
+      // Navigate back to agents page
+      navigate('/agents');
+      
+      setIsSubmitting(false);
+    }, 1500);
+  };
+
   return {
     isSubmitting,
-    handleSubmitAgent
+    handleSubmitAgent,
+    handleUpdateAgent
   };
 };

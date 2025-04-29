@@ -1,6 +1,6 @@
 
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -24,7 +24,7 @@ export interface Agent {
   type: string;
   isConnected: boolean;
   createdAt: Date;
-  instanceId?: string; // New instance ID field
+  instanceId?: string;
 }
 
 interface AgentPanelProps {
@@ -42,6 +42,7 @@ const agentTypeMap: Record<string, string> = {
 };
 
 export const AgentPanel: React.FC<AgentPanelProps> = ({ agent, onDelete }) => {
+  const navigate = useNavigate();
   const [isGeneratingQR, setIsGeneratingQR] = useState(false);
 
   const handleGenerateQrCode = () => {
@@ -63,6 +64,12 @@ export const AgentPanel: React.FC<AgentPanelProps> = ({ agent, onDelete }) => {
     }
   };
 
+  const handleEdit = () => {
+    // Prepare agent data for editing and navigate
+    sessionStorage.setItem('editingAgent', JSON.stringify(agent));
+    navigate(`/edit-agent/${agent.id}?type=${agent.type}`);
+  };
+
   // Get friendly agent type name or use the raw type if not found in map
   const agentTypeName = agentTypeMap[agent.type] || agent.type;
 
@@ -70,10 +77,13 @@ export const AgentPanel: React.FC<AgentPanelProps> = ({ agent, onDelete }) => {
     <Card className="flex flex-col h-full overflow-hidden">
       <CardHeader className="pb-2 pt-6 relative">
         <div className="absolute top-2 right-2 flex space-x-1">
-          <Button variant="ghost" size="icon" asChild className="h-8 w-8">
-            <Link to={`/edit-agent/${agent.id}`}>
-              <Edit className="h-4 w-4" />
-            </Link>
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="h-8 w-8"
+            onClick={handleEdit}
+          >
+            <Edit className="h-4 w-4" />
           </Button>
           <AlertDialog>
             <AlertDialogTrigger asChild>

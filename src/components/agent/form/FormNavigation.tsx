@@ -1,5 +1,6 @@
 
 import { Button } from "@/components/ui/button";
+import { ArrowLeft, ArrowRight } from "lucide-react";
 
 interface FormNavigationProps {
   step: number;
@@ -7,6 +8,7 @@ interface FormNavigationProps {
   onBack: () => void;
   onNext: () => void;
   isSubmitting: boolean;
+  isEditing?: boolean;
 }
 
 const FormNavigation = ({
@@ -15,26 +17,30 @@ const FormNavigation = ({
   onBack,
   onNext,
   isSubmitting,
+  isEditing = false
 }: FormNavigationProps) => {
+  const isFirstStep = step === 1;
   const isLastStep = step === totalSteps;
 
   return (
-    <div className="flex justify-between">
+    <div className="flex justify-between pt-4">
       <Button
         type="button"
-        variant="outline"
+        variant="ghost"
         onClick={onBack}
-        disabled={step === 1}
+        disabled={isFirstStep}
+        className={isFirstStep ? "invisible" : ""}
       >
-        Voltar
+        <ArrowLeft className="mr-2 h-4 w-4" /> Voltar
       </Button>
-      {!isLastStep ? (
-        <Button type="button" onClick={onNext}>
-          Próximo
+
+      {isLastStep ? (
+        <Button type="submit" disabled={isSubmitting}>
+          {isSubmitting ? "Enviando..." : isEditing ? "Atualizar Agente" : "Criar Agente"}
         </Button>
       ) : (
-        <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? "Criando Agente..." : "Criar Agente"}
+        <Button type="button" onClick={onNext}>
+          Continuar <ArrowRight className="ml-2 h-4 w-4" />
         </Button>
       )}
     </div>
