@@ -65,42 +65,63 @@ const transferUserPlanData = (oldEmail: string, newEmail: string): void => {
     // Save updated plans
     localStorage.setItem(STORAGE_KEY, JSON.stringify(plans));
   }
+  
+  // Transfer agent data if exists
+  const allAgentsData = localStorage.getItem('all_agents');
+  if (allAgentsData) {
+    const allAgents: Record<string, any[]> = JSON.parse(allAgentsData);
+    
+    // If the old email had agents, transfer them to the new email
+    if (allAgents[oldEmail]) {
+      allAgents[newEmail] = allAgents[oldEmail].map(agent => ({
+        ...agent,
+        instanceId: generateInstanceId(newEmail, agent.name)
+      }));
+      
+      // Remove the old email agents
+      delete allAgents[oldEmail];
+      
+      // Save updated agents
+      localStorage.setItem('all_agents', JSON.stringify(allAgents));
+    }
+  }
 };
 
 // Update agent instance IDs with new email
 const updateUserAgentInstances = (oldEmail: string, newEmail: string): void => {
-  const storedAgents = localStorage.getItem('user_agents');
-  if (!storedAgents) return;
+  const allAgentsData = localStorage.getItem('all_agents');
+  if (!allAgentsData) return;
   
-  const agents = JSON.parse(storedAgents);
+  const allAgents: Record<string, any[]> = JSON.parse(allAgentsData);
   
-  // Update instanceId for each agent
-  const updatedAgents = agents.map((agent: any) => {
-    if (agent.instanceId && agent.instanceId.startsWith(`${oldEmail}-`)) {
-      // Create new instanceId with the new email
-      const agentName = agent.instanceId.substring(oldEmail.length + 1);
-      const newInstanceId = generateInstanceId(newEmail, agentName);
-      return {
-        ...agent,
-        instanceId: newInstanceId
-      };
-    }
-    return agent;
-  });
-  
-  // Save updated agents
-  localStorage.setItem('user_agents', JSON.stringify(updatedAgents));
+  // Update instanceId for each agent of the old email
+  if (allAgents[oldEmail]) {
+    allAgents[newEmail] = allAgents[oldEmail].map(agent => ({
+      ...agent,
+      instanceId: generateInstanceId(newEmail, agent.name)
+    }));
+    
+    // Remove old email agents
+    delete allAgents[oldEmail];
+    
+    // Save updated agents
+    localStorage.setItem('all_agents', JSON.stringify(allAgents));
+  }
 };
 
 // Sync user email across all relevant storage locations
 const syncUserEmail = (email: string): void => {
-  // Update user_agents if they exist
+  // Migrate from old storage scheme if exists
   const storedAgents = localStorage.getItem('user_agents');
   if (storedAgents) {
     const agents = JSON.parse(storedAgents);
     
-    // Update instanceId for each agent to use the correct email
-    const updatedAgents = agents.map((agent: any) => {
+    // Initialize all_agents if needed
+    const allAgentsData = localStorage.getItem('all_agents');
+    const allAgents: Record<string, any[]> = allAgentsData ? JSON.parse(allAgentsData) : {};
+    
+    // Update instances with current email and store in the new format
+    allAgents[email] = agents.map((agent: any) => {
       if (agent.name) {
         return {
           ...agent,
@@ -110,8 +131,11 @@ const syncUserEmail = (email: string): void => {
       return agent;
     });
     
-    // Save updated agents
-    localStorage.setItem('user_agents', JSON.stringify(updatedAgents));
+    // Save in new format
+    localStorage.setItem('all_agents', JSON.stringify(allAgents));
+    
+    // Remove old format
+    localStorage.removeItem('user_agents');
   }
 };
 
@@ -153,6 +177,13 @@ export const canCreateAgent = (email: string): boolean => {
   
   // Basic plan (1) can only create 1 agent
   if (plan.plano === 1) {
+    // Check number of actual agents for this user
+    const allAgentsData = localStorage.getItem('all_agents');
+    if (allAgentsData) {
+      const allAgents: Record<string, any[]> = JSON.parse(allAgentsData);
+      const userAgents = allAgents[email] || [];
+      return userAgents.length < 1;
+    }
     return plan.agentCount < 1;
   }
   

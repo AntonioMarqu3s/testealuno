@@ -72,12 +72,13 @@ export const useAgentSubmission = (agentType: string) => {
     
     setTimeout(() => {
       // Get existing agents from localStorage
-      const storedAgents = localStorage.getItem('user_agents');
-      if (storedAgents) {
-        const agents = JSON.parse(storedAgents);
+      const allAgentsData = localStorage.getItem('all_agents');
+      if (allAgentsData) {
+        const allAgents: Record<string, any[]> = JSON.parse(allAgentsData);
+        const userAgents = allAgents[userEmail] || [];
         
         // Find and update the specific agent
-        const updatedAgents = agents.map((agent: any) => {
+        const updatedAgents = userAgents.map((agent: any) => {
           if (agent.id === agentId) {
             return {
               ...agent,
@@ -90,7 +91,8 @@ export const useAgentSubmission = (agentType: string) => {
         });
         
         // Save updated agents back to localStorage
-        localStorage.setItem('user_agents', JSON.stringify(updatedAgents));
+        allAgents[userEmail] = updatedAgents;
+        localStorage.setItem('all_agents', JSON.stringify(allAgents));
       }
       
       toast({
