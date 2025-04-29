@@ -24,6 +24,7 @@ export interface Agent {
   type: string;
   isConnected: boolean;
   createdAt: Date;
+  instanceId?: string; // New instance ID field
 }
 
 interface AgentPanelProps {
@@ -103,7 +104,12 @@ export const AgentPanel: React.FC<AgentPanelProps> = ({ agent, onDelete }) => {
         </p>
       </CardHeader>
       <CardContent className="pb-2 flex-grow">
-        <p className="text-sm mb-4">Tipo: <span className="font-medium">{agent.type}</span></p>
+        <p className="text-sm mb-2">Tipo: <span className="font-medium">{agent.type}</span></p>
+        {agent.instanceId && (
+          <p className="text-xs text-muted-foreground mb-2">
+            ID da Instância: <span className="font-mono">{agent.instanceId}</span>
+          </p>
+        )}
       </CardContent>
       <CardFooter className="flex justify-between gap-2 pt-2">
         <Button 

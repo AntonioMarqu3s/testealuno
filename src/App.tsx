@@ -11,6 +11,7 @@ import NotFound from "./pages/NotFound";
 import CreateAgent from "./pages/CreateAgent";
 import Agents from "./pages/Agents";
 import AgentAnalytics from "./pages/AgentAnalytics";
+import Checkout from "./pages/Checkout";
 
 const queryClient = new QueryClient();
 
@@ -28,6 +29,7 @@ const App = () => (
           <Route path="/edit-agent/:agentId" element={<CreateAgent />} />
           <Route path="/agents" element={<Agents />} />
           <Route path="/agent-analytics/:agentId" element={<AgentAnalytics />} />
+          <Route path="/checkout" element={<Checkout />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
