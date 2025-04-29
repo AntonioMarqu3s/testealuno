@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { BarChart, QrCode, MessageSquare } from "lucide-react";
+import { BarChart, QrCode, MessageSquare, WifiOff, Wifi } from "lucide-react";
 import { toast } from "sonner";
 
 export interface Agent {
@@ -35,19 +35,29 @@ export const AgentPanel: React.FC<AgentPanelProps> = ({ agent }) => {
   };
 
   return (
-    <Card>
+    <Card className="flex flex-col h-full">
       <CardHeader className="pb-2">
         <div className="flex justify-between items-center">
           <CardTitle className="text-xl">{agent.name}</CardTitle>
-          <Badge variant={agent.isConnected ? "default" : "outline"}>
-            {agent.isConnected ? "Conectado" : "Desconectado"}
+          <Badge variant={agent.isConnected ? "default" : "outline"} className="flex items-center gap-1">
+            {agent.isConnected ? (
+              <>
+                <Wifi className="h-3 w-3" /> 
+                <span>Conectado</span>
+              </>
+            ) : (
+              <>
+                <WifiOff className="h-3 w-3" /> 
+                <span>Desconectado</span>
+              </>
+            )}
           </Badge>
         </div>
         <p className="text-xs text-muted-foreground">
           Criado em: {agent.createdAt.toLocaleDateString()}
         </p>
       </CardHeader>
-      <CardContent className="pb-2">
+      <CardContent className="pb-2 flex-grow">
         <p className="text-sm mb-4">Tipo: <span className="font-medium">{agent.type}</span></p>
       </CardContent>
       <CardFooter className="flex justify-between gap-2 pt-2">

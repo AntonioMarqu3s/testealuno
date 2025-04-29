@@ -19,21 +19,21 @@ const Agents = () => {
           id: "1",
           name: "Agente de Vendas",
           type: "sales",
-          isConnected: true,
+          isConnected: false, // Inicialmente todos desconectados
           createdAt: new Date(2023, 2, 15)
         },
         {
           id: "2",
           name: "SDR Prospecção",
           type: "sdr",
-          isConnected: false,
+          isConnected: false, // Inicialmente todos desconectados
           createdAt: new Date(2023, 4, 22)
         },
         {
           id: "3",
           name: "Atendimento ao Cliente",
           type: "support",
-          isConnected: true,
+          isConnected: false, // Inicialmente todos desconectados
           createdAt: new Date(2023, 5, 10)
         }
       ];
@@ -46,7 +46,7 @@ const Agents = () => {
           id: `${dummyAgents.length + 1}`,
           name: newAgent.agentName,
           type: newAgent.agentType,
-          isConnected: false,
+          isConnected: false, // Sempre inicia desconectado
           createdAt: new Date()
         });
         sessionStorage.removeItem('newAgent'); // Limpar após adicionar
@@ -58,7 +58,7 @@ const Agents = () => {
   }, []);
 
   const handleCreateAgent = () => {
-    navigate('/dashboard?tab=agents');
+    navigate('/create-agent');
   };
 
   return (
