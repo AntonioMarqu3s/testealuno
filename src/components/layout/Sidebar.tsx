@@ -37,7 +37,7 @@ export function AppSidebar() {
     },
     {
       title: "Meus Agentes",
-      path: "/my-agents",
+      path: "/agents",
       icon: Grid2X2,
     },
     {
@@ -111,3 +111,4 @@ export function AppSidebar() {
     </Sidebar>
   );
 }
+
