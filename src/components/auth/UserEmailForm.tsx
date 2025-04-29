@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -8,8 +8,13 @@ import { toast } from "sonner";
 import { getCurrentUserEmail, updateCurrentUserEmail } from "@/services/userPlanService";
 
 export function UserEmailForm() {
-  const [email, setEmail] = useState(getCurrentUserEmail());
+  const [email, setEmail] = useState("");
   const [isUpdating, setIsUpdating] = useState(false);
+
+  // Load current email on component mount
+  useEffect(() => {
+    setEmail(getCurrentUserEmail());
+  }, []);
 
   const handleUpdateEmail = (e: React.FormEvent) => {
     e.preventDefault();
@@ -23,7 +28,7 @@ export function UserEmailForm() {
     
     setIsUpdating(true);
     
-    // Update email in local storage
+    // Update email in local storage and synchronize agent instances
     updateCurrentUserEmail(email);
     
     setTimeout(() => {

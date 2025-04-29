@@ -29,12 +29,27 @@ const Agents = () => {
 
     // Simulando uma chamada API para obter os agentes
     setTimeout(() => {
-      // Check localStorage for user agents instead of showing dummy agents
+      // Always get the most current email when loading agents
+      const currentEmail = getCurrentUserEmail();
+      
+      // Check localStorage for user agents
       const storedAgents = localStorage.getItem('user_agents');
       let userAgents: Agent[] = [];
       
       if (storedAgents) {
         userAgents = JSON.parse(storedAgents);
+        
+        // Ensure all agent instances use the current email
+        userAgents = userAgents.map(agent => {
+          if (agent.name) {
+            // Update instanceId with current email
+            return {
+              ...agent,
+              instanceId: generateInstanceId(currentEmail, agent.name)
+            };
+          }
+          return agent;
+        });
       }
       
       // Se houver um agente na sessão, adicione-o à lista
@@ -47,7 +62,7 @@ const Agents = () => {
           type: newAgent.agentType,
           isConnected: false,
           createdAt: new Date(),
-          instanceId: newAgent.instanceId
+          instanceId: newAgent.instanceId || generateInstanceId(currentEmail, newAgent.agentName)
         };
         
         userAgents.unshift(newAgentObj);
@@ -58,7 +73,7 @@ const Agents = () => {
       }
       
       // Limitar agentes conforme o plano do usuário
-      const userPlan = getUserPlan(userEmail);
+      const userPlan = getUserPlan(currentEmail);
       let filteredAgents = userAgents;
       if (userPlan.plano === 1 && userAgents.length > 1) {
         filteredAgents = userAgents.slice(0, 1);
@@ -68,11 +83,12 @@ const Agents = () => {
       setUserPlan(userPlan);
       setIsLoading(false);
     }, 1000);
-  }, [location.search, userEmail]);
+  }, [location.search]);
 
   const handleCreateAgent = () => {
     // Verificar se o usuário pode criar mais agentes
-    const userPlan = getUserPlan(userEmail);
+    const currentEmail = getCurrentUserEmail();
+    const userPlan = getUserPlan(currentEmail);
     if (userPlan.plano === 1 && userPlan.agentCount >= 1) {
       setShowUpgradeModal(true);
       return;

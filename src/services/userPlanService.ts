@@ -9,16 +9,19 @@ interface UserPlan {
 
 // Use localStorage as a simple database
 const STORAGE_KEY = 'user_plans';
+const USER_EMAIL_KEY = 'current_user_email';
 
 // Get current user email (in a real app would come from auth system)
 export const getCurrentUserEmail = (): string => {
   // First try to get from localStorage (simulating a logged-in user)
-  const savedEmail = localStorage.getItem('current_user_email');
+  const savedEmail = localStorage.getItem(USER_EMAIL_KEY);
   
   // If no email is saved, create a new one and save it
   if (!savedEmail) {
     const defaultEmail = 'usuario@exemplo.com';
-    localStorage.setItem('current_user_email', defaultEmail);
+    localStorage.setItem(USER_EMAIL_KEY, defaultEmail);
+    // Make sure to synchronize with any user instance data
+    syncUserEmail(defaultEmail);
     return defaultEmail;
   }
   
@@ -27,7 +30,89 @@ export const getCurrentUserEmail = (): string => {
 
 // Update current user email
 export const updateCurrentUserEmail = (email: string): void => {
-  localStorage.setItem('current_user_email', email);
+  const oldEmail = localStorage.getItem(USER_EMAIL_KEY);
+  
+  // Update the email in localStorage
+  localStorage.setItem(USER_EMAIL_KEY, email);
+  
+  // If there was a previous email, update all references to it
+  if (oldEmail && oldEmail !== email) {
+    // Transfer any existing plan data to the new email
+    transferUserPlanData(oldEmail, email);
+    
+    // Update any agent instance IDs
+    updateUserAgentInstances(oldEmail, email);
+  }
+};
+
+// Transfer user plan data from old email to new email
+const transferUserPlanData = (oldEmail: string, newEmail: string): void => {
+  const plansData = localStorage.getItem(STORAGE_KEY);
+  if (!plansData) return;
+  
+  const plans: Record<string, UserPlan> = JSON.parse(plansData);
+  
+  // If the old email had a plan, transfer it to the new email
+  if (plans[oldEmail]) {
+    plans[newEmail] = {
+      ...plans[oldEmail],
+      email: newEmail
+    };
+    
+    // Remove the old email plan
+    delete plans[oldEmail];
+    
+    // Save updated plans
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(plans));
+  }
+};
+
+// Update agent instance IDs with new email
+const updateUserAgentInstances = (oldEmail: string, newEmail: string): void => {
+  const storedAgents = localStorage.getItem('user_agents');
+  if (!storedAgents) return;
+  
+  const agents = JSON.parse(storedAgents);
+  
+  // Update instanceId for each agent
+  const updatedAgents = agents.map((agent: any) => {
+    if (agent.instanceId && agent.instanceId.startsWith(`${oldEmail}-`)) {
+      // Create new instanceId with the new email
+      const agentName = agent.instanceId.substring(oldEmail.length + 1);
+      const newInstanceId = generateInstanceId(newEmail, agentName);
+      return {
+        ...agent,
+        instanceId: newInstanceId
+      };
+    }
+    return agent;
+  });
+  
+  // Save updated agents
+  localStorage.setItem('user_agents', JSON.stringify(updatedAgents));
+};
+
+// Sync user email across all relevant storage locations
+const syncUserEmail = (email: string): void => {
+  // Update user_agents if they exist
+  const storedAgents = localStorage.getItem('user_agents');
+  if (storedAgents) {
+    const agents = JSON.parse(storedAgents);
+    
+    // Update instanceId for each agent to use the correct email
+    const updatedAgents = agents.map((agent: any) => {
+      if (agent.name) {
+        return {
+          ...agent,
+          instanceId: generateInstanceId(email, agent.name)
+        };
+      }
+      return agent;
+    });
+    
+    // Save updated agents
+    localStorage.setItem('user_agents', JSON.stringify(updatedAgents));
+  }
 };
 
 // Get current user's plan
