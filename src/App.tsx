@@ -30,6 +30,7 @@ const App = () => (
           <Route path="/agents" element={<Agents />} />
           <Route path="/agent-analytics/:agentId" element={<AgentAnalytics />} />
           <Route path="/checkout" element={<Checkout />} />
+          <Route path="/update-email" element={<Dashboard />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

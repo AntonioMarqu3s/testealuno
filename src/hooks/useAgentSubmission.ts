@@ -3,7 +3,13 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { AgentFormValues } from "@/components/agent/form/agentSchema";
-import { getUserPlan, incrementAgentCount, canCreateAgent, generateInstanceId } from "@/services/userPlanService";
+import { 
+  getUserPlan, 
+  incrementAgentCount, 
+  canCreateAgent, 
+  generateInstanceId,
+  getCurrentUserEmail 
+} from "@/services/userPlanService";
 
 export const useAgentSubmission = (agentType: string) => {
   const navigate = useNavigate();
@@ -13,8 +19,8 @@ export const useAgentSubmission = (agentType: string) => {
   const handleSubmitAgent = (values: AgentFormValues) => {
     setIsSubmitting(true);
     
-    // Simulando usuário atual (numa aplicação real, isso viria do sistema de autenticação)
-    const userEmail = "usuario@exemplo.com";
+    // Get actual user email
+    const userEmail = getCurrentUserEmail();
     
     // Verificar se o usuário pode criar mais agentes
     if (!canCreateAgent(userEmail)) {

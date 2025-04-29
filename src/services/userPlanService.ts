@@ -10,6 +10,26 @@ interface UserPlan {
 // Use localStorage as a simple database
 const STORAGE_KEY = 'user_plans';
 
+// Get current user email (in a real app would come from auth system)
+export const getCurrentUserEmail = (): string => {
+  // First try to get from localStorage (simulating a logged-in user)
+  const savedEmail = localStorage.getItem('current_user_email');
+  
+  // If no email is saved, create a new one and save it
+  if (!savedEmail) {
+    const defaultEmail = 'user@example.com';
+    localStorage.setItem('current_user_email', defaultEmail);
+    return defaultEmail;
+  }
+  
+  return savedEmail;
+};
+
+// Update current user email
+export const updateCurrentUserEmail = (email: string): void => {
+  localStorage.setItem('current_user_email', email);
+};
+
 // Get current user's plan
 export const getUserPlan = (email: string): UserPlan => {
   const plansData = localStorage.getItem(STORAGE_KEY);

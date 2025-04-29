@@ -6,7 +6,7 @@ import { AgentPanel, Agent } from "@/components/agent/AgentPanel";
 import { Button } from "@/components/ui/button";
 import { Plus, CreditCard } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { getUserPlan } from "@/services/userPlanService";
+import { getUserPlan, getCurrentUserEmail, generateInstanceId } from "@/services/userPlanService";
 import {
   Dialog,
   DialogContent,
@@ -23,8 +23,8 @@ const Agents = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
 
-  // Demo user email (in a real app, this would come from authentication)
-  const userEmail = "usuario@exemplo.com";
+  // Get actual user email
+  const userEmail = getCurrentUserEmail();
   const [userPlan, setUserPlan] = useState(() => getUserPlan(userEmail));
 
   useEffect(() => {
@@ -89,7 +89,7 @@ const Agents = () => {
       setUserPlan(userPlan);
       setIsLoading(false);
     }, 1000);
-  }, [location.search]);
+  }, [location.search, userEmail]);
 
   const handleCreateAgent = () => {
     // Verificar se o usuário pode criar mais agentes
