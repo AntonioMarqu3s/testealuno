@@ -14,7 +14,11 @@ const Dashboard = () => {
   const currentTab = searchParams.get('tab') || 'agents';
 
   const handleCreateAgent = () => {
-    navigate('/dashboard?tab=agents');
+    navigate('/create-agent');
+  };
+
+  const handleNavigateToMyAgents = () => {
+    navigate('/agents');
   };
 
   return (
@@ -35,7 +39,7 @@ const Dashboard = () => {
         <Tabs defaultValue="agents">
           <TabsList>
             <TabsTrigger value="agents">Tipos de Agentes</TabsTrigger>
-            <TabsTrigger value="my-agents">Meus Agentes</TabsTrigger>
+            <TabsTrigger value="my-agents" onClick={handleNavigateToMyAgents}>Meus Agentes</TabsTrigger>
           </TabsList>
           <TabsContent value="agents" className="space-y-6">
             <div className="mt-6">
@@ -52,7 +56,7 @@ const Dashboard = () => {
               <p className="text-muted-foreground text-center max-w-md mt-2 mb-6">
                 Crie seu primeiro agente de IA personalizado para automatizar tarefas de vendas, prospecção ou atendimento.
               </p>
-              <Button>
+              <Button onClick={handleCreateAgent}>
                 <Plus className="mr-2 h-4 w-4" /> Criar Agente
               </Button>
             </div>
