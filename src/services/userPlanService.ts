@@ -17,7 +17,7 @@ export const getCurrentUserEmail = (): string => {
   
   // If no email is saved, create a new one and save it
   if (!savedEmail) {
-    const defaultEmail = 'user@example.com';
+    const defaultEmail = 'usuario@exemplo.com';
     localStorage.setItem('current_user_email', defaultEmail);
     return defaultEmail;
   }
@@ -77,6 +77,7 @@ export const canCreateAgent = (email: string): boolean => {
 
 // Generate instance ID (email + agent name)
 export const generateInstanceId = (email: string, agentName: string): string => {
+  if (!email || !agentName) return "";
   return `${email}-${agentName}`.replace(/\s+/g, '-').toLowerCase();
 };
 

@@ -32,6 +32,15 @@ interface AgentPanelProps {
   onDelete?: (agentId: string) => void;
 }
 
+// Map to translate agent type codes to friendly names
+const agentTypeMap: Record<string, string> = {
+  "sales": "Vendedor",
+  "sdr": "SDR",
+  "closer": "Closer",
+  "support": "Atendimento",
+  "custom": "Personalizado",
+};
+
 export const AgentPanel: React.FC<AgentPanelProps> = ({ agent, onDelete }) => {
   const [isGeneratingQR, setIsGeneratingQR] = useState(false);
 
@@ -53,6 +62,9 @@ export const AgentPanel: React.FC<AgentPanelProps> = ({ agent, onDelete }) => {
       toast.success("Agente removido com sucesso!");
     }
   };
+
+  // Get friendly agent type name or use the raw type if not found in map
+  const agentTypeName = agentTypeMap[agent.type] || agent.type;
 
   return (
     <Card className="flex flex-col h-full overflow-hidden">
@@ -104,7 +116,7 @@ export const AgentPanel: React.FC<AgentPanelProps> = ({ agent, onDelete }) => {
         </p>
       </CardHeader>
       <CardContent className="pb-2 flex-grow">
-        <p className="text-sm mb-2">Tipo: <span className="font-medium">{agent.type}</span></p>
+        <p className="text-sm mb-2">Tipo: <span className="font-medium">{agentTypeName}</span></p>
         {agent.instanceId && (
           <p className="text-xs text-muted-foreground mb-2">
             ID da Instância: <span className="font-mono">{agent.instanceId}</span>
