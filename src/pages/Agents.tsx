@@ -6,9 +6,8 @@ import { Agent } from "@/components/agent/AgentPanel";
 import { 
   getUserPlan, 
   getCurrentUserEmail, 
-  getUserAgents,
-  initializeUserData
-} from "@/services/userPlanService";
+  getUserAgents
+} from "@/services";
 import { AgentsHeader } from "@/components/agent/AgentsHeader";
 import { AgentsList } from "@/components/agent/AgentsList";
 import { EmptyAgentState } from "@/components/agent/EmptyAgentState";
@@ -89,7 +88,7 @@ const Agents = () => {
     const currentEmail = getCurrentUserEmail();
     const userPlan = getUserPlan(currentEmail);
     
-    if (userPlan.plano === 1 && agents.length >= 1) {
+    if (userPlan.plan === 1 && agents.length >= 1) {
       setShowUpgradeModal(true);
       return;
     }
@@ -124,7 +123,7 @@ const Agents = () => {
     <MainLayout title="Meus Agentes">
       <div className="space-y-8">
         <AgentsHeader 
-          userPlanType={userPlan.plano} 
+          userPlanType={userPlan.plan} 
           onCreateAgent={handleCreateAgent}
           onUpgradeClick={() => setShowUpgradeModal(true)}
         />
