@@ -26,6 +26,7 @@ export interface Agent {
   isConnected: boolean;
   createdAt: Date;
   instanceId?: string;
+  clientIdentifier?: string;  // Add client identifier
 }
 
 interface AgentPanelProps {
@@ -124,7 +125,7 @@ export const AgentPanel: React.FC<AgentPanelProps> = ({ agent, onDelete }) => {
           </Badge>
         </div>
         <p className="text-xs text-muted-foreground">
-          Criado em: {agent.createdAt.toLocaleDateString()}
+          Criado em: {new Date(agent.createdAt).toLocaleDateString()}
         </p>
       </CardHeader>
       <CardContent className="pb-2 flex-grow">
@@ -136,6 +137,11 @@ export const AgentPanel: React.FC<AgentPanelProps> = ({ agent, onDelete }) => {
         {agent.instanceId && (
           <p className="text-xs text-muted-foreground mb-2">
             ID da Instância: <span className="font-mono">{agent.instanceId}</span>
+          </p>
+        )}
+        {agent.clientIdentifier && (
+          <p className="text-xs text-muted-foreground mb-2">
+            Cliente: <span className="font-mono">{agent.clientIdentifier}</span>
           </p>
         )}
       </CardContent>

@@ -8,6 +8,7 @@ export interface Agent {
   isConnected: boolean;
   createdAt: Date;
   instanceId: string;
+  clientIdentifier?: string; // Add client identifier
 }
 
 /**
@@ -58,7 +59,7 @@ export const deleteUserAgent = (email: string, agentId: string): void => {
   const allAgentsData = getStorageItem<Record<string, Agent[]>>(ALL_AGENTS_KEY, {});
   
   if (allAgentsData[email]) {
-    // Filter out the agent with the given ID
+    // Filter out deleted agent
     allAgentsData[email] = allAgentsData[email].filter(agent => agent.id !== agentId);
     
     // Save back to storage
@@ -100,6 +101,14 @@ export const transferUserAgentData = (oldEmail: string, newEmail: string): void 
   if (allAgentsData[oldEmail] && allAgentsData[oldEmail].length > 0) {
     // Copy the agents to the new email
     allAgentsData[newEmail] = [...(allAgentsData[oldEmail] || [])];
+    
+    // Update client identifiers for each agent
+    if (allAgentsData[newEmail]) {
+      allAgentsData[newEmail] = allAgentsData[newEmail].map(agent => {
+        const clientIdentifier = `${newEmail}-${agent.name}`.replace(/\s+/g, '-').toLowerCase();
+        return { ...agent, clientIdentifier };
+      });
+    }
     
     // Optionally, delete the old email data
     delete allAgentsData[oldEmail];

@@ -3,18 +3,22 @@ import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Form } from "@/components/ui/form";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 
 import AgentBasicInfoForm from "./form/AgentBasicInfoForm";
 import CompanyInfoForm from "./form/CompanyInfoForm";
 import ProductInfoForm from "./form/ProductInfoForm";
 import FormProgress from "./form/FormProgress";
 import FormNavigation from "./form/FormNavigation";
+import AgentConfirmationPanel from "./AgentConfirmationPanel";
 import { useAgentSubmission } from "@/hooks/useAgentSubmission";
 import { 
   agentFormSchema, 
   defaultValues, 
   type AgentFormValues 
 } from "./form/agentSchema";
+import { Agent } from "./AgentPanel";
+import { getCurrentUserEmail, generateInstanceId } from "@/services";
 
 interface CreateAgentFormProps {
   agentType: string;
@@ -32,6 +36,8 @@ const CreateAgentForm = ({
   const [step, setStep] = useState(1);
   const { isSubmitting, handleSubmitAgent, handleUpdateAgent } = useAgentSubmission(agentType);
   const totalSteps = 3;
+  const [showConfirmation, setShowConfirmation] = useState(false);
+  const [createdAgent, setCreatedAgent] = useState<Agent | null>(null);
   
   // Use initialValues if provided (for editing)
   const formDefaultValues = initialValues ? { ...defaultValues, ...initialValues } : defaultValues;
@@ -53,6 +59,27 @@ const CreateAgentForm = ({
   }, [initialValues, form]);
 
   const onSubmit = (values: AgentFormValues) => {
+    const userEmail = getCurrentUserEmail();
+    const instanceId = generateInstanceId(userEmail, values.agentName);
+    
+    // Create agent object for confirmation panel
+    const agent: Agent = {
+      id: isEditing && agentId ? agentId : `agent-${Date.now()}`,
+      name: values.agentName,
+      type: agentType,
+      isConnected: false,
+      createdAt: new Date(),
+      instanceId
+    };
+    
+    setCreatedAgent(agent);
+    setShowConfirmation(true);
+    
+    // Create client identifier for the system
+    const clientIdentifier = `${userEmail}-${values.agentName}`.replace(/\s+/g, '-').toLowerCase();
+    console.log("Client identifier:", clientIdentifier);
+    
+    // Actually save or update the agent
     if (isEditing && agentId) {
       handleUpdateAgent(values, agentId);
     } else {
@@ -66,6 +93,20 @@ const CreateAgentForm = ({
 
   const handleBack = () => {
     setStep(prev => Math.max(prev - 1, 1));
+  };
+
+  const handleCloseConfirmation = () => {
+    setShowConfirmation(false);
+  };
+
+  const handleGenerateQR = () => {
+    console.log("Generating QR code for agent:", createdAgent?.name);
+    // Implement QR code generation logic
+  };
+
+  const handleAnalyze = () => {
+    // Navigate to analytics page
+    window.location.href = `/agent-analytics/${createdAgent?.id}`;
   };
 
   const renderStepContent = () => {
@@ -82,24 +123,40 @@ const CreateAgentForm = ({
   };
 
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        <FormProgress currentStep={step} totalSteps={totalSteps} />
-        
-        <div className="space-y-6">
-          {renderStepContent()}
-        </div>
+    <>
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <FormProgress currentStep={step} totalSteps={totalSteps} />
+          
+          <div className="space-y-6">
+            {renderStepContent()}
+          </div>
 
-        <FormNavigation 
-          step={step} 
-          totalSteps={totalSteps} 
-          onBack={handleBack} 
-          onNext={handleNext}
-          isSubmitting={isSubmitting} 
-          isEditing={isEditing}
-        />
-      </form>
-    </Form>
+          <FormNavigation 
+            step={step} 
+            totalSteps={totalSteps} 
+            onBack={handleBack} 
+            onNext={handleNext}
+            isSubmitting={isSubmitting} 
+            isEditing={isEditing}
+          />
+        </form>
+      </Form>
+
+      {/* Agent Confirmation Dialog */}
+      <Dialog open={showConfirmation} onOpenChange={setShowConfirmation}>
+        <DialogContent className="sm:max-w-md p-0" onInteractOutside={(e) => e.preventDefault()}>
+          {createdAgent && (
+            <AgentConfirmationPanel
+              agent={createdAgent}
+              onClose={handleCloseConfirmation}
+              onAnalyze={handleAnalyze}
+              onGenerateQR={handleGenerateQR}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
+    </>
   );
 };
 

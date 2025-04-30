@@ -1,17 +1,31 @@
 
-// This file is now deprecated.
-// Its functionality has been moved to:
-// - src/services/storage/localStorageService.ts
-// - src/services/user/userService.ts
-// - src/services/plan/userPlanService.ts
-// - src/services/agent/agentInstanceService.ts
-// - src/services/agent/agentStorageService.ts
+// Re-export from user modules
+export { 
+  getCurrentUserEmail, 
+  setCurrentUserEmail, 
+  getUserEmail, 
+  validateEmail 
+} from './user/userService';
 
-// Re-export everything from the new structure for backwards compatibility
-export * from './storage/localStorageService';
-export * from './user/userService';
-export * from './plan/userPlanService';
-export * from './agent/agentInstanceService';
-export * from './agent/agentStorageService';
-// We don't re-export transferUserPlanData and transferUserAgentData as they're 
-// already exported from user/userService.ts
+// Re-export from plan modules
+export { 
+  getUserPlan, 
+  initializeUserPlan, 
+  upgradeToPremium, 
+  downgradeToBasic 
+} from './plan/userPlanService';
+
+// Re-export from agent modules
+export { 
+  generateInstanceId 
+} from './agent/agentInstanceService';
+
+// Re-export from plan limitation modules
+export { 
+  canCreateAgent, 
+  incrementAgentCount, 
+  decrementAgentCount 
+} from './plan/planLimitService';
+
+// Note: transferUserPlanData and transferUserAgentData are already exported from their respective modules
+// so we don't need to re-export them here to avoid duplication

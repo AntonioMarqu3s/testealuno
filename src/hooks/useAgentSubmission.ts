@@ -1,20 +1,23 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { AgentFormValues } from "@/components/agent/form/agentSchema";
 import { 
   getUserPlan, 
-  incrementAgentCount, 
-  canCreateAgent, 
+  incrementAgentCount,
+  canCreateAgent,
   generateInstanceId,
   getCurrentUserEmail,
   saveAgent,
-  deleteUserAgent
+  deleteUserAgent,
+  updateUserAgent
 } from "@/services";
 
 export const useAgentSubmission = (agentType: string) => {
   const navigate = useNavigate();
-  const { toast } = useToast();
+  const { toast: toastHook } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmitAgent = (values: AgentFormValues) => {
@@ -25,7 +28,7 @@ export const useAgentSubmission = (agentType: string) => {
     
     // Verificar se o usuário pode criar mais agentes
     if (!canCreateAgent(userEmail)) {
-      toast({
+      toastHook({
         title: "Limite de plano atingido",
         description: "Seu plano atual permite apenas 1 agente. Faça upgrade para o plano Premium para criar mais agentes.",
         variant: "destructive"
@@ -38,6 +41,9 @@ export const useAgentSubmission = (agentType: string) => {
     // Gerar ID de instância
     const instanceId = generateInstanceId(userEmail, values.agentName);
     
+    // Create client identifier
+    const clientIdentifier = `${userEmail}-${values.agentName}`.replace(/\s+/g, '-').toLowerCase();
+    
     // Incrementar contagem de agentes do usuário
     incrementAgentCount(userEmail);
     
@@ -48,7 +54,8 @@ export const useAgentSubmission = (agentType: string) => {
       type: agentType,
       isConnected: false,
       createdAt: new Date(),
-      instanceId
+      instanceId,
+      clientIdentifier // Add client identifier
     };
 
     // Salvar agente no localStorage
@@ -56,14 +63,11 @@ export const useAgentSubmission = (agentType: string) => {
     
     // Simulação - normalmente aqui você faria uma chamada à API
     setTimeout(() => {
-      toast({
-        title: "Agente criado com sucesso",
+      toast.success("Agente criado com sucesso", {
         description: `O agente ${values.agentName} foi criado e está pronto para uso.`,
       });
       
-      // Redirecionar para a página de agentes
-      navigate('/agents');
-      
+      // We won't navigate automatically, user will close the confirmation panel
       setIsSubmitting(false);
     }, 1000);
   };
@@ -77,44 +81,24 @@ export const useAgentSubmission = (agentType: string) => {
     // Update instance ID if name changed
     const instanceId = generateInstanceId(userEmail, values.agentName);
     
-    setTimeout(() => {
-      // Get existing agents from localStorage
-      const allAgentsData = localStorage.getItem('all_agents');
-      if (allAgentsData) {
-        const allAgents: Record<string, any[]> = JSON.parse(allAgentsData);
-        const userAgents = allAgents[userEmail] || [];
-        
-        // Find and update the specific agent
-        const updatedAgents = userAgents.map((agent: any) => {
-          if (agent.id === agentId) {
-            return {
-              ...agent,
-              name: values.agentName,
-              instanceId,
-              // Update other fields as needed
-            };
-          }
-          return agent;
-        });
-        
-        // Save updated agents back to localStorage
-        allAgents[userEmail] = updatedAgents;
-        localStorage.setItem('all_agents', JSON.stringify(allAgents));
-      }
-      
-      toast({
-        title: "Agente atualizado com sucesso",
-        description: `O agente ${values.agentName} foi atualizado com sucesso.`,
-      });
-      
-      // Clear the editing session
-      sessionStorage.removeItem('editingAgent');
-      
-      // Navigate back to agents page
-      navigate('/agents');
-      
-      setIsSubmitting(false);
-    }, 1000);
+    // Create client identifier
+    const clientIdentifier = `${userEmail}-${values.agentName}`.replace(/\s+/g, '-').toLowerCase();
+    
+    // Update agent in localStorage
+    updateUserAgent(userEmail, agentId, {
+      name: values.agentName,
+      instanceId,
+      clientIdentifier // Add client identifier
+    });
+    
+    toast.success("Agente atualizado com sucesso", {
+      description: `O agente ${values.agentName} foi atualizado com sucesso.`,
+    });
+    
+    // Clear the editing session
+    sessionStorage.removeItem('editingAgent');
+    
+    setIsSubmitting(false);
   };
 
   const handleDeleteAgent = (agentId: string) => {
@@ -123,8 +107,7 @@ export const useAgentSubmission = (agentType: string) => {
     // Delete agent from localStorage
     deleteUserAgent(userEmail, agentId);
     
-    toast({
-      title: "Agente removido com sucesso",
+    toast.success("Agente removido com sucesso", {
       description: "O agente foi excluído com sucesso.",
     });
   };
