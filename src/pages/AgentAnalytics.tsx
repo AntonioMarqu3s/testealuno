@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import MainLayout from "@/components/layout/MainLayout";
 import { Badge } from "@/components/ui/badge";
@@ -6,7 +7,10 @@ import { AgentConversationChart } from "@/components/agent/analytics/AgentConver
 import { AgentSatisfactionChart } from "@/components/agent/analytics/AgentSatisfactionChart";
 import { AgentRecentConversations } from "@/components/agent/analytics/AgentRecentConversations";
 import { useParams } from "react-router-dom";
-import { getCurrentUserEmail } from "@/services/user/userService";
+import { 
+  getCurrentUserEmail 
+} from "@/services/userPlanService";
+import { getUserAgents } from "@/services/agent/agentStorageService";
 
 interface AgentAnalyticsData {
   agentId: string;
@@ -41,16 +45,21 @@ const AgentAnalytics = () => {
   const userEmail = getCurrentUserEmail();
 
   useEffect(() => {
-    // Simulate API call to fetch agent analytics data
+    // Fetch agent data including performance metrics
     const fetchAgentData = () => {
       setIsLoading(true);
+      
+      // Get the actual agent data from storage
+      const userAgents = getUserAgents(userEmail);
+      const agent = userAgents.find(a => a.id === agentId);
+      
       setTimeout(() => {
-        // Mock data for demonstration
+        // Create analytics data using the actual agent info
         const mockAgentData: AgentAnalyticsData = {
           agentId: agentId || "1",
-          agentName: "Agente de Vendas",
-          type: "sales",
-          status: "online",
+          agentName: agent ? agent.name : "Agente",
+          type: agent ? agent.type : "sales",
+          status: "offline",
           conversations: 124,
           conversionRate: 23.5,
           satisfactionScore: 4.7,
@@ -85,7 +94,7 @@ const AgentAnalytics = () => {
     };
 
     fetchAgentData();
-  }, [agentId]);
+  }, [agentId, userEmail]);
 
   if (isLoading) {
     return (

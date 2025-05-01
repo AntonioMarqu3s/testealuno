@@ -19,6 +19,7 @@ import {
 } from "./form/agentSchema";
 import { Agent } from "./AgentPanel";
 import { getCurrentUserEmail, generateInstanceId } from "@/services";
+import { useNavigate } from "react-router-dom";
 
 interface CreateAgentFormProps {
   agentType: string;
@@ -38,6 +39,7 @@ const CreateAgentForm = ({
   const totalSteps = 3;
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [createdAgent, setCreatedAgent] = useState<Agent | null>(null);
+  const navigate = useNavigate();
   
   // Use initialValues if provided (for editing)
   const formDefaultValues = initialValues ? { ...defaultValues, ...initialValues } : defaultValues;
@@ -60,7 +62,7 @@ const CreateAgentForm = ({
 
   const onSubmit = (values: AgentFormValues) => {
     const userEmail = getCurrentUserEmail();
-    const instanceId = generateInstanceId(userEmail, values.agentName);
+    const instanceId = `${userEmail}-${values.agentName}`.replace(/\s+/g, '-').toLowerCase();
     
     // Create agent object for confirmation panel
     const agent: Agent = {
@@ -97,6 +99,7 @@ const CreateAgentForm = ({
 
   const handleCloseConfirmation = () => {
     setShowConfirmation(false);
+    navigate('/agents');
   };
 
   const handleGenerateQR = () => {
@@ -106,7 +109,10 @@ const CreateAgentForm = ({
 
   const handleAnalyze = () => {
     // Navigate to analytics page
-    window.location.href = `/agent-analytics/${createdAgent?.id}`;
+    if (createdAgent?.id) {
+      handleCloseConfirmation();
+      navigate(`/agent-analytics/${createdAgent.id}`);
+    }
   };
 
   const renderStepContent = () => {

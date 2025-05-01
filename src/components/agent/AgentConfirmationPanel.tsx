@@ -64,17 +64,19 @@ const AgentConfirmationPanel: React.FC<AgentConfirmationPanelProps> = ({
           </div>
         </div>
       </CardHeader>
-      <CardContent className="pb-4">
-        <Badge variant="outline" className="flex items-center gap-1 mb-2">
-          <WifiOff className="h-3 w-3" /> 
-          <span>Desconectado</span>
-        </Badge>
-        <p className="text-sm mb-1">Tipo: <span className="font-medium">{typeName}</span></p>
+      <CardContent className="space-y-2 pb-2">
+        <div className="flex items-center gap-2">
+          <Badge variant="outline" className="flex items-center gap-1">
+            <WifiOff className="h-3 w-3" /> 
+            <span>Desconectado</span>
+          </Badge>
+        </div>
+        <p className="text-sm">Tipo: <span className="font-medium">{typeName}</span></p>
         <p className="text-xs text-muted-foreground">
           ID da Instância: <span className="font-mono">{agent.instanceId}</span>
         </p>
       </CardContent>
-      <CardFooter className="flex justify-between gap-2">
+      <CardFooter className="flex justify-between gap-2 pt-4">
         <Button 
           variant="outline" 
           className="flex-1" 
@@ -83,7 +85,7 @@ const AgentConfirmationPanel: React.FC<AgentConfirmationPanelProps> = ({
           <QrCode className="mr-2 h-4 w-4" /> Gerar QR Code
         </Button>
         <Button 
-          className="flex-1"
+          className="flex-1 bg-purple-600 hover:bg-purple-700"
           onClick={onAnalyze}
         >
           <BarChart className="mr-2 h-4 w-4" /> Análise

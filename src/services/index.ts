@@ -1,6 +1,12 @@
 
-export * from './user';
+// Re-export everything from userPlanService for easier imports
+export * from './userPlanService';
+
+// Export specific agent services
 export * from './agent';
-export * from './plan';
+
+// Export storage services
+export * from './storage/localStorageService';
+
+// Export analytics services
 export * from './analytics/agentPerformanceService';
-export * from './checkout';

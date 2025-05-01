@@ -26,7 +26,7 @@ export interface Agent {
   isConnected: boolean;
   createdAt: Date;
   instanceId?: string;
-  clientIdentifier?: string;  // Add client identifier
+  clientIdentifier?: string;
 }
 
 interface AgentPanelProps {
@@ -75,6 +75,13 @@ export const AgentPanel: React.FC<AgentPanelProps> = ({ agent, onDelete }) => {
 
   // Get friendly agent type name or use the raw type if not found in map
   const agentTypeName = agentTypeMap[agent.type] || agent.type;
+  
+  // Format date to look like the image (DD/MM/YYYY)
+  const formattedDate = new Date(agent.createdAt).toLocaleDateString('pt-BR', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric'
+  });
 
   return (
     <Card className="flex flex-col h-full overflow-hidden">
@@ -125,15 +132,17 @@ export const AgentPanel: React.FC<AgentPanelProps> = ({ agent, onDelete }) => {
           </Badge>
         </div>
         <p className="text-xs text-muted-foreground">
-          Criado em: {new Date(agent.createdAt).toLocaleDateString()}
+          Criado em: {formattedDate}
         </p>
       </CardHeader>
       <CardContent className="pb-2 flex-grow">
         <p className="text-sm mb-2">Tipo: <span className="font-medium">{agentTypeName}</span></p>
-        <div className="flex items-center text-xs text-muted-foreground mb-2">
-          <Mail className="h-3 w-3 mr-1" />
-          <span>{userEmail}</span>
-        </div>
+        {userEmail && (
+          <div className="flex items-center text-xs text-muted-foreground mb-2">
+            <Mail className="h-3 w-3 mr-1" />
+            <span>{userEmail}</span>
+          </div>
+        )}
         {agent.instanceId && (
           <p className="text-xs text-muted-foreground mb-2">
             ID da Instância: <span className="font-mono">{agent.instanceId}</span>
@@ -155,7 +164,7 @@ export const AgentPanel: React.FC<AgentPanelProps> = ({ agent, onDelete }) => {
           <QrCode className="mr-2 h-4 w-4" /> 
           {isGeneratingQR ? "Gerando..." : "Gerar QR Code"}
         </Button>
-        <Button asChild className="flex-1">
+        <Button asChild className="flex-1 bg-purple-600 hover:bg-purple-700">
           <Link to={`/agent-analytics/${agent.id}`}>
             <BarChart className="mr-2 h-4 w-4" /> Análise
           </Link>
