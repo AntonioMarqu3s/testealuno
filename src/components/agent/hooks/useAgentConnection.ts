@@ -13,20 +13,34 @@ export const useAgentConnection = () => {
    * Disconnect an agent instance
    */
   const handleDisconnect = async (instanceId?: string) => {
+    if (!instanceId) return false;
+    
     setIsDisconnecting(true);
-    const success = await disconnectInstance(instanceId);
-    setIsDisconnecting(false);
-    return success;
+    try {
+      const success = await disconnectInstance(instanceId);
+      return success;
+    } finally {
+      setIsDisconnecting(false);
+    }
   };
   
   /**
    * Check connection status of an agent instance
    */
-  const checkConnectionStatus = async (instanceId?: string) => {
+  const checkConnectionStatus = async (instanceId?: string): Promise<boolean> => {
+    if (!instanceId) return false;
+    
     setIsCheckingStatus(true);
-    const isConnected = await checkInstanceStatus(instanceId);
-    setIsCheckingStatus(false);
-    return isConnected;
+    try {
+      const result = await checkInstanceStatus(instanceId);
+      // Return the connected status from the response object
+      return result.connected;
+    } catch (error) {
+      console.error("Error checking connection status:", error);
+      return false;
+    } finally {
+      setIsCheckingStatus(false);
+    }
   };
 
   return {
