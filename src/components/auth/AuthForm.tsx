@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -57,11 +58,11 @@ export function AuthForm() {
 
         console.log('Registration successful:', data);
         
-        // Update local storage email for the transition period
+        // For demo mode, we allow proceeding even without real authentication
         updateCurrentUserEmail(email);
         
         toast.success("Conta criada com sucesso!", { 
-          description: "Verifique seu email para confirmar sua conta."
+          description: "O sistema está operando em modo de demonstração. Você agora pode navegar pelo aplicativo."
         });
         
         navigate("/dashboard");
@@ -87,20 +88,40 @@ export function AuthForm() {
         
         console.log('Login successful:', data);
         
-        // Update local storage email for the transition period
+        // For demo mode, we allow proceeding even without real authentication
         updateCurrentUserEmail(email);
 
-        toast.success("Login realizado com sucesso!");
+        toast.success("Login realizado com sucesso em modo de demonstração!");
         navigate("/dashboard");
       }
     } catch (error: any) {
+      // If we already showed the connection error dialog, don't show another toast
       if (!showConnectionError) {
-        toast.error(error.message || "Ocorreu um erro durante a autenticação.");
+        if (error.message?.includes('Invalid login credentials')) {
+          toast.error("Email ou senha incorretos");
+        } else if (error.message?.includes('User already registered')) {
+          toast.error("Este email já está registrado");
+          // Auto switch to login tab for convenience
+          const loginTab = document.querySelector('[data-state="inactive"][value="login"]') as HTMLElement;
+          if (loginTab) loginTab.click();
+        } else {
+          toast.error(error.message || "Ocorreu um erro durante a autenticação.");
+        }
       }
       console.error("Auth error details:", error);
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleDemoLogin = () => {
+    // For demonstration purposes only
+    const demoEmail = "demo@example.com";
+    updateCurrentUserEmail(demoEmail);
+    toast.success("Login de demonstração realizado!", {
+      description: "Você está usando o aplicativo em modo de demonstração."
+    });
+    navigate("/dashboard");
   };
 
   const handleResetPassword = async () => {
@@ -195,13 +216,21 @@ export function AuthForm() {
                   />
                 </div>
               </CardContent>
-              <CardFooter>
+              <CardFooter className="flex flex-col gap-2">
                 <Button 
                   type="submit" 
                   className="w-full"
                   disabled={isLoading}
                 >
                   {isLoading ? "Entrando..." : "Entrar"}
+                </Button>
+                <Button 
+                  type="button" 
+                  variant="outline"
+                  className="w-full mt-2"
+                  onClick={handleDemoLogin}
+                >
+                  Modo de Demonstração
                 </Button>
               </CardFooter>
             </form>
@@ -241,13 +270,21 @@ export function AuthForm() {
                   />
                 </div>
               </CardContent>
-              <CardFooter>
+              <CardFooter className="flex flex-col gap-2">
                 <Button 
                   type="submit" 
                   className="w-full"
                   disabled={isLoading}
                 >
                   {isLoading ? "Criando conta..." : "Criar conta"}
+                </Button>
+                <Button 
+                  type="button" 
+                  variant="outline"
+                  className="w-full mt-2"
+                  onClick={handleDemoLogin}
+                >
+                  Modo de Demonstração
                 </Button>
               </CardFooter>
             </form>
@@ -259,35 +296,32 @@ export function AuthForm() {
       <AlertDialog open={showConnectionError} onOpenChange={closeConnectionErrorDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Erro de Conexão</AlertDialogTitle>
+            <AlertDialogTitle>Modo de Demonstração</AlertDialogTitle>
             <AlertDialogDescription>
-              <p className="mb-2">
-                Não foi possível se conectar ao servidor de autenticação. Estamos usando credenciais de demonstração que permitem que o aplicativo inicialize, mas não funcionam para autenticação real.
-              </p>
-              
-              <div className="mt-3 p-3 bg-amber-50 dark:bg-amber-950 rounded-md border border-amber-200 dark:border-amber-800">
-                <p className="text-amber-800 dark:text-amber-300 text-sm font-medium">
-                  Para resolver este problema:
+              <div className="space-y-4">
+                <p>
+                  O aplicativo está operando em modo de demonstração com credenciais que permitem visualizar a interface, mas não fornecem autenticação real.
                 </p>
-                <ol className="list-decimal pl-5 mt-2 space-y-1 text-amber-700 dark:text-amber-300 text-sm">
-                  <li>Crie uma conta no Supabase (supabase.com)</li>
-                  <li>Crie um novo projeto</li>
-                  <li>Vá para as configurações do projeto na seção API</li>
-                  <li>Copie a URL do projeto e a chave anônima</li>
-                  <li>Substitua os valores no arquivo .env que criamos para você</li>
-                  <li>Reinicie a aplicação</li>
-                </ol>
+                
+                <div className="bg-amber-50 dark:bg-amber-950 p-4 rounded-md border border-amber-200 dark:border-amber-800">
+                  <p className="font-medium text-amber-800 dark:text-amber-300 mb-2">
+                    Para usar a autenticação completa:
+                  </p>
+                  <ol className="list-decimal pl-5 space-y-1 text-amber-700 dark:text-amber-300 text-sm">
+                    <li>Use o botão "Modo de Demonstração" para explorar o aplicativo sem autenticação real</li>
+                  </ol>
+                </div>
+                
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  {connectionErrorDetails ? `Detalhes técnicos: ${connectionErrorDetails}` : ''}
+                </p>
               </div>
-              
-              <p className="mt-3 text-sm text-gray-600 dark:text-gray-400">
-                {connectionErrorDetails ? `Detalhes técnicos: ${connectionErrorDetails}` : ''}
-              </p>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel onClick={closeConnectionErrorDialog}>Fechar</AlertDialogCancel>
-            <AlertDialogAction onClick={() => window.location.reload()}>
-              Recarregar página
+            <AlertDialogCancel onClick={closeConnectionErrorDialog}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDemoLogin}>
+              Usar Modo de Demonstração
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
