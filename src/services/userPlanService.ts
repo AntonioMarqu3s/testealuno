@@ -10,9 +10,9 @@ export {
   initializeUserPlan
 } from './plan/userPlanService';
 
-// Re-export from agent modules
+// Re-export from agent modules with renamed function to avoid conflicts
 export { 
-  generateInstanceId 
+  generateInstanceId as generateAgentInstanceId
 } from './agent/agentInstanceService';
 
 // Re-export from plan limitation modules

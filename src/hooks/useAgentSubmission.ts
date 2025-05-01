@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
@@ -8,7 +7,7 @@ import {
   getUserPlan, 
   incrementAgentCount,
   canCreateAgent,
-  generateInstanceId,
+  generateAgentInstanceId,
   getCurrentUserEmail,
   saveAgent,
   deleteUserAgent,
@@ -39,7 +38,7 @@ export const useAgentSubmission = (agentType: string) => {
     }
     
     // Gerar ID de instância
-    const instanceId = generateInstanceId(userEmail, values.agentName);
+    const instanceId = generateAgentInstanceId(userEmail, values.agentName);
     
     // Create client identifier
     const clientIdentifier = `${userEmail}-${values.agentName}`.replace(/\s+/g, '-').toLowerCase();
@@ -79,7 +78,7 @@ export const useAgentSubmission = (agentType: string) => {
     const userEmail = getCurrentUserEmail();
     
     // Update instance ID if name changed
-    const instanceId = generateInstanceId(userEmail, values.agentName);
+    const instanceId = generateAgentInstanceId(userEmail, values.agentName);
     
     // Create client identifier
     const clientIdentifier = `${userEmail}-${values.agentName}`.replace(/\s+/g, '-').toLowerCase();

@@ -21,3 +21,10 @@ export * from './user';
 // from different modules, export some functions with explicit names
 export { transferUserAgentData as transferAgentData } from './agent/agentStorageService';
 export { transferUserAgentData as transferUserAgents } from './user/userService';
+
+// Fix the conflict between the two generateInstanceId functions
+export { generateInstanceId as generateAgentInstanceId } from './agent/agentInstanceService';
+export { generateInstanceId as generateUserInstanceId } from './user/userService';
+
+// We'll use the agent implementation as our default generateInstanceId
+export { generateInstanceId } from './agent/agentInstanceService';

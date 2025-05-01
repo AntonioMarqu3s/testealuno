@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -18,8 +17,7 @@ import {
   type AgentFormValues 
 } from "./form/agentSchema";
 import { Agent } from "./AgentPanel";
-import { getCurrentUserEmail } from "@/services";
-import { generateInstanceId } from "@/services/user/userService";
+import { getCurrentUserEmail, generateAgentInstanceId } from "@/services";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { getUserAgents } from "@/services/agent/agentStorageService";
@@ -85,7 +83,7 @@ const CreateAgentForm = ({
 
   const onSubmit = (values: AgentFormValues) => {
     const userEmail = getCurrentUserEmail();
-    const instanceId = generateInstanceId(userEmail, values.agentName);
+    const instanceId = generateAgentInstanceId(userEmail, values.agentName);
     
     // Create agent object for confirmation panel
     const agent: Agent = {
