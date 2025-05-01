@@ -1,50 +1,49 @@
 
 import { useState, useRef, useCallback } from 'react';
 
-export const useQRCodeTimer = (updateQRCode: (instanceName: string) => Promise<boolean>) => {
-  const [timerCount, setTimerCount] = useState(30);
+type UpdateQRCodeFunction = (instanceId: string) => Promise<boolean>;
+
+export const useQRCodeTimer = (updateQRCodeFn: UpdateQRCodeFunction) => {
+  const [timerCount, setTimerCount] = useState(30); // Start at 30 seconds
   const timerIntervalRef = useRef<number | null>(null);
-  
+
   const clearQRCodeTimer = useCallback(() => {
     if (timerIntervalRef.current !== null) {
       window.clearInterval(timerIntervalRef.current);
       timerIntervalRef.current = null;
+      setTimerCount(30); // Reset to 30 seconds
     }
-    setTimerCount(30); // Reset timer
   }, []);
-  
-  const startQRCodeUpdateTimer = useCallback((instanceName: string) => {
-    // Reset timer to full value
-    setTimerCount(30);
-    
-    // Clear any existing interval
+
+  const startQRCodeUpdateTimer = useCallback((instanceId: string) => {
+    // Clear any existing timers
     clearQRCodeTimer();
     
-    console.log("Starting QR code update timer for instance:", instanceName);
+    setTimerCount(30); // Start from 30 seconds
     
-    // Set new interval - counts down from 30 to 0
-    const intervalId = window.setInterval(() => {
-      setTimerCount((prevCount) => {
-        const newCount = prevCount - 1;
-        // When timer hits zero, update QR code and reset timer
-        if (newCount <= 0) {
-          console.log("Timer expired, updating QR code automatically");
-          updateQRCode(instanceName).then(success => {
-            if (success) {
-              console.log("QR code updated successfully after timer expiry");
-            } else {
-              console.error("Failed to update QR code after timer expiry");
+    // Start new timer
+    timerIntervalRef.current = window.setInterval(() => {
+      setTimerCount(prevCount => {
+        // When timer reaches zero, reset and trigger QR code update
+        if (prevCount <= 1) {
+          console.log("QR Code timer expired, updating QR code...");
+          
+          // Schedule update with slight delay to avoid race conditions
+          setTimeout(async () => {
+            const success = await updateQRCodeFn(instanceId);
+            if (!success) {
+              console.error("Failed to update QR code on timer expiration");
             }
-          });
-          return 30; // Reset to 30 seconds
+            setTimerCount(30); // Reset to 30 seconds after update attempt
+          }, 100);
+          
+          return 0; // Show 0 while updating
         }
-        return newCount;
+        return prevCount - 1;
       });
     }, 1000);
     
-    // Store interval ID for cleanup
-    timerIntervalRef.current = intervalId;
-  }, [clearQRCodeTimer]);
+  }, [clearQRCodeTimer, updateQRCodeFn]);
 
   return {
     timerCount,

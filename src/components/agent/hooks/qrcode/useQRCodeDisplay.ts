@@ -1,7 +1,8 @@
 
 import { useState, useCallback } from 'react';
 import { toast } from 'sonner';
-import { fetchQRCode, createAgentInstance } from '../api/agentConnectionApi';
+import { createAgentInstance } from '../api/agentConnectionApi';
+import { fetchQRCode } from '../api/qrCodeApi';
 
 export const useQRCodeDisplay = () => {
   const [qrCodeImage, setQrCodeImage] = useState<string | null>(null);
@@ -10,7 +11,7 @@ export const useQRCodeDisplay = () => {
   const updateQRCode = useCallback(async (instanceName: string, clientIdentifier?: string) => {
     try {
       setIsGeneratingQRCode(true);
-      console.log("Updating QR code for instance:", instanceName);
+      console.log("Updating QR code for instance:", instanceName, "Client identifier:", clientIdentifier);
       
       // Primeiro, criamos a instância
       const instanceCreated = await createAgentInstance(instanceName, clientIdentifier);
@@ -24,7 +25,7 @@ export const useQRCodeDisplay = () => {
       console.log("Instance created successfully, fetching QR code");
       
       // Aguarde um momento para garantir que o backend tenha tempo de processar
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise(resolve => setTimeout(resolve, 1500));
       
       // Agora obtenha o QR code
       const imgSrc = await fetchQRCode(instanceName);
