@@ -25,13 +25,15 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { getCurrentUserEmail } from "@/services";
-import { toast } from "sonner";
+import { signOut } from "@/services/auth/supabaseAuth";
+import { useAuth } from "@/context/AuthContext";
 
 export function AppSidebar() {
   const location = useLocation();
   const navigate = useNavigate();
   const currentPath = location.pathname;
-  const userEmail = getCurrentUserEmail() || "usuario@exemplo.com";
+  const { user } = useAuth();
+  const userEmail = user?.email || getCurrentUserEmail() || "usuario@exemplo.com";
 
   const menuItems = [
     {
@@ -61,10 +63,8 @@ export function AppSidebar() {
     },
   ];
   
-  const handleLogout = () => {
-    // In a real app, we would clear the auth token here
-    localStorage.removeItem('user_email');
-    toast.success("Logout realizado com sucesso");
+  const handleLogout = async () => {
+    await signOut();
     navigate("/auth");
   };
 

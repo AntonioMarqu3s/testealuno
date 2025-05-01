@@ -17,8 +17,9 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { getCurrentUserEmail } from "@/services";
+import { signOut } from "@/services/auth/supabaseAuth";
+import { useAuth } from "@/context/AuthContext";
 import { useNavigate } from "react-router-dom";
-import { toast } from "sonner";
 
 interface HeaderProps {
   title?: string;
@@ -26,12 +27,11 @@ interface HeaderProps {
 
 const Header = ({ title = "Dashboard" }: HeaderProps) => {
   const navigate = useNavigate();
-  const userEmail = getCurrentUserEmail() || "usuario@exemplo.com";
+  const { user } = useAuth();
+  const userEmail = user?.email || getCurrentUserEmail() || "usuario@exemplo.com";
   
-  const handleLogout = () => {
-    // In a real app, we would clear the auth token here
-    localStorage.removeItem('user_email');
-    toast.success("Logout realizado com sucesso");
+  const handleLogout = async () => {
+    await signOut();
     navigate("/auth");
   };
   

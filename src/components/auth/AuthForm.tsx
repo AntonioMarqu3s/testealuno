@@ -7,29 +7,91 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
+import { supabase } from "@/lib/supabase";
+import { updateCurrentUserEmail } from "@/services/user/userService";
 
 export function AuthForm() {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
+  const [confirmPassword, setConfirmPassword] = useState<string>("");
 
-  // Esta função simula o processo de login
-  // Posteriormente precisará ser integrada com Supabase
   const handleSubmit = async (e: React.FormEvent, mode: 'login' | 'register') => {
     e.preventDefault();
     setIsLoading(true);
 
     try {
-      // Simulação de autenticação
-      setTimeout(() => {
-        // Na versão final, aqui será integrado o Supabase
-        toast.success(mode === 'login' ? "Login realizado com sucesso!" : "Conta criada com sucesso!");
+      if (mode === 'register') {
+        if (password !== confirmPassword) {
+          toast.error("As senhas não coincidem!");
+          setIsLoading(false);
+          return;
+        }
+        
+        const { data, error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            emailRedirectTo: `${window.location.origin}/auth-callback`,
+            data: {
+              email // Store email in user metadata
+            }
+          }
+        });
+        
+        if (error) throw error;
+
+        // Update local storage email for the transition period
+        updateCurrentUserEmail(email);
+        
+        toast.success("Conta criada com sucesso!", { 
+          description: "Verifique seu email para confirmar sua conta."
+        });
+        
         navigate("/dashboard");
-      }, 1500);
-    } catch (error) {
-      toast.error("Ocorreu um erro durante a autenticação.");
+      } else {
+        // Login
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email,
+          password
+        });
+        
+        if (error) throw error;
+        
+        // Update local storage email for the transition period
+        updateCurrentUserEmail(email);
+
+        toast.success("Login realizado com sucesso!");
+        navigate("/dashboard");
+      }
+    } catch (error: any) {
+      toast.error(error.message || "Ocorreu um erro durante a autenticação.");
       console.error(error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleResetPassword = async () => {
+    if (!email) {
+      toast.error("Por favor, insira seu email primeiro.");
+      return;
+    }
+    
+    setIsLoading(true);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+      
+      if (error) throw error;
+      
+      toast.success("Email de redefinição de senha enviado!", {
+        description: "Verifique sua caixa de entrada."
+      });
+    } catch (error: any) {
+      toast.error(error.message || "Não foi possível enviar o email de redefinição de senha.");
     } finally {
       setIsLoading(false);
     }
@@ -67,7 +129,12 @@ export function AuthForm() {
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <Label htmlFor="password">Senha</Label>
-                  <Button variant="link" className="px-0 h-auto text-xs">
+                  <Button 
+                    type="button"
+                    variant="link" 
+                    className="px-0 h-auto text-xs"
+                    onClick={handleResetPassword}
+                  >
                     Esqueceu a senha?
                   </Button>
                 </div>
@@ -120,6 +187,8 @@ export function AuthForm() {
                 <Input 
                   id="confirm-password" 
                   type="password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
                   required 
                 />
               </div>
