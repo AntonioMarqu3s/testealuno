@@ -7,12 +7,16 @@ export const useQRCodeTimer = (updateQRCodeFn: UpdateQRCodeFunction) => {
   const [timerCount, setTimerCount] = useState(30); // Start at 30 seconds
   const timerIntervalRef = useRef<number | null>(null);
   const updateInProgressRef = useRef<boolean>(false);
+  const updateTimeoutRef = useRef<number | null>(null);
 
   // Clean up on unmount
   useEffect(() => {
     return () => {
       if (timerIntervalRef.current !== null) {
         window.clearInterval(timerIntervalRef.current);
+      }
+      if (updateTimeoutRef.current !== null) {
+        window.clearTimeout(updateTimeoutRef.current);
       }
     };
   }, []);
@@ -21,8 +25,14 @@ export const useQRCodeTimer = (updateQRCodeFn: UpdateQRCodeFunction) => {
     if (timerIntervalRef.current !== null) {
       window.clearInterval(timerIntervalRef.current);
       timerIntervalRef.current = null;
-      setTimerCount(30); // Reset to 30 seconds
     }
+    
+    if (updateTimeoutRef.current !== null) {
+      window.clearTimeout(updateTimeoutRef.current);
+      updateTimeoutRef.current = null;
+    }
+    
+    setTimerCount(30); // Reset to 30 seconds
     updateInProgressRef.current = false;
   }, []);
 
@@ -43,8 +53,8 @@ export const useQRCodeTimer = (updateQRCodeFn: UpdateQRCodeFunction) => {
           if (!updateInProgressRef.current) {
             updateInProgressRef.current = true;
             
-            // Schedule update with slight delay to avoid race conditions
-            setTimeout(async () => {
+            // Schedule update with delay to avoid race conditions
+            updateTimeoutRef.current = window.setTimeout(async () => {
               try {
                 console.log("Attempting to refresh QR code after timer expiration");
                 const success = await updateQRCodeFn(instanceId);
@@ -58,8 +68,9 @@ export const useQRCodeTimer = (updateQRCodeFn: UpdateQRCodeFunction) => {
               } finally {
                 updateInProgressRef.current = false;
                 setTimerCount(30); // Reset to 30 seconds after update attempt
+                updateTimeoutRef.current = null;
               }
-            }, 200);
+            }, 500);
           }
           
           return 0; // Show 0 while updating

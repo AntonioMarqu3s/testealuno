@@ -32,6 +32,10 @@ export const fetchQRCode = async (instanceName: string): Promise<string | null> 
         console.log("Received text response, length:", textData.length);
         if (textData.length > 100) { // Likely base64 data
           console.log("Text response sample:", textData.substring(0, 50));
+          // Check if already has data:image prefix
+          if (textData.startsWith('data:image')) {
+            return textData;
+          }
           return `data:image/png;base64,${textData}`;
         } else {
           console.error("Text response too short to be valid QR code:", textData);
@@ -49,6 +53,10 @@ export const fetchQRCode = async (instanceName: string): Promise<string | null> 
         if (base64Data) {
           console.log("Found base64 data in response, length:", base64Data.length);
           console.log("Base64 sample:", base64Data.substring(0, 50));
+          // Check if already has data:image prefix
+          if (base64Data.startsWith('data:image')) {
+            return base64Data;
+          }
           return `data:image/png;base64,${base64Data}`;
         } else {
           console.error("JSON response didn't contain QR code data:", data);
@@ -77,8 +85,7 @@ export const fetchQRCode = async (instanceName: string): Promise<string | null> 
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({ instanceName }),
-          // Add abort controller with a timeout
-          signal: AbortSignal.timeout(10000), // 10 second timeout
+          signal: AbortSignal.timeout(15000), // 15 second timeout
         });
         
         if (!fallbackResponse.ok) {
@@ -97,6 +104,10 @@ export const fetchQRCode = async (instanceName: string): Promise<string | null> 
           console.log("Received text response from fallback, length:", textData.length);
           if (textData.length > 100) { // Likely base64 data
             console.log("Text fallback sample:", textData.substring(0, 50));
+            // Check if already has data:image prefix
+            if (textData.startsWith('data:image')) {
+              return textData;
+            }
             return `data:image/png;base64,${textData}`;
           } else {
             console.error("Fallback text response too short:", textData);
@@ -113,6 +124,10 @@ export const fetchQRCode = async (instanceName: string): Promise<string | null> 
           if (base64Data) {
             console.log("Found base64 data in fallback response, length:", base64Data.length);
             console.log("Base64 fallback sample:", base64Data.substring(0, 50));
+            // Check if already has data:image prefix
+            if (base64Data.startsWith('data:image')) {
+              return base64Data;
+            }
             return `data:image/png;base64,${base64Data}`;
           } else {
             console.error("JSON fallback didn't contain QR code:", data);
@@ -135,7 +150,7 @@ export const fetchQRCode = async (instanceName: string): Promise<string | null> 
   
   // For development purposes or as last resort, return a placeholder QR code
   console.log("Using placeholder QR code due to errors");
-  return "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIQAAACECAYAAABRRIOnAAAAAklEQVR4AewaftIAAAOdSURBVO3BQY4cOxIEwfAC//9l7x3jrYBBJNWjmRH2B2utP1hj3WCNdYM11g3WWDdYY91gjXWDNdYN1lg3WGPdYI11gzXWDdZYN1hj3WCN9YeXJPxJlW8kcJKqk4QnVZ0kfEPVScI3VJ0k/EmVb6yxbrDGusEa6wZf+LJKJ5W+odJJwkmlaYQTlU4qnVQ6SZhGOEnopNI3VPqmSt9U6ZvWWDdYY91gjXWDH/lhEk4qnSR0Ek5UTiqdJJyonFQ6SThROVF5UqWThBOVJwl/0hrrBmusG6yxbvAjf5mEE5WThBOVTsJJwknlROUk4UTlGwl/szXWDdYYN1hj3eArf7mEk4SThE6lk4SThBOVE5WThBOVTsKT1lg3WGPdYI11g6/8J1U6SThJOEk4SThJOKmYVDpRmRKeWmPdYI11gzXWDb7yn1TpJOEk4YlKJwknKicJJwmdSicJJwmdypPK32yNdYM11g3WWDf4wpclTCp9Q6WThCdVOkk4STipeKLSSUIn4YlK31TpJOEba6wbrLFusMa6wR9eSphUOkl4knCi8kSlk4QnlU4STlSeJDxR6SRhUukk4U9aY91gjXWDNdYNfuRFCZ1KJwmdSicJJwmdSicJnconCSrfUOmTEk5UOkn4xhrrBmusG6yxbvCHP0ylk4QnCSrfSOhU6iR0Ck9UThI6lScJJwknKk9aY91gjXWDNdYNfuRFCX9SpZOEJyqdJJwkPFHpJGFS6VsqnSScJExV+qY11g3WWDdYY93gCy+q9KRKJwknCScqnSR8otJJwonKpNJJwqTSScKTKn1DpZOEb6yxbrDGusEa6wY/8sNUnqh0knCi8g0JJwknCZNKJwknCU+qdJLwJOFJlX7SGusGa6wbrLFu8JW/XEKn8qRKJwlPEk5UnlQ6SThReaLSScKTKp2odJLwpDXWDdZYN1hj3eBHflilk4QTlU4SJpWeSJhUmhL+JpVOVDpJeNIa6wZrrBussbXlxUoqnSR8U8KJyknCNyV0Kp0kdAmdypOEE5Vvmk80rLFusMa6wRrrBl95UcKk0knCicqJyqTSk4QnKp0kTCqdJJyonKicJEwqnSR8otJJwjfWWDdYY91gjXWDH/mQSicJJwmdyknCpNJJwqRyktCpTCqdJEwqnSR0Kp2EE5VJ5ZPWWDdYY91gjXWDH/mXSXii0knCScKTKp0kTAmdSicJk0onCSdVOkl4knCi8qQ11g3WWDdYY93gD9Za/rDGusEa6wZrrBussbXlL22nNrxM003hAAAAAElFTkSuQmCC";
+  return "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIQAAACECAYAAABRRIOnAAAAAklEQVR4AewaftIAAAOdSURBVO3BQY4cOxIEwfAC//9l7x3jrYBBJNWjmRH2B2utP1hj3WCNdYM11g3WWDdYY91gjXWDNdYN1lg3WGPdYI11gzXWDdZYN1hj3WCN9YeXJPxJlW8kcJKqk4QnVZ0kfEPVScI3VJ0k/EmVb6yxbrDGusEa6wZf+LJKJ5W+odJJwkmlaYQTlU4qnVQ6SZhGOEnopNI3VPqmSt9U6ZvWWDdYY91gjXWDH/lhEk4qnSR0Ek5UTiqdJJyonFQ6SThROVF5UqWThBOVJwl/0hrrBmusG6yxbvAjf5mEE5WThBOVTsJJwknlROUk4UTlGwl/szXWDdZYN1hj3eArf7mEk4SThE6lk4SThBOVE5WThBOVTsKT1lg3WGPdYI11g6/8J1U6SThJOEk4SThJOKmYVDpRmRKeWmPdYI11gzXWDb7yn1TpJOEk4YlKJwknKicJJwmdSicJJwmdypPK32yNdYM11g3WWDf4wpclTCp9Q6WThCdVOkk4STipeKLSSUIn4YlK31TpJOEba6wbrLFusMa6wR9eSphUOkl4knCi8kSlk4QnlU4STlSeJDxR6SRhUukk4U9aY91gjXWDNdYNfuRFCZ1KJwmdSicJJwmdSicJnconCSrfUOmTEk5UOkn4xhrrBmusG6yxbvCHP0ylk4QnCSrfSOhU6iR0Ck9UThI6lScJJwknKk9aY91gjXWDNdYNfuRFCX9SpZOEJyqdJJwkPFHpJGFS6VsqnSScJExV+qY11g3WWDdYY93gCy+q9KRKJwknCScqnSR8otJJwonKpNJJwqTSScKTKn1DpZOEb6yxbrDGusEa6wY/8sNUnqh0knCi8g0JJwknCZNKJwknCU+qdJLwJOFJlX7SGusGa6wbrLFu8JW/XEKn8qRKJwlPEk5UnlQ6SThReaLSScKTKp2odJLwpDXWDdZYN1hj3eBHflilk4QTlU4SJpWeSJhUmhL+JpVOVDpJeNIa6wZrrBussbXlxUoqnSR8U8KJyknCNyV0Kp0kdAmdypOEE5Vvmk80rLFusMa6wRrrBl95UcKk0knCicqJyqTSk4QnKp0kTCqdJJyonKicJEwqnSR8otJJwjfWWDdYY91gjXWDH/mQSicJJwmdyknCpNJJwqRyktCpTCqdJEwqnSR0Kp2EE5VJ5ZPWWDdYY91gjXWDH/mXSXii0knCScKTKp0kTAmdSicJk0onCSdVOkl4knCi8qQ11g3WWDdYY93gD9Za/rDGusEa6wZrrBussbXlL22nNrxM003hAAAAAElFTkSuQmCC";
 };
 
 // Check connection status
@@ -151,7 +166,6 @@ export const checkConnectionStatus = async (instanceName: string): Promise<boole
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ instanceName }),
-        // Add abort controller with a timeout
         signal: AbortSignal.timeout(8000), // 8 second timeout
       });
       
@@ -173,7 +187,6 @@ export const checkConnectionStatus = async (instanceName: string): Promise<boole
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({ instanceName }),
-          // Add abort controller with a timeout
           signal: AbortSignal.timeout(8000), // 8 second timeout
         });
         
