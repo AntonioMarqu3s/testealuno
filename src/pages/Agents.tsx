@@ -6,12 +6,17 @@ import { Agent } from "@/components/agent/AgentPanel";
 import { 
   getUserPlan, 
   getCurrentUserEmail, 
-  getUserAgents
+  getUserAgents,
+  PlanType,
+  hasTrialExpired,
+  getTrialDaysRemaining
 } from "@/services";
 import { AgentsHeader } from "@/components/agent/AgentsHeader";
 import { AgentsList } from "@/components/agent/AgentsList";
 import { EmptyAgentState } from "@/components/agent/EmptyAgentState";
 import { UpgradeModal } from "@/components/agent/UpgradeModal";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
 
 const Agents = () => {
   const navigate = useNavigate();
@@ -23,6 +28,8 @@ const Agents = () => {
   // Get actual user email
   const userEmail = getCurrentUserEmail();
   const [userPlan, setUserPlan] = useState(() => getUserPlan(userEmail));
+  const isTrialExpired = hasTrialExpired(userEmail);
+  const trialDaysLeft = getTrialDaysRemaining(userEmail);
 
   useEffect(() => {
     console.log("Loading agents for email:", userEmail);
@@ -84,11 +91,13 @@ const Agents = () => {
   };
 
   const handleCreateAgent = () => {
-    // Verificar se o usuário pode criar mais agentes
+    // Check if the user can create more agents
     const currentEmail = getCurrentUserEmail();
     const userPlan = getUserPlan(currentEmail);
     
-    if (userPlan.plan === 1 && agents.length >= 1) {
+    // If trial expired or user has reached the limit of their plan
+    if ((userPlan.plan === PlanType.FREE_TRIAL && isTrialExpired) || 
+        agents.length >= userPlan.agentLimit) {
       setShowUpgradeModal(true);
       return;
     }
@@ -113,10 +122,10 @@ const Agents = () => {
   };
 
   const handleUpgrade = () => {
-    // Simula um checkout de plano premium
-    console.log("Redirecionando para checkout do plano premium");
+    // Redirect to plan checkout page
+    console.log("Redirecionando para checkout dos planos");
     setShowUpgradeModal(false);
-    navigate('/checkout');
+    navigate('/plan-checkout');
   };
 
   return (
@@ -127,6 +136,22 @@ const Agents = () => {
           onCreateAgent={handleCreateAgent}
           onUpgradeClick={() => setShowUpgradeModal(true)}
         />
+
+        {userPlan.plan === PlanType.FREE_TRIAL && (
+          <Alert variant={isTrialExpired ? "destructive" : "default"}>
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>
+              {isTrialExpired 
+                ? "Seu período de teste expirou" 
+                : `Período de teste: ${trialDaysLeft} ${trialDaysLeft === 1 ? 'dia' : 'dias'} restantes`}
+            </AlertTitle>
+            <AlertDescription>
+              {isTrialExpired
+                ? "Escolha um plano pago para continuar usando o serviço e criar mais agentes."
+                : "Aproveite o período de teste para explorar os recursos básicos do sistema."}
+            </AlertDescription>
+          </Alert>
+        )}
 
         {!isLoading && agents.length === 0 ? (
           <EmptyAgentState onCreateAgent={handleCreateAgent} />

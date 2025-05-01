@@ -1,6 +1,9 @@
 
 // Re-export everything from userPlanService for easier imports
-export * from './userPlanService';
+export * from './plan/userPlanService';
+
+// Export plan limitation services
+export * from './plan/planLimitService';
 
 // Export specific agent services
 export * from './agent';

@@ -13,14 +13,17 @@ import CreateAgent from "./pages/CreateAgent";
 import Agents from "./pages/Agents";
 import AgentAnalytics from "./pages/AgentAnalytics";
 import Checkout from "./pages/Checkout";
+import PlanCheckout from "./pages/PlanCheckout";
 import { initializeUserEmail } from "./services/user/userService";
+import { initializeUserPlan } from "./services/plan/userPlanService";
 
 const queryClient = new QueryClient();
 
 const App = () => {
-  // Initialize user email on app load
+  // Initialize user email and plan on app load
   useEffect(() => {
-    initializeUserEmail();
+    const userEmail = initializeUserEmail();
+    initializeUserPlan(userEmail);
   }, []);
 
   return (
@@ -38,6 +41,7 @@ const App = () => {
             <Route path="/agents" element={<Agents />} />
             <Route path="/agent-analytics/:agentId" element={<AgentAnalytics />} />
             <Route path="/checkout" element={<Checkout />} />
+            <Route path="/plan-checkout" element={<PlanCheckout />} />
             <Route path="/update-email" element={<Dashboard />} />
             <Route path="*" element={<NotFound />} />
           </Routes>

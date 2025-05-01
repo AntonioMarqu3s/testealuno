@@ -1,5 +1,5 @@
 
-import { getUserPlan } from './userPlanService';
+import { getUserPlan, hasTrialExpired, PlanType } from './userPlanService';
 import { getUserAgents } from '../agent/agentStorageService';
 
 /**
@@ -11,13 +11,30 @@ export const canCreateAgent = (email: string): boolean => {
   const userPlan = getUserPlan(email);
   const userAgents = getUserAgents(email);
   
-  // Free plan (plan === 1) has limit of 1 agent
-  if (userPlan.plan === 1) {
-    return userAgents.length < 1;
+  // If trial expired, user needs to upgrade
+  if (userPlan.plan === PlanType.FREE_TRIAL && hasTrialExpired(email)) {
+    return false;
   }
   
-  // Premium plan (plan === 2) has unlimited agents
-  return true;
+  // Check if user has reached the agent limit for their plan
+  return userAgents.length < userPlan.agentLimit;
+};
+
+/**
+ * Get the number of remaining agents that can be created
+ * @param email User email
+ * @returns number of remaining agents or 0 if limit reached
+ */
+export const getRemainingAgentCount = (email: string): number => {
+  const userPlan = getUserPlan(email);
+  const userAgents = getUserAgents(email);
+  
+  // If trial expired, no agents can be created
+  if (userPlan.plan === PlanType.FREE_TRIAL && hasTrialExpired(email)) {
+    return 0;
+  }
+  
+  return Math.max(0, userPlan.agentLimit - userAgents.length);
 };
 
 /**
