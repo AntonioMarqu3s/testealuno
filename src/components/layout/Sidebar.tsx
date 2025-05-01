@@ -1,4 +1,3 @@
-
 import {
   Sidebar,
   SidebarContent,
@@ -43,7 +42,7 @@ export function AppSidebar() {
     },
     {
       title: "Meus Agentes",
-      path: "/agents",
+      path: "/agents", // Always use /agents instead of /my-agents
       icon: Grid2X2,
     },
     {
@@ -88,7 +87,9 @@ export function AppSidebar() {
                     asChild
                     className={cn(
                       "gap-2",
-                      currentPath === item.path && "bg-sidebar-accent text-accent-foreground"
+                      (currentPath === item.path || 
+                       (currentPath === "/my-agents" && item.path === "/agents")) && 
+                      "bg-sidebar-accent text-accent-foreground"
                     )}
                   >
                     <Link to={item.path}>

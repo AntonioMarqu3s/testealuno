@@ -4,7 +4,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
 import AuthCallback from "./pages/AuthCallback";
 import ResetPassword from "./pages/ResetPassword";
@@ -47,7 +47,7 @@ const App = () => {
               <Route path="/create-agent" element={<CreateAgent />} />
               <Route path="/edit-agent/:agentId" element={<CreateAgent />} />
               <Route path="/agents" element={<Agents />} />
-              <Route path="/my-agents" element={<Agents />} />
+              <Route path="/my-agents" element={<Navigate to="/agents" replace />} />
               <Route path="/agent-analytics/:agentId" element={<AgentAnalytics />} />
               <Route path="/checkout" element={<Checkout />} />
               <Route path="/plan-checkout" element={<PlanCheckout />} />
