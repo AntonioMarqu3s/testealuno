@@ -17,9 +17,9 @@ export * from './checkout';
 // Export user services
 export * from './user';
 
-// To avoid ambiguity, explicitly export functions with unique names
-export { transferUserAgentData as transferAgentData } from './agent/agentStorageService';
-export { transferUserAgentData as transferUserAgents } from './user/userService';
+// Fix the conflict between the two transferUserAgentData functions
+// Only export the one from agentStorageService
+export { transferUserAgentData } from './agent/agentStorageService';
 
 // Fix the conflict between the two generateInstanceId functions
 export { generateInstanceId as generateAgentInstanceId } from './agent/agentInstanceService';

@@ -18,6 +18,14 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogClose,
+} from "@/components/ui/dialog";
 
 export interface Agent {
   id: string;
@@ -46,18 +54,145 @@ const agentTypeMap: Record<string, string> = {
 export const AgentPanel: React.FC<AgentPanelProps> = ({ agent, onDelete }) => {
   const navigate = useNavigate();
   const [isGeneratingQR, setIsGeneratingQR] = useState(false);
+  const [showQRDialog, setShowQRDialog] = useState(false);
+  const [qrCodeImage, setQrCodeImage] = useState<string | null>(null);
+  const [timerCount, setTimerCount] = useState(30);
+  const [timerInterval, setTimerIntervalState] = useState<number | null>(null);
   const userEmail = getCurrentUserEmail();
 
-  const handleGenerateQrCode = () => {
+  const handleGenerateQrCode = async () => {
     setIsGeneratingQR(true);
+    setShowQRDialog(true);
     
-    // Simulando geração de QR code
-    setTimeout(() => {
-      setIsGeneratingQR(false);
-      toast.success("QR Code gerado com sucesso!", {
-        description: `O QR Code para o agente ${agent.name} foi gerado e está disponível para download.`
+    try {
+      // Create instance name in the format expected by the webhook
+      const instanceName = `${agentTypeMap[agent.type] || agent.type} - ${agent.name}`;
+      
+      // Call webhook to generate QR code
+      const response = await fetch('https://webhook.dev.matrixgpt.com.br/webhook/criar-instancia', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ instanceName }),
       });
-    }, 1500);
+      
+      if (!response.ok) {
+        throw new Error('Failed to generate QR code');
+      }
+      
+      // Parse response
+      const contentType = response.headers.get('content-type');
+      let imgSrc;
+      
+      if (contentType && contentType.includes('application/json')) {
+        const data = await response.json();
+        const base64Data = data.mensagem || data.qrCodeBase64;
+        
+        if (!base64Data) {
+          throw new Error('Invalid response format');
+        }
+        
+        imgSrc = `data:image/png;base64,${base64Data}`;
+      } else {
+        const blob = await response.blob();
+        imgSrc = URL.createObjectURL(blob);
+      }
+      
+      setQrCodeImage(imgSrc);
+      
+      // Start timer for QR code updates
+      startQRCodeUpdateTimer(instanceName);
+      toast.success("QR Code gerado com sucesso");
+      
+    } catch (error) {
+      console.error("Error generating QR code:", error);
+      toast.error("Erro ao gerar QR Code");
+    } finally {
+      setIsGeneratingQR(false);
+    }
+  };
+  
+  const startQRCodeUpdateTimer = (instanceName: string) => {
+    setTimerCount(30);
+    
+    // Clear any existing interval
+    if (timerInterval) {
+      window.clearInterval(timerInterval);
+    }
+    
+    // Set new interval
+    const intervalId = window.setInterval(() => {
+      setTimerCount((prevCount) => {
+        if (prevCount <= 1) {
+          // Update QR code
+          updateQRCode(instanceName);
+          return 30;
+        }
+        return prevCount - 1;
+      });
+    }, 1000);
+    
+    // Store interval ID for cleanup
+    setTimerIntervalState(intervalId);
+  };
+  
+  const updateQRCode = async (instanceName: string) => {
+    try {
+      const response = await fetch('https://webhook.dev.matrixgpt.com.br/webhook/atualizar-qr-code', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ instanceName }),
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to update QR code');
+      }
+      
+      // Parse response
+      const contentType = response.headers.get('content-type');
+      let imgSrc;
+      
+      if (contentType && contentType.includes('application/json')) {
+        const data = await response.json();
+        const base64Data = data.mensagem || data.qrCodeBase64;
+        
+        if (!base64Data) {
+          throw new Error('Invalid response format');
+        }
+        
+        imgSrc = `data:image/png;base64,${base64Data}`;
+      } else {
+        const blob = await response.blob();
+        imgSrc = URL.createObjectURL(blob);
+      }
+      
+      setQrCodeImage(imgSrc);
+      toast.info("QR Code atualizado");
+      
+    } catch (error) {
+      console.error("Error updating QR code:", error);
+      toast.error("Erro ao atualizar QR Code");
+    }
+  };
+  
+  // Clean up interval on unmount
+  React.useEffect(() => {
+    return () => {
+      if (timerInterval) {
+        window.clearInterval(timerInterval);
+      }
+    };
+  }, [timerInterval]);
+  
+  const handleCloseQRDialog = () => {
+    setShowQRDialog(false);
+    if (timerInterval) {
+      window.clearInterval(timerInterval);
+      setTimerIntervalState(null);
+    }
   };
 
   const handleDelete = () => {
@@ -172,6 +307,43 @@ export const AgentPanel: React.FC<AgentPanelProps> = ({ agent, onDelete }) => {
           </Link>
         </Button>
       </CardFooter>
+      
+      {/* QR Code Dialog */}
+      <Dialog open={showQRDialog} onOpenChange={handleCloseQRDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>QR Code do Agente</DialogTitle>
+            <DialogDescription>
+              Escaneie o QR Code com o aplicativo WhatsApp para conectar seu agente
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col items-center justify-center p-6">
+            {qrCodeImage ? (
+              <>
+                <div className="mb-4 border rounded-lg p-2 overflow-hidden">
+                  <img 
+                    src={qrCodeImage} 
+                    alt="QR Code" 
+                    className="w-full h-auto max-w-[240px]"
+                  />
+                </div>
+                <p className="text-sm text-muted-foreground text-center">
+                  Novo QR Code em: <span className="font-bold">{timerCount}s</span>
+                </p>
+              </>
+            ) : (
+              <div className="flex justify-center items-center h-[240px] w-[240px]">
+                <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+              </div>
+            )}
+          </div>
+          <div className="flex justify-end">
+            <DialogClose asChild>
+              <Button variant="outline">Fechar</Button>
+            </DialogClose>
+          </div>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 };

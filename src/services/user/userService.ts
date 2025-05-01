@@ -1,6 +1,5 @@
 
 import { getStorageItem, setStorageItem } from '../storage/localStorageService';
-import { transferUserAgentData } from '../agent/agentStorageService';
 import { transferUserPlanData } from '../plan/userPlanService';
 
 const USER_EMAIL_KEY = 'user_email';
@@ -33,23 +32,14 @@ export const updateCurrentUserEmail = (newEmail: string): void => {
     console.log(`Updating user email from ${oldEmail} to ${newEmail}`);
     
     // Transfer user data to new email
+    // Use the imported function from agentStorageService
+    const { transferUserAgentData } = require('../agent/agentStorageService');
     transferUserAgentData(oldEmail, newEmail);
     transferUserPlanData(oldEmail, newEmail);
     
     // Save new email
     setStorageItem(USER_EMAIL_KEY, newEmail);
   }
-};
-
-/**
- * Transfer user agent data from old email to new email
- * This is an alias of the function in agentStorageService
- */
-export const transferUserAgentData = (oldEmail: string, newEmail: string): void => {
-  // The actual implementation is in agentStorageService
-  // This is just an alias for API consistency
-  const transferFn = require('../agent/agentStorageService').transferUserAgentData;
-  transferFn(oldEmail, newEmail);
 };
 
 /**
