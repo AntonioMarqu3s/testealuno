@@ -52,6 +52,7 @@ export const getCurrentUserEmail = async (): Promise<string | null> => {
 export const initializeUserDataAfterLogin = async (): Promise<void> => {
   const user = await getCurrentUser();
   if (user && user.email) {
+    console.log("Initializing user data after login for:", user.email);
     updateCurrentUserEmail(user.email);
     
     // Migrate local data to Supabase

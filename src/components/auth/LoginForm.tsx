@@ -51,19 +51,30 @@ export function LoginForm({
         throw error;
       }
       
-      console.log('Login successful:', data);
-      
-      // For demo mode, we allow proceeding even without real authentication
-      updateCurrentUserEmail(email);
+      if (data && data.session) {
+        console.log('Login successful:', data);
+        
+        // Update local storage with email for backward compatibility
+        updateCurrentUserEmail(email);
 
-      toast.success("Login realizado com sucesso em modo de demonstração!");
-      onSuccessfulAuth();
+        toast.success("Login realizado com sucesso!");
+        
+        // Clear form fields
+        setPassword("");
+        
+        // Redirect to dashboard
+        onSuccessfulAuth();
+      } else {
+        throw new Error("Falha na autenticação.");
+      }
     } catch (error: any) {
       // If we already showed the connection error dialog, don't show another toast
-      if (error.message?.includes('Invalid login credentials')) {
-        toast.error("Email ou senha incorretos");
-      } else {
-        toast.error(error.message || "Ocorreu um erro durante a autenticação.");
+      if (!error.message?.includes('fetch') && error.message !== 'Failed to fetch') {
+        if (error.message?.includes('Invalid login credentials')) {
+          toast.error("Email ou senha incorretos");
+        } else {
+          toast.error(error.message || "Ocorreu um erro durante a autenticação.");
+        }
       }
       console.error("Auth error details:", error);
     } finally {
