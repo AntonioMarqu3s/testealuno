@@ -7,18 +7,32 @@ import MainLayout from "@/components/layout/MainLayout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { Plus, Users } from "lucide-react";
+import { getUserPlan } from "@/services/plan/userPlanService";
+import { getCurrentUserEmail } from "@/services/user/userService";
+import { getUserAgents } from "@/services/agent/agentStorageService";
 
 const Dashboard = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
   const currentTab = searchParams.get('tab') || 'agents';
+  
+  // Get user information
+  const userEmail = getCurrentUserEmail();
+  const userPlan = getUserPlan(userEmail);
+  const userAgents = getUserAgents(userEmail);
 
   const handleCreateAgent = () => {
+    // Navigate to agent type selection
     navigate('/create-agent');
   };
 
   const handleNavigateToMyAgents = () => {
     navigate('/agents');
+  };
+  
+  const handleUpgrade = () => {
+    navigate('/plan-checkout');
   };
 
   return (
@@ -36,7 +50,7 @@ const Dashboard = () => {
           </Button>
         </div>
         
-        <Tabs defaultValue="agents">
+        <Tabs defaultValue={currentTab}>
           <TabsList>
             <TabsTrigger value="agents">Tipos de Agentes</TabsTrigger>
             <TabsTrigger value="my-agents" onClick={handleNavigateToMyAgents}>Meus Agentes</TabsTrigger>
@@ -72,7 +86,7 @@ const Dashboard = () => {
             <CardContent>
               <div className="flex items-center justify-between py-2">
                 <span>Agentes criados</span>
-                <span className="font-medium">0 / 3</span>
+                <span className="font-medium">{userAgents.length} / {userPlan.agentLimit}</span>
               </div>
               <div className="flex items-center justify-between py-2">
                 <span>Usuários</span>
@@ -85,11 +99,11 @@ const Dashboard = () => {
               <Separator className="my-2" />
               <div className="flex items-center justify-between py-2">
                 <span>Plano atual</span>
-                <span className="font-medium">Free</span>
+                <span className="font-medium">{userPlan.name}</span>
               </div>
             </CardContent>
             <CardFooter>
-              <Button variant="outline" className="w-full">Fazer upgrade</Button>
+              <Button variant="outline" className="w-full" onClick={handleUpgrade}>Fazer upgrade</Button>
             </CardFooter>
           </Card>
 

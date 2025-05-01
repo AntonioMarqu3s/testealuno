@@ -31,7 +31,7 @@ export function AgentCard({ title, description, type, icon, path = "/create-agen
 
   return (
     <Card 
-      className="h-full overflow-hidden transition-all hover:shadow-md hover:-translate-y-1"
+      className="h-full overflow-hidden transition-all hover:shadow-md hover:-translate-y-1 cursor-pointer"
       onClick={handleClick}
     >
       <div className={cn(
@@ -73,6 +73,7 @@ export function AgentCard({ title, description, type, icon, path = "/create-agen
             "w-full bg-gradient-to-r shadow-sm",
             colorMap[type]
           )}
+          onClick={handleClick}
         >
           Criar Agente
         </Button>

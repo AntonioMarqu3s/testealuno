@@ -35,3 +35,4 @@ export const upgradeToPlan = (email: string, planType: PlanType): void => {
   const checkoutCode = `CHK-${Math.random().toString(36).substring(2, 10).toUpperCase()}`;
   saveCheckoutInfo(email, checkoutCode, planType);
 };
+
