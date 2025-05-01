@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { getCurrentUserEmail } from "@/services";
 import { toast } from "sonner";
-import { AlertDialog } from "@/components/ui/alert-dialog";
+import { AlertDialog, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 
 import { Agent } from "./AgentTypes";
 import { AgentHeader } from "./panels/AgentHeader";

@@ -4,10 +4,6 @@ import { CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Edit, Trash2, Wifi, WifiOff } from "lucide-react";
-import {
-  AlertDialog,
-  AlertDialogTrigger
-} from "@/components/ui/alert-dialog";
 import { Agent } from "../AgentTypes";
 
 interface AgentHeaderProps {
@@ -39,16 +35,14 @@ export const AgentHeader: React.FC<AgentHeaderProps> = ({
         >
           <Edit className="h-4 w-4" />
         </Button>
-        <AlertDialogTrigger asChild>
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className="h-8 w-8 text-destructive hover:text-destructive"
-            onClick={onOpenDeleteDialog}
-          >
-            <Trash2 className="h-4 w-4" />
-          </Button>
-        </AlertDialogTrigger>
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          className="h-8 w-8 text-destructive hover:text-destructive"
+          onClick={onOpenDeleteDialog}
+        >
+          <Trash2 className="h-4 w-4" />
+        </Button>
       </div>
       <div className="flex justify-between items-center mt-2">
         <CardTitle className="text-xl">{agent.name}</CardTitle>
