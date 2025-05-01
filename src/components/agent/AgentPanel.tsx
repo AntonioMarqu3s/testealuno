@@ -61,7 +61,7 @@ export const AgentPanel: React.FC<AgentPanelProps> = ({ agent, onDelete, onToggl
       
       verifyStatus();
     }
-  }, [agent.instanceId]);
+  }, [agent.instanceId, checkConnectionStatus, isConnected, agent.id, onToggleConnection]);
 
   const handleEdit = () => {
     // Prepare agent data for editing and navigate
@@ -91,7 +91,11 @@ export const AgentPanel: React.FC<AgentPanelProps> = ({ agent, onDelete, onToggl
   
   const handleConnectClick = () => {
     // Generate QR code and set up connection callback
-    handleGenerateQrCode(handleQRConnected);
+    // Fix: Pass a function reference instead of a function call
+    handleGenerateQrCode(() => {
+      // This is the callback that will be executed when connected
+      handleQRConnected();
+    });
   };
   
   const handleQRConnected = () => {

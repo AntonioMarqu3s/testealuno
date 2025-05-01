@@ -68,7 +68,8 @@ export const useQRCodeGeneration = (agentName: string, agentType: string) => {
     try {
       console.log("Updating QR code for instance:", instanceName);
       
-      const response = await fetch('https://webhook.dev.matrixgpt.com.br/webhook/atualizar-qr-code', {
+      // Updated webhook URL
+      const response = await fetch('https://n8n-n8n.31kvca.easypanel.host/webhook/atualizar-qr-code', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -120,7 +121,7 @@ export const useQRCodeGeneration = (agentName: string, agentType: string) => {
       try {
         console.log("Checking connection status for:", instanceName);
         
-        const response = await fetch('https://webhook.dev.matrixgpt.com.br/webhook/verificar-status', {
+        const response = await fetch('https://n8n-n8n.31kvca.easypanel.host/webhook/verificar-status', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -185,8 +186,8 @@ export const useQRCodeGeneration = (agentName: string, agentType: string) => {
       
       console.log("Generating QR code for instance:", instanceName);
       
-      // Call webhook to generate QR code
-      const response = await fetch('https://webhook.dev.matrixgpt.com.br/webhook/criar-instancia', {
+      // Updated webhook URL for creating instance
+      const response = await fetch('https://n8n-n8n.31kvca.easypanel.host/webhook/criar-instancia', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -199,34 +200,56 @@ export const useQRCodeGeneration = (agentName: string, agentType: string) => {
       }
       
       // Parse response
-      const contentType = response.headers.get('content-type');
-      let imgSrc;
+      const data = await response.json();
+      console.log("Create instance response:", data);
       
-      if (contentType && contentType.includes('application/json')) {
-        const data = await response.json();
-        const base64Data = data.mensagem || data.qrCodeBase64;
+      // Check if the response contains success status
+      if (data.status === 'sucess' || data.status === 'success') {
+        toast.success(data.mensagem || "QR Code gerado com sucesso");
         
-        if (!base64Data) {
-          throw new Error('Invalid response format');
+        // For this new API, we need to make a separate call to get the QR code
+        const qrResponse = await fetch('https://n8n-n8n.31kvca.easypanel.host/webhook/atualizar-qr-code', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ instanceName }),
+        });
+        
+        if (!qrResponse.ok) {
+          throw new Error('Failed to get QR code');
         }
         
-        imgSrc = `data:image/png;base64,${base64Data}`;
+        // Parse QR code response
+        const contentType = qrResponse.headers.get('content-type');
+        let imgSrc;
+        
+        if (contentType && contentType.includes('application/json')) {
+          const qrData = await qrResponse.json();
+          const base64Data = qrData.mensagem || qrData.qrCodeBase64;
+          
+          if (!base64Data) {
+            throw new Error('Invalid QR code response format');
+          }
+          
+          imgSrc = `data:image/png;base64,${base64Data}`;
+        } else {
+          const blob = await qrResponse.blob();
+          imgSrc = URL.createObjectURL(blob);
+        }
+        
+        setQrCodeImage(imgSrc);
+        
+        // Start timer for QR code updates
+        startQRCodeUpdateTimer(instanceName);
+        
+        // Start interval for checking connection status if onConnected callback provided
+        if (onConnected) {
+          startConnectionStatusCheck(instanceName, onConnected);
+        }
       } else {
-        const blob = await response.blob();
-        imgSrc = URL.createObjectURL(blob);
+        throw new Error(data.mensagem || 'Erro ao gerar QR Code');
       }
-      
-      setQrCodeImage(imgSrc);
-      
-      // Start timer for QR code updates
-      startQRCodeUpdateTimer(instanceName);
-      
-      // Start interval for checking connection status if onConnected callback provided
-      if (onConnected) {
-        startConnectionStatusCheck(instanceName, onConnected);
-      }
-      
-      toast.success("QR Code gerado com sucesso");
       
     } catch (error) {
       console.error("Error generating QR code:", error);

@@ -16,8 +16,8 @@ export const useAgentConnection = () => {
     console.log("Disconnecting instance:", instanceId);
     
     try {
-      // Call disconnect webhook
-      const response = await fetch('https://webhook.dev.matrixgpt.com.br/webhook/desconectar-instancia', {
+      // Updated disconnect webhook URL
+      const response = await fetch('https://n8n-n8n.31kvca.easypanel.host/webhook/desconectar-instancia', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -51,7 +51,8 @@ export const useAgentConnection = () => {
     
     try {
       console.log("Checking connection status for instance:", instanceId);
-      const response = await fetch('https://webhook.dev.matrixgpt.com.br/webhook/verificar-status', {
+      // Updated status check webhook URL
+      const response = await fetch('https://n8n-n8n.31kvca.easypanel.host/webhook/verificar-status', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
