@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { toast } from 'sonner';
 import { useQRCodeDisplay } from "./qrcode/useQRCodeDisplay";
 import { useQRCodeTimer } from "./qrcode/useQRCodeTimer";
@@ -41,7 +41,7 @@ export const useQRCodeGeneration = (instanceId: string) => {
   }, [timerIntervalRef, connectionCheckIntervalRef]);
 
   // Function to handle successful connection
-  const handleConnected = () => {
+  const handleConnected = useCallback(() => {
     console.log("Agent connected successfully!");
     toast.success("Agente conectado com sucesso!");
     setShowQRCodeDialog(false);
@@ -49,10 +49,11 @@ export const useQRCodeGeneration = (instanceId: string) => {
     clearQRCodeTimer();
     clearConnectionCheck();
     // Additional logic for when agent is connected
-  };
+  }, [clearQRCodeTimer, clearConnectionCheck, setQrCodeImage]);
 
   // Function to show QR code dialog and handle QR code generation
-  const handleShowQRCode = async () => {
+  const handleShowQRCode = useCallback(async () => {
+    console.log("Initiating QR code generation for:", instanceId);
     setShowQRCodeDialog(true);
     
     // Reset state
@@ -64,21 +65,34 @@ export const useQRCodeGeneration = (instanceId: string) => {
     const success = await updateQRCode(instanceId);
     
     if (success) {
+      console.log("QR code generated successfully, starting timers");
       // Start timer for QR code refresh
       startQRCodeUpdateTimer(instanceId);
       
       // Start checking connection status
       startConnectionStatusCheck(instanceId, handleConnected);
+    } else {
+      console.error("Failed to generate QR code");
+      toast.error("Erro ao gerar QR Code. Tente novamente.");
     }
-  };
+  }, [
+    instanceId, 
+    setQrCodeImage, 
+    clearQRCodeTimer, 
+    clearConnectionCheck, 
+    updateQRCode, 
+    startQRCodeUpdateTimer, 
+    startConnectionStatusCheck, 
+    handleConnected
+  ]);
 
   // Function to close QR code dialog and clean up
-  const handleCloseQRCode = () => {
+  const handleCloseQRCode = useCallback(() => {
     setShowQRCodeDialog(false);
     setQrCodeImage(null);
     clearQRCodeTimer();
     clearConnectionCheck();
-  };
+  }, [clearQRCodeTimer, clearConnectionCheck, setQrCodeImage]);
 
   return {
     showQRCodeDialog,

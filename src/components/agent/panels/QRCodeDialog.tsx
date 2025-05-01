@@ -31,7 +31,12 @@ export const QRCodeDialog: React.FC<QRCodeDialogProps> = ({
   
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md" onInteractOutside={(e) => {
+        // Prevent closing when clicking outside to avoid accidental interruptions
+        if (isGeneratingQRCode || isCheckingConnection) {
+          e.preventDefault();
+        }
+      }}>
         <DialogHeader>
           <DialogTitle>QR Code do Agente</DialogTitle>
           <DialogDescription>
@@ -40,9 +45,10 @@ export const QRCodeDialog: React.FC<QRCodeDialogProps> = ({
         </DialogHeader>
         <div className="flex flex-col items-center justify-center p-6">
           {isGeneratingQRCode ? (
-            <div className="flex justify-center items-center h-[240px] w-[240px]">
-              <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
-              <p className="text-sm text-muted-foreground ml-3">Gerando QR Code...</p>
+            <div className="flex flex-col justify-center items-center h-[240px] w-[240px]">
+              <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mb-3"></div>
+              <p className="text-sm text-muted-foreground">Gerando QR Code...</p>
+              <p className="text-xs text-muted-foreground mt-2">Aguarde enquanto preparamos sua conexão</p>
             </div>
           ) : qrCodeImage ? (
             <>

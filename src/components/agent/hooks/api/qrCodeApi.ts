@@ -40,6 +40,7 @@ export const fetchQRCode = async (instanceName: string): Promise<string | null> 
         return URL.createObjectURL(blob);
       }
     } catch (primaryError) {
+      console.error("Primary endpoint error:", primaryError);
       // Try fallback endpoint
       console.log("Primary QR code endpoint failed, trying fallback...");
       const fallbackResponse = await fetch('https://webhook.dev.matrixgpt.com.br/webhook/atualizar-qr-code', {
@@ -51,6 +52,7 @@ export const fetchQRCode = async (instanceName: string): Promise<string | null> 
       });
       
       if (!fallbackResponse.ok) {
+        console.error("Fallback response not OK:", await fallbackResponse.text());
         // For development purposes, return a placeholder QR code if all else fails
         if (process.env.NODE_ENV === 'development') {
           console.log("Using placeholder QR code");
