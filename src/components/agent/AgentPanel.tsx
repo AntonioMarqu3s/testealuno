@@ -32,8 +32,10 @@ export const AgentPanel: React.FC<AgentPanelProps> = ({ agent, onDelete, onToggl
     showQRDialog, 
     qrCodeImage, 
     timerCount,
+    instanceName,
     handleGenerateQrCode, 
-    setShowQRDialog 
+    setShowQRDialog,
+    handleConnected 
   } = useQRCodeGeneration(agent.name, agent.type);
   
   const { isDisconnecting, handleDisconnect } = useAgentConnection();
@@ -61,6 +63,18 @@ export const AgentPanel: React.FC<AgentPanelProps> = ({ agent, onDelete, onToggl
   
   const handleConnectClick = () => {
     handleGenerateQrCode();
+  };
+  
+  const handleQRConnected = () => {
+    // Handle the successful connection
+    handleConnected();
+    
+    // Update agent connection status
+    if (onToggleConnection) {
+      console.log("QR code scanned successfully, updating agent connection status");
+      onToggleConnection(agent.id, true);
+      toast.success("Agente conectado com sucesso!");
+    }
   };
 
   return (
@@ -98,6 +112,7 @@ export const AgentPanel: React.FC<AgentPanelProps> = ({ agent, onDelete, onToggl
         onOpenChange={setShowQRDialog}
         qrCodeImage={qrCodeImage}
         timerCount={timerCount}
+        onConnected={handleQRConnected}
       />
     </Card>
   );

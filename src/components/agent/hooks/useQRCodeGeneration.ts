@@ -7,6 +7,7 @@ export const useQRCodeGeneration = (agentName: string, agentType: string) => {
   const [showQRDialog, setShowQRDialog] = useState(false);
   const [qrCodeImage, setQrCodeImage] = useState<string | null>(null);
   const [timerCount, setTimerCount] = useState(30);
+  const [instanceName, setInstanceName] = useState<string>("");
   const timerIntervalRef = useRef<number | null>(null);
   
   // Clear timer on unmount
@@ -105,6 +106,12 @@ export const useQRCodeGeneration = (agentName: string, agentType: string) => {
         "custom": "Personalizado",
       };
       const instanceName = `${agentTypeMap[agentType] || agentType} - ${agentName}`;
+      setInstanceName(instanceName);
+      
+      // Store instance name for status checks
+      sessionStorage.setItem('currentInstanceId', instanceName);
+      
+      console.log("Generating QR code for instance:", instanceName);
       
       // Call webhook to generate QR code
       const response = await fetch('https://webhook.dev.matrixgpt.com.br/webhook/criar-instancia', {
@@ -146,9 +153,25 @@ export const useQRCodeGeneration = (agentName: string, agentType: string) => {
     } catch (error) {
       console.error("Error generating QR code:", error);
       toast.error("Erro ao gerar QR Code");
+      setShowQRDialog(false);
     } finally {
       setIsGeneratingQR(false);
     }
+  };
+  
+  const handleConnected = () => {
+    // Clear any existing interval
+    if (timerIntervalRef.current !== null) {
+      window.clearInterval(timerIntervalRef.current);
+      timerIntervalRef.current = null;
+    }
+    
+    // Clear stored instance ID
+    sessionStorage.removeItem('currentInstanceId');
+    
+    // Reset states
+    setQrCodeImage(null);
+    setShowQRDialog(false);
   };
 
   return {
@@ -156,7 +179,9 @@ export const useQRCodeGeneration = (agentName: string, agentType: string) => {
     showQRDialog,
     qrCodeImage,
     timerCount,
+    instanceName,
     handleGenerateQrCode,
     setShowQRDialog: handleCloseQRDialog,
+    handleConnected
   };
 };
