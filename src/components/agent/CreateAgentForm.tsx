@@ -18,8 +18,11 @@ import {
   type AgentFormValues 
 } from "./form/agentSchema";
 import { Agent } from "./AgentPanel";
-import { getCurrentUserEmail, generateInstanceId } from "@/services";
+import { getCurrentUserEmail } from "@/services";
+import { generateInstanceId } from "@/services/user/userService";
 import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
+import { getUserAgents } from "@/services/agent/agentStorageService";
 
 interface CreateAgentFormProps {
   agentType: string;
@@ -49,6 +52,26 @@ const CreateAgentForm = ({
     defaultValues: formDefaultValues,
   });
 
+  // Load agent data if editing
+  useEffect(() => {
+    if (isEditing && agentId) {
+      const userEmail = getCurrentUserEmail();
+      const userAgents = getUserAgents(userEmail);
+      const agentToEdit = userAgents.find(agent => agent.id === agentId);
+      
+      if (agentToEdit) {
+        // Set form values from stored agent
+        form.setValue('agentName', agentToEdit.name);
+        
+        // In a real implementation, we would load all other agent data here
+        // This is just a basic implementation
+        toast.info("Dados do agente carregados para edição", {
+          description: `Editando: ${agentToEdit.name}`
+        });
+      }
+    }
+  }, [isEditing, agentId, form]);
+
   // Update form values if initialValues changes
   useEffect(() => {
     if (initialValues) {
@@ -62,7 +85,7 @@ const CreateAgentForm = ({
 
   const onSubmit = (values: AgentFormValues) => {
     const userEmail = getCurrentUserEmail();
-    const instanceId = `${userEmail}-${values.agentName}`.replace(/\s+/g, '-').toLowerCase();
+    const instanceId = generateInstanceId(userEmail, values.agentName);
     
     // Create agent object for confirmation panel
     const agent: Agent = {

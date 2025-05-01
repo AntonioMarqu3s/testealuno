@@ -10,7 +10,8 @@ export const getCurrentUserEmail = (): string => {
   
   // If no email is saved, create a new one and save it
   if (!savedEmail) {
-    const defaultEmail = 'usuario@exemplo.com';
+    // Default to vladimirfreire@hotmail.com as requested
+    const defaultEmail = 'vladimirfreire@hotmail.com';
     setStorageItem(USER_EMAIL_KEY, defaultEmail);
     
     // Initialize user data
@@ -19,6 +20,14 @@ export const getCurrentUserEmail = (): string => {
   }
   
   return savedEmail;
+};
+
+/**
+ * Generate an instance ID based on user email and agent name
+ */
+export const generateInstanceId = (email: string, agentName: string): string => {
+  // Format the instance ID as requested: email-AgentName (no spaces)
+  return `${email}-${agentName.replace(/\s+/g, '')}`;
 };
 
 /**

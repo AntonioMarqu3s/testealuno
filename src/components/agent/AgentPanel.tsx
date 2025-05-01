@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { BarChart, QrCode, MessageSquare, WifiOff, Wifi, Trash2, Edit, Mail } from "lucide-react";
 import { toast } from "sonner";
-import { getCurrentUserEmail } from "@/services/userPlanService";
+import { getCurrentUserEmail } from "@/services";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -83,6 +83,10 @@ export const AgentPanel: React.FC<AgentPanelProps> = ({ agent, onDelete }) => {
     year: 'numeric'
   });
 
+  // Create displayed instance ID per requirements
+  const displayInstanceId = agent.instanceId || 
+    (userEmail ? `${userEmail}-${agent.name.replace(/\s+/g, '')}` : 'Instance ID not available');
+
   return (
     <Card className="flex flex-col h-full overflow-hidden">
       <CardHeader className="pb-2 pt-6 relative">
@@ -143,11 +147,9 @@ export const AgentPanel: React.FC<AgentPanelProps> = ({ agent, onDelete }) => {
             <span>{userEmail}</span>
           </div>
         )}
-        {agent.instanceId && (
-          <p className="text-xs text-muted-foreground mb-2">
-            ID da Instância: <span className="font-mono">{agent.instanceId}</span>
-          </p>
-        )}
+        <p className="text-xs text-muted-foreground mb-2">
+          ID da Instância: <span className="font-mono">{displayInstanceId}</span>
+        </p>
         {agent.clientIdentifier && (
           <p className="text-xs text-muted-foreground mb-2">
             Cliente: <span className="font-mono">{agent.clientIdentifier}</span>

@@ -21,13 +21,17 @@ import {
   LayoutDashboard, 
   LogOut 
 } from "lucide-react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import { getCurrentUserEmail } from "@/services";
+import { toast } from "sonner";
 
 export function AppSidebar() {
   const location = useLocation();
+  const navigate = useNavigate();
   const currentPath = location.pathname;
+  const userEmail = getCurrentUserEmail();
 
   const menuItems = [
     {
@@ -56,6 +60,13 @@ export function AppSidebar() {
       icon: Settings,
     },
   ];
+  
+  const handleLogout = () => {
+    // In a real app, we would clear the auth token here
+    localStorage.removeItem('user_email');
+    toast.success("Logout realizado com sucesso");
+    navigate("/auth");
+  };
 
   return (
     <Sidebar className="border-r">
@@ -96,14 +107,14 @@ export function AppSidebar() {
           <div className="flex items-center gap-3">
             <Avatar>
               <AvatarImage src="" />
-              <AvatarFallback>U</AvatarFallback>
+              <AvatarFallback>{userEmail ? userEmail[0].toUpperCase() : "U"}</AvatarFallback>
             </Avatar>
             <div className="flex flex-col">
-              <span className="text-sm font-medium">Usuário</span>
-              <span className="text-xs text-muted-foreground">Plano Grátis</span>
+              <span className="text-sm font-medium">Minha Conta</span>
+              <span className="text-xs text-muted-foreground">{userEmail || "Sem email"}</span>
             </div>
           </div>
-          <Button variant="ghost" size="icon">
+          <Button variant="ghost" size="icon" onClick={handleLogout}>
             <LogOut className="h-5 w-5" />
           </Button>
         </div>

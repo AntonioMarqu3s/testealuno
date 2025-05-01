@@ -16,3 +16,8 @@ export * from './checkout';
 
 // Export user services
 export * from './user';
+
+// To avoid ambiguity between exported functions with the same name
+// from different modules, export some functions with explicit names
+export { transferUserAgentData as transferAgentData } from './agent/agentStorageService';
+export { transferUserAgentData as transferUserAgents } from './user/userService';
