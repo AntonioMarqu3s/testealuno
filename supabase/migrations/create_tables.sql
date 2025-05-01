@@ -86,9 +86,16 @@ RETURNS TRIGGER AS $$
 DECLARE
   trial_end TIMESTAMP WITH TIME ZONE;
   selected_plan INTEGER;
+  trial_start TIMESTAMP WITH TIME ZONE;
 BEGIN
-  -- Calculate trial end date (5 days from now)
-  trial_end := NOW() + INTERVAL '5 days';
+  -- Get trial start date from user metadata or use current timestamp
+  trial_start := COALESCE(
+    (NEW.raw_user_meta_data->>'trialStartDate')::TIMESTAMP WITH TIME ZONE, 
+    NOW()
+  );
+  
+  -- Calculate trial end date (5 days from trial start)
+  trial_end := trial_start + INTERVAL '5 days';
   
   -- Get selected plan from user metadata if available
   selected_plan := (NEW.raw_user_meta_data->>'plan')::INTEGER;

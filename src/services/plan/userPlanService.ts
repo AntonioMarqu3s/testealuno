@@ -1,4 +1,3 @@
-
 import { getStorageItem, setStorageItem } from '../storage/localStorageService';
 
 // Define plan types
@@ -150,11 +149,20 @@ export const updateUserPlan = (email: string, planType: PlanType): void => {
   // Get current plan or initialize
   const currentPlan = planData[email] || getUserPlan(email);
   
+  // Calculate trial end date if it's a free trial
+  let trialEndsAt = undefined;
+  if (planType === PlanType.FREE_TRIAL) {
+    const trialEnd = new Date();
+    trialEnd.setDate(trialEnd.getDate() + PLAN_DETAILS[PlanType.FREE_TRIAL].trialDays);
+    trialEndsAt = trialEnd.toISOString();
+  }
+  
   // Update plan
   planData[email] = {
     plan: planType,
     name: PLAN_DETAILS[planType].name,
     agentLimit: PLAN_DETAILS[planType].agentLimit,
+    trialEndsAt: trialEndsAt,
     updatedAt: new Date().toISOString()
   };
   

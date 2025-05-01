@@ -5,6 +5,6 @@ export interface Agent {
   type: string;
   isConnected: boolean;
   createdAt: Date;
-  instanceId?: string;
+  instanceId: string;
   clientIdentifier?: string;
 }

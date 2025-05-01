@@ -33,7 +33,7 @@ export function RegisterForm({
 }: RegisterFormProps) {
   const [password, setPassword] = useState<string>("");
   const [confirmPassword, setConfirmPassword] = useState<string>("");
-  const [selectedPlan, setSelectedPlan] = useState<PlanType>(PlanType.BASIC);
+  const [selectedPlan, setSelectedPlan] = useState<PlanType>(PlanType.FREE_TRIAL);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -54,7 +54,8 @@ export function RegisterForm({
           emailRedirectTo: `${window.location.origin}/auth-callback`,
           data: {
             email, // Store email in user metadata
-            plan: selectedPlan // Store selected plan in user metadata
+            plan: selectedPlan, // Store selected plan in user metadata
+            trialStartDate: new Date().toISOString() // Store trial start date in user metadata
           }
         }
       });
@@ -79,7 +80,9 @@ export function RegisterForm({
       updateUserPlan(email, selectedPlan);
       
       toast.success("Conta criada com sucesso!", { 
-        description: "O sistema está operando em modo de demonstração. Você agora pode navegar pelo aplicativo."
+        description: selectedPlan === PlanType.FREE_TRIAL 
+          ? "Seu período de teste gratuito de 5 dias foi iniciado." 
+          : "Obrigado por escolher nosso plano premium."
       });
       
       onSuccessfulAuth();
@@ -135,6 +138,7 @@ export function RegisterForm({
         <PlanSelector 
           selectedPlan={selectedPlan}
           onSelectPlan={setSelectedPlan}
+          showTrialInfo={true}
         />
       </CardContent>
       <CardFooter className="flex flex-col gap-2">
