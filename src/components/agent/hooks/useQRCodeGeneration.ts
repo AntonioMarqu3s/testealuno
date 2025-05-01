@@ -1,5 +1,6 @@
 
 import { useState, useEffect, useRef } from "react";
+import { toast } from 'sonner';
 import { useQRCodeDisplay } from "./qrcode/useQRCodeDisplay";
 import { useQRCodeTimer } from "./qrcode/useQRCodeTimer";
 import { useQRCodeConnection } from "./qrcode/useQRCodeConnection";
@@ -42,9 +43,11 @@ export const useQRCodeGeneration = (instanceId: string) => {
   // Function to handle successful connection
   const handleConnected = () => {
     console.log("Agent connected successfully!");
+    toast.success("Agente conectado com sucesso!");
     setShowQRCodeDialog(false);
     setQrCodeImage(null);
     clearQRCodeTimer();
+    clearConnectionCheck();
     // Additional logic for when agent is connected
   };
 

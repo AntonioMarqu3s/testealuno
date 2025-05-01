@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
@@ -45,16 +44,22 @@ export const AgentPanel: React.FC<AgentPanelProps> = ({ agent, onDelete, onToggl
   useEffect(() => {
     if (agent.instanceId) {
       const verifyStatus = async () => {
-        const connected = await checkConnectionStatus(agent.instanceId);
-        
-        // Only update if the connection status is different
-        if (connected !== isConnected) {
-          setIsConnected(connected);
+        try {
+          console.log("Verifying agent connection status on mount:", agent.instanceId);
+          const connected = await checkConnectionStatus(agent.instanceId);
           
-          // Update parent state if callback provided
-          if (onToggleConnection) {
-            onToggleConnection(agent.id, connected);
+          // Only update if the connection status is different
+          if (connected !== isConnected) {
+            setIsConnected(connected);
+            
+            // Update parent state if callback provided
+            if (onToggleConnection) {
+              onToggleConnection(agent.id, connected);
+            }
           }
+        } catch (error) {
+          console.error("Error checking connection status:", error);
+          // Don't update status on error, keep current state
         }
       };
       
@@ -77,14 +82,19 @@ export const AgentPanel: React.FC<AgentPanelProps> = ({ agent, onDelete, onToggl
   };
   
   const handleDisconnectClick = async () => {
-    const success = await handleDisconnect(agent.instanceId);
-    if (success) {
-      setIsConnected(false);
-      
-      // Update parent state if callback provided
-      if (onToggleConnection) {
-        onToggleConnection(agent.id, false);
+    try {
+      const success = await handleDisconnect(agent.instanceId);
+      if (success) {
+        setIsConnected(false);
+        
+        // Update parent state if callback provided
+        if (onToggleConnection) {
+          onToggleConnection(agent.id, false);
+        }
       }
+    } catch (error) {
+      console.error("Error disconnecting agent:", error);
+      toast.error("Erro ao desconectar agente. Tente novamente.");
     }
   };
   
@@ -139,7 +149,12 @@ export const AgentPanel: React.FC<AgentPanelProps> = ({ agent, onDelete, onToggl
       {/* QR Code Dialog */}
       <QRCodeDialog
         open={showQRCodeDialog}
-        onOpenChange={setShowQRCodeDialog}
+        onOpenChange={(open) => {
+          if (!open) {
+            handleCloseQRCode();
+          }
+          setShowQRCodeDialog(open);
+        }}
         qrCodeImage={qrCodeImage}
         timerCount={timerCount}
         connectionCheckAttempts={connectionCheckAttempts}
