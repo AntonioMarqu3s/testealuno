@@ -2,9 +2,9 @@
 import { createClient } from '@supabase/supabase-js';
 import { toast } from 'sonner';
 
-// Get environment variables or use fallbacks with better error handling
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://ehotbpdibacbrqsgsnbv.supabase.co';
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVob3RicGRpYmFjYnJxc2dzbmJ2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MTUxODg5MjUsImV4cCI6MjAzMDc2NDkyNX0.XDRMx47XxnzaURJrNKSKOMVtRRqAfhxrz_w22aZYjds';
+// Get environment variables or use your actual Supabase project credentials
+const supabaseUrl = "https://iaoxaiyjmpqcvbyvlucl.supabase.co";
+const supabaseAnonKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlhb3hhaXlqbXBxY3ZieXZsdWNsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU5NzU1NTQsImV4cCI6MjA2MTU1MTU1NH0.BCp61J4kIjjpyTOdshXLMxJvWZ7WEYCoPT9fnWwuc3U";
 
 console.log('🔑 Supabase configuration:');
 console.log('URL:', supabaseUrl);
@@ -18,7 +18,7 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     detectSessionInUrl: true
   },
   global: {
-    fetch: (...args) => fetch(...args)
+    fetch: (url, options) => fetch(url, options)
   }
 });
 
@@ -30,14 +30,14 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     
     if (error) {
       console.error('⚠️ Supabase connection error:', error);
-      // Only show the toast for real errors, not for demo mode
+      // Only show the toast for real errors, not for permission denied
       if (!error.message.includes('permission denied') && !error.message.includes('does not exist')) {
         toast.error('Erro de conexão com o Supabase', {
           description: 'Verifique as credenciais e conexão com a internet.',
           duration: 8000,
         });
       } else {
-        console.log('✓ Supabase connected in demo mode (limited functionality)');
+        console.log('✓ Supabase connected (with expected permission limitation)');
       }
     } else {
       console.log('✅ Supabase connection successful!');
