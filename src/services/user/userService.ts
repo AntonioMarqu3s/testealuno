@@ -5,7 +5,7 @@ import { transferUserPlanData } from '../plan/userPlanService';
 const USER_EMAIL_KEY = 'user_email';
 
 // Default email value
-const DEFAULT_EMAIL = 'vladimirfreire@hotmail.com';
+const DEFAULT_EMAIL = 'usuario@exemplo.com';
 
 /**
  * Get the current user's email
