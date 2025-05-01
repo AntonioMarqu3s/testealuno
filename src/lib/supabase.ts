@@ -8,6 +8,7 @@ const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'your-anon-key
 // Log configuration status but don't stop the app from working
 if (!import.meta.env.VITE_SUPABASE_URL || !import.meta.env.VITE_SUPABASE_ANON_KEY) {
   console.warn('Supabase environment variables are missing. Using default values for development. Authentication may not work in production.');
+  console.info('Please create a .env file based on .env.example with your Supabase credentials and restart the application.');
 }
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
