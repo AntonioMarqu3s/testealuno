@@ -31,7 +31,7 @@ export function AppSidebar() {
   const location = useLocation();
   const navigate = useNavigate();
   const currentPath = location.pathname;
-  const userEmail = getCurrentUserEmail();
+  const userEmail = getCurrentUserEmail() || "usuario@exemplo.com";
 
   const menuItems = [
     {

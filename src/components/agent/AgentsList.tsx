@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ChevronRight, Trash } from "lucide-react";
+import { ChevronRight, Trash, Edit } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Agent } from "@/services/agent/agentStorageService";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "../ui/alert-dialog";
@@ -24,6 +24,17 @@ export function AgentsList({ agents, onDeleteAgent, isLoading = false }: AgentsL
   const handleDeleteClick = (agentId: string, e: React.MouseEvent) => {
     e.stopPropagation();
     setAgentToDelete(agentId);
+  };
+
+  const handleEditClick = (agentId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    // Store agent in sessionStorage for edit form
+    const agent = agents.find(a => a.id === agentId);
+    if (agent) {
+      sessionStorage.setItem('editingAgent', JSON.stringify(agent));
+    }
+    // Navigate to edit page
+    navigate(`/edit-agent/${agentId}`);
   };
 
   const confirmDelete = () => {
@@ -62,15 +73,26 @@ export function AgentsList({ agents, onDeleteAgent, isLoading = false }: AgentsL
             </div>
             <div className="flex items-center gap-2">
               {onDeleteAgent && (
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                  onClick={(e) => handleDeleteClick(agent.id, e)}
-                >
-                  <Trash className="h-5 w-5" />
-                  <span className="sr-only">Deletar agente</span>
-                </Button>
+                <>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="text-blue-600 hover:text-blue-800 hover:bg-blue-100"
+                    onClick={(e) => handleEditClick(agent.id, e)}
+                  >
+                    <Edit className="h-5 w-5" />
+                    <span className="sr-only">Editar agente</span>
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                    onClick={(e) => handleDeleteClick(agent.id, e)}
+                  >
+                    <Trash className="h-5 w-5" />
+                    <span className="sr-only">Deletar agente</span>
+                  </Button>
+                </>
               )}
               <ChevronRight className="h-5 w-5 text-muted-foreground" />
             </div>

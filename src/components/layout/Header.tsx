@@ -26,7 +26,7 @@ interface HeaderProps {
 
 const Header = ({ title = "Dashboard" }: HeaderProps) => {
   const navigate = useNavigate();
-  const userEmail = getCurrentUserEmail();
+  const userEmail = getCurrentUserEmail() || "usuario@exemplo.com";
   
   const handleLogout = () => {
     // In a real app, we would clear the auth token here
@@ -61,7 +61,7 @@ const Header = ({ title = "Dashboard" }: HeaderProps) => {
               <div className="flex flex-col space-y-1">
                 <p className="text-sm font-medium leading-none">Minha Conta</p>
                 <p className="text-xs leading-none text-muted-foreground">
-                  {userEmail || "Sem email"}
+                  {userEmail}
                 </p>
               </div>
             </DropdownMenuLabel>
