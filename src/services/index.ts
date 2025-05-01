@@ -10,3 +10,6 @@ export * from './storage/localStorageService';
 
 // Export analytics services
 export * from './analytics/agentPerformanceService';
+
+// Export checkout services
+export * from './checkout';
