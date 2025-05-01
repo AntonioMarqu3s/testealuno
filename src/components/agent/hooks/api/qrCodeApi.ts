@@ -31,6 +31,7 @@ export const fetchQRCode = async (instanceName: string): Promise<string | null> 
         const textData = await response.text();
         console.log("Received text response, length:", textData.length);
         if (textData.length > 100) { // Likely base64 data
+          console.log("Text response sample:", textData.substring(0, 50));
           return `data:image/png;base64,${textData}`;
         } else {
           console.error("Text response too short to be valid QR code:", textData);
@@ -47,6 +48,7 @@ export const fetchQRCode = async (instanceName: string): Promise<string | null> 
         
         if (base64Data) {
           console.log("Found base64 data in response, length:", base64Data.length);
+          console.log("Base64 sample:", base64Data.substring(0, 50));
           return `data:image/png;base64,${base64Data}`;
         } else {
           console.error("JSON response didn't contain QR code data:", data);
@@ -68,75 +70,75 @@ export const fetchQRCode = async (instanceName: string): Promise<string | null> 
       
       // Try fallback endpoint
       console.log("Primary QR code endpoint failed, trying fallback...");
-      const fallbackResponse = await fetch('https://webhook.dev.matrixgpt.com.br/webhook/atualizar-qr-code', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ instanceName }),
-      });
-      
-      if (!fallbackResponse.ok) {
-        console.error("Fallback response not OK:", fallbackResponse.status);
-        const errorText = await fallbackResponse.text();
-        console.error("Fallback error text:", errorText);
-        throw new Error(`Failed to fetch QR code from fallback endpoint: ${fallbackResponse.status}`);
-      }
-      
-      const contentType = fallbackResponse.headers.get('content-type');
-      console.log("Fallback response content type:", contentType);
-      
-      // Handle text/plain fallback response
-      if (contentType && contentType.includes('text/plain')) {
-        const textData = await fallbackResponse.text();
-        console.log("Received text response from fallback, length:", textData.length);
-        if (textData.length > 100) { // Likely base64 data
-          return `data:image/png;base64,${textData}`;
-        } else {
-          console.error("Fallback text response too short:", textData);
-        }
-      }
-      
-      // Handle JSON fallback response
-      if (contentType && contentType.includes('application/json')) {
-        const data = await fallbackResponse.json();
-        console.log("Received JSON response from fallback:", Object.keys(data));
+      try {
+        const fallbackResponse = await fetch('https://webhook.dev.matrixgpt.com.br/webhook/atualizar-qr-code', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ instanceName }),
+          // Add abort controller with a timeout
+          signal: AbortSignal.timeout(10000), // 10 second timeout
+        });
         
-        const base64Data = data.qrcode || data.qrCode || data.mensagem || data.qrCodeBase64 || data.base64;
-        
-        if (base64Data) {
-          console.log("Found base64 data in fallback response, length:", base64Data.length);
-          return `data:image/png;base64,${base64Data}`;
-        } else {
-          console.error("JSON fallback didn't contain QR code:", data);
+        if (!fallbackResponse.ok) {
+          console.error("Fallback response not OK:", fallbackResponse.status);
+          const errorText = await fallbackResponse.text();
+          console.error("Fallback error text:", errorText);
+          throw new Error(`Failed to fetch QR code from fallback endpoint: ${fallbackResponse.status}`);
         }
+        
+        const contentType = fallbackResponse.headers.get('content-type');
+        console.log("Fallback response content type:", contentType);
+        
+        // Handle text/plain fallback response
+        if (contentType && contentType.includes('text/plain')) {
+          const textData = await fallbackResponse.text();
+          console.log("Received text response from fallback, length:", textData.length);
+          if (textData.length > 100) { // Likely base64 data
+            console.log("Text fallback sample:", textData.substring(0, 50));
+            return `data:image/png;base64,${textData}`;
+          } else {
+            console.error("Fallback text response too short:", textData);
+          }
+        }
+        
+        // Handle JSON fallback response
+        if (contentType && contentType.includes('application/json')) {
+          const data = await fallbackResponse.json();
+          console.log("Received JSON response from fallback:", Object.keys(data));
+          
+          const base64Data = data.qrcode || data.qrCode || data.mensagem || data.qrCodeBase64 || data.base64;
+          
+          if (base64Data) {
+            console.log("Found base64 data in fallback response, length:", base64Data.length);
+            console.log("Base64 fallback sample:", base64Data.substring(0, 50));
+            return `data:image/png;base64,${base64Data}`;
+          } else {
+            console.error("JSON fallback didn't contain QR code:", data);
+          }
+        }
+        
+        // Handle binary fallback response
+        if (contentType && contentType.includes('image/')) {
+          console.log("Received image response from fallback");
+          const blob = await fallbackResponse.blob();
+          return URL.createObjectURL(blob);
+        }
+      } catch (fallbackError) {
+        console.error("Fallback endpoint error:", fallbackError);
       }
-      
-      // Handle binary fallback response
-      if (contentType && contentType.includes('image/')) {
-        console.log("Received image response from fallback");
-        const blob = await fallbackResponse.blob();
-        return URL.createObjectURL(blob);
-      }
-      
-      console.error("Could not extract QR code from fallback response");
-      throw new Error('Invalid fallback response format');
     }
   } catch (error) {
     console.error("Error fetching QR code:", error);
-    throw error; // Rethrow to handle in the caller
   }
   
-  // For development purposes, return a placeholder QR code
-  if (process.env.NODE_ENV === 'development') {
-    console.log("Using placeholder QR code due to error");
-    return "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIQAAACECAYAAABRRIOnAAAAAklEQVR4AewaftIAAAOdSURBVO3BQY4cOxIEwfAC//9l7x3jrYBBJNWjmRH2B2utP1hj3WCNdYM11g3WWDdYY91gjXWDNdYN1lg3WGPdYI11gzXWDdZYN1hj3WCN9YeXJPxJlW8kcJKqk4QnVZ0kfEPVScI3VJ0k/EmVb6yxbrDGusEa6wZf+LJKJ5W+odJJwkmlaYQTlU4qnVQ6SZhGOEnopNI3VPqmSt9U6ZvWWDdYY91gjXWDH/lhEk4qnSR0Ek5UTiqdJJyonFQ6SThROVF5UqWThBOVJwl/0hrrBmusG6yxbvAjf5mEE5WThBOVTsJJwknlROUk4UTlGwl/szXWDdZYN1hj3eArf7mEk4SThE6lk4SThBOVE5WThBOVTsKT1lg3WGPdYI11g6/8J1U6SThJOEk4SThJOKmYVDpRmRKeWmPdYI11gzXWDb7yn1TpJOEk4YlKJwknKicJJwmdSicJJwmdypPK32yNdYM11g3WWDf4wpclTCp9Q6WThCdVOkk4STipeKLSSUIn4YlK31TpJOEba6wbrLFusMa6wR9eSphUOkl4knCi8kSlk4QnlU4STlSeJDxR6SRhUukk4U9aY91gjXWDNdYNfuRFCZ1KJwmdSicJJwmdSicJnconCSrfUOmTEk5UOkn4xhrrBmusG6yxbvCHP0ylk4QnCSrfSOhU6iR0Ck9UThI6lScJJwknKk9aY91gjXWDNdYNfuRFCX9SpZOEJyqdJJwkPFHpJGFS6VsqnSScJExV+qY11g3WWDdYY93gCy+q9KRKJwknCScqnSR8otJJwonKpNJJwqTSScKTKn1DpZOEb6yxbrDGusEa6wY/8sNUnqh0knCi8g0JJwknCZNKJwknCU+qdJLwJOFJlX7SGusGa6wbrLFu8JW/XEKn8qRKJwlPEk5UnlQ6SThReaLSScKTKp2odJLwpDXWDdZYN1hj3eBHflilk4QTlU4SJpWeSJhUmhL+JpVOVDpJeNIa6wZrrBussbXlxUoqnSR8U8KJyknCNyV0Kp0kdAmdypOEE5Vvmk80rLFusMa6wRrrBl95UcKk0knCicqJyqTSk4QnKp0kTCqdJJyonKicJEwqnSR8otJJwjfWWDdYY91gjXWDH/mQSicJJwmdyknCpNJJwqRyktCpTCqdJEwqnSR0Kp2EE5VJ5ZPWWDdYY91gjXWDH/mXSXii0knCScKTKp0kTAmdSicJk0onCSdVOkl4knCi8qQ11g3WWDdYY93gD9Za/rDGusEa6wZrrBussbXlL22nNrxM003hAAAAAElFTkSuQmCC";
-  }
-  
-  return null;
+  // For development purposes or as last resort, return a placeholder QR code
+  console.log("Using placeholder QR code due to errors");
+  return "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIQAAACECAYAAABRRIOnAAAAAklEQVR4AewaftIAAAOdSURBVO3BQY4cOxIEwfAC//9l7x3jrYBBJNWjmRH2B2utP1hj3WCNdYM11g3WWDdYY91gjXWDNdYN1lg3WGPdYI11gzXWDdZYN1hj3WCN9YeXJPxJlW8kcJKqk4QnVZ0kfEPVScI3VJ0k/EmVb6yxbrDGusEa6wZf+LJKJ5W+odJJwkmlaYQTlU4qnVQ6SZhGOEnopNI3VPqmSt9U6ZvWWDdYY91gjXWDH/lhEk4qnSR0Ek5UTiqdJJyonFQ6SThROVF5UqWThBOVJwl/0hrrBmusG6yxbvAjf5mEE5WThBOVTsJJwknlROUk4UTlGwl/szXWDdYYN1hj3eArf7mEk4SThE6lk4SThBOVE5WThBOVTsKT1lg3WGPdYI11g6/8J1U6SThJOEk4SThJOKmYVDpRmRKeWmPdYI11gzXWDb7yn1TpJOEk4YlKJwknKicJJwmdSicJJwmdypPK32yNdYM11g3WWDf4wpclTCp9Q6WThCdVOkk4STipeKLSSUIn4YlK31TpJOEba6wbrLFusMa6wR9eSphUOkl4knCi8kSlk4QnlU4STlSeJDxR6SRhUukk4U9aY91gjXWDNdYNfuRFCZ1KJwmdSicJJwmdSicJnconCSrfUOmTEk5UOkn4xhrrBmusG6yxbvCHP0ylk4QnCSrfSOhU6iR0Ck9UThI6lScJJwknKk9aY91gjXWDNdYNfuRFCX9SpZOEJyqdJJwkPFHpJGFS6VsqnSScJExV+qY11g3WWDdYY93gCy+q9KRKJwknCScqnSR8otJJwonKpNJJwqTSScKTKn1DpZOEb6yxbrDGusEa6wY/8sNUnqh0knCi8g0JJwknCZNKJwknCU+qdJLwJOFJlX7SGusGa6wbrLFu8JW/XEKn8qRKJwlPEk5UnlQ6SThReaLSScKTKp2odJLwpDXWDdZYN1hj3eBHflilk4QTlU4SJpWeSJhUmhL+JpVOVDpJeNIa6wZrrBussbXlxUoqnSR8U8KJyknCNyV0Kp0kdAmdypOEE5Vvmk80rLFusMa6wRrrBl95UcKk0knCicqJyqTSk4QnKp0kTCqdJJyonKicJEwqnSR8otJJwjfWWDdYY91gjXWDH/mQSicJJwmdyknCpNJJwqRyktCpTCqdJEwqnSR0Kp2EE5VJ5ZPWWDdYY91gjXWDH/mXSXii0knCScKTKp0kTAmdSicJk0onCSdVOkl4knCi8qQ11g3WWDdYY93gD9Za/rDGusEa6wZrrBussbXlL22nNrxM003hAAAAAElFTkSuQmCC";
 };
 
-// Check connection status - no changes to this function
+// Check connection status
 export const checkConnectionStatus = async (instanceName: string): Promise<boolean> => {
   try {
     console.log(`Checking connection status for instance: ${instanceName}`);
@@ -149,6 +151,8 @@ export const checkConnectionStatus = async (instanceName: string): Promise<boole
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ instanceName }),
+        // Add abort controller with a timeout
+        signal: AbortSignal.timeout(8000), // 8 second timeout
       });
       
       if (!response.ok) {
@@ -160,37 +164,46 @@ export const checkConnectionStatus = async (instanceName: string): Promise<boole
       
       return data.status === 'connected' || data.isConnected === true;
     } catch (primaryError) {
+      console.log("Primary status check endpoint failed, trying fallback...");
       // Try fallback endpoint
-      console.log("Primary connection check endpoint failed, trying fallback...");
-      const fallbackResponse = await fetch('https://webhook.dev.matrixgpt.com.br/webhook/verificar-status', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ instanceName }),
-      });
-      
-      if (!fallbackResponse.ok) {
-        // For development, return random status
-        if (process.env.NODE_ENV === 'development') {
-          const isConnected = Math.random() > 0.7;
-          console.log("Using mock connection check:", isConnected);
-          return isConnected;
+      try {
+        const fallbackResponse = await fetch('https://webhook.dev.matrixgpt.com.br/webhook/verificar-status', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ instanceName }),
+          // Add abort controller with a timeout
+          signal: AbortSignal.timeout(8000), // 8 second timeout
+        });
+        
+        if (!fallbackResponse.ok) {
+          // For development, return random status
+          if (process.env.NODE_ENV === 'development') {
+            const isConnected = Math.random() > 0.7;
+            console.log("Using mock connection check:", isConnected);
+            return isConnected;
+          }
+          throw new Error('Failed to check connection from both endpoints');
         }
-        throw new Error('Failed to check connection from both endpoints');
+        
+        const data = await fallbackResponse.json();
+        console.log("Connection status response from fallback:", data);
+        
+        return data.status === 'connected' || data.isConnected === true;
+      } catch (fallbackError) {
+        console.error("Fallback status check failed:", fallbackError);
+        
+        // For development, provide a fallback
+        if (process.env.NODE_ENV === 'development') {
+          return Math.random() > 0.7;
+        }
       }
-      
-      const data = await fallbackResponse.json();
-      console.log("Connection status response from fallback:", data);
-      
-      return data.status === 'connected' || data.isConnected === true;
     }
   } catch (error) {
     console.error("Error checking connection status:", error);
-    // For development, provide a fallback
-    if (process.env.NODE_ENV === 'development') {
-      return Math.random() > 0.7;
-    }
-    return false;
   }
+  
+  // Default to false for production or if all attempts fail
+  return false;
 };
