@@ -1,3 +1,4 @@
+
 import { getStorageItem, setStorageItem } from '../storage/localStorageService';
 
 // Define plan types
@@ -14,7 +15,7 @@ export const PLAN_DETAILS = {
     name: 'Teste Gratuito', 
     agentLimit: 1, 
     price: 0,
-    trialDays: 3 
+    trialDays: 5 
   },
   [PlanType.BASIC]: { 
     name: 'Inicial', 
@@ -50,7 +51,7 @@ export const getUserPlan = (email: string): UserPlan => {
   
   // If no plan exists for this user, initialize with free trial plan
   if (!planData[email]) {
-    // Calculate trial end date (3 days from now)
+    // Calculate trial end date (5 days from now)
     const trialEnd = new Date();
     trialEnd.setDate(trialEnd.getDate() + PLAN_DETAILS[PlanType.FREE_TRIAL].trialDays);
     

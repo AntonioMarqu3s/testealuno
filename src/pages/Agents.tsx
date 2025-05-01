@@ -6,7 +6,7 @@ import { AgentsHeader } from "@/components/agent/AgentsHeader";
 import { AgentsList } from "@/components/agent/AgentsList";
 import { EmptyAgentState } from "@/components/agent/EmptyAgentState";
 import { getCurrentUserEmail } from "@/services/user/userService";
-import { getUserPlan } from "@/services/plan/userPlanService";
+import { getUserPlan, hasTrialExpired } from "@/services/plan/userPlanService";
 import { deleteUserAgent, getUserAgents } from "@/services/agent/agentStorageService";
 import { UpgradeModal } from "@/components/agent/UpgradeModal";
 import { useToast } from "@/hooks/use-toast";
@@ -19,12 +19,21 @@ const Agents = () => {
   // Get current user email
   const userEmail = getCurrentUserEmail();
   
-  // Get user plan
+  // Get user plan and check trial status
   const userPlan = getUserPlan(userEmail);
+  const isTrialExpired = hasTrialExpired(userEmail);
   
   // Get user agents with state management
   const [userAgents, setUserAgents] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  
+  // Check for URL parameter to show upgrade modal
+  useEffect(() => {
+    const searchParams = new URLSearchParams(location.search);
+    if (searchParams.get('showUpgrade') === 'true') {
+      setShowUpgradeModal(true);
+    }
+  }, []);
   
   // Load agents on component mount and when email changes
   useEffect(() => {
@@ -37,7 +46,12 @@ const Agents = () => {
   }, [userEmail]);
   
   const handleCreateAgent = () => {
-    navigate('/create-agent'); // Navigate to create agent page directly
+    // If trial expired, show upgrade modal
+    if (isTrialExpired) {
+      setShowUpgradeModal(true);
+    } else {
+      navigate('/create-agent'); // Navigate to create agent page directly
+    }
   };
   
   const handleUpgradeClick = () => {

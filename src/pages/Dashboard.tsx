@@ -7,9 +7,15 @@ import MainLayout from "@/components/layout/MainLayout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { Plus, Users } from "lucide-react";
-import { getUserPlan } from "@/services/plan/userPlanService";
+import { 
+  getUserPlan, 
+  PlanType, 
+  getTrialDaysRemaining, 
+  hasTrialExpired 
+} from "@/services/plan/userPlanService";
 import { getCurrentUserEmail } from "@/services/user/userService";
 import { getUserAgents } from "@/services/agent/agentStorageService";
+import { Badge } from "@/components/ui/badge";
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -21,6 +27,11 @@ const Dashboard = () => {
   const userEmail = getCurrentUserEmail();
   const userPlan = getUserPlan(userEmail);
   const userAgents = getUserAgents(userEmail);
+  
+  // Get trial information
+  const trialDaysRemaining = getTrialDaysRemaining(userEmail);
+  const isTrialExpired = hasTrialExpired(userEmail);
+  const isTrialPlan = userPlan.plan === PlanType.FREE_TRIAL;
 
   const handleCreateAgent = () => {
     // Navigate to agent type selection
@@ -49,6 +60,32 @@ const Dashboard = () => {
             <Plus className="mr-2 h-4 w-4" /> Criar Novo Agente
           </Button>
         </div>
+        
+        {isTrialPlan && (
+          <Card className="bg-yellow-50 border-yellow-200">
+            <CardContent className="pt-6">
+              <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div>
+                  <h3 className="font-medium text-lg">
+                    {isTrialExpired ? (
+                      "Seu período de teste expirou!"
+                    ) : (
+                      `Seu período de teste termina em ${trialDaysRemaining} ${trialDaysRemaining === 1 ? 'dia' : 'dias'}`
+                    )}
+                  </h3>
+                  <p className="text-muted-foreground">
+                    {isTrialExpired 
+                      ? "Faça upgrade agora para continuar usando todos os recursos."
+                      : "Aproveite todos os recursos e benefícios durante seu período de teste gratuito."}
+                  </p>
+                </div>
+                <Button onClick={handleUpgrade} variant={isTrialExpired ? "default" : "outline"}>
+                  Fazer upgrade
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
         
         <Tabs defaultValue={currentTab}>
           <TabsList>
@@ -99,7 +136,14 @@ const Dashboard = () => {
               <Separator className="my-2" />
               <div className="flex items-center justify-between py-2">
                 <span>Plano atual</span>
-                <span className="font-medium">{userPlan.name}</span>
+                <div className="flex items-center gap-2">
+                  <span className="font-medium">{userPlan.name}</span>
+                  {isTrialPlan && (
+                    <Badge variant={isTrialExpired ? "destructive" : "outline"} className="text-xs">
+                      {isTrialExpired ? "Expirado" : `${trialDaysRemaining} dias restantes`}
+                    </Badge>
+                  )}
+                </div>
               </div>
             </CardContent>
             <CardFooter>
