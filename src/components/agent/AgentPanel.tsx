@@ -1,10 +1,10 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { getCurrentUserEmail } from "@/services";
 import { toast } from "sonner";
-import { AlertDialog, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { AlertDialog } from "@/components/ui/alert-dialog";
 
 import { Agent } from "./AgentTypes";
 import { AgentHeader } from "./panels/AgentHeader";
@@ -25,6 +25,7 @@ export const AgentPanel: React.FC<AgentPanelProps> = ({ agent, onDelete, onToggl
   const navigate = useNavigate();
   const userEmail = getCurrentUserEmail();
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [isConnected, setIsConnected] = useState(agent.isConnected);
   
   // Custom hooks for QR code and connection
   const { 
@@ -33,12 +34,34 @@ export const AgentPanel: React.FC<AgentPanelProps> = ({ agent, onDelete, onToggl
     qrCodeImage, 
     timerCount,
     instanceName,
+    connectionCheckAttempts,
     handleGenerateQrCode, 
     setShowQRDialog,
     handleConnected 
   } = useQRCodeGeneration(agent.name, agent.type);
   
-  const { isDisconnecting, handleDisconnect } = useAgentConnection();
+  const { isDisconnecting, isCheckingStatus, handleDisconnect, checkConnectionStatus } = useAgentConnection();
+
+  // Check connection status when component mounts
+  useEffect(() => {
+    if (agent.instanceId) {
+      const verifyStatus = async () => {
+        const connected = await checkConnectionStatus(agent.instanceId);
+        
+        // Only update if the connection status is different
+        if (connected !== isConnected) {
+          setIsConnected(connected);
+          
+          // Update parent state if callback provided
+          if (onToggleConnection) {
+            onToggleConnection(agent.id, connected);
+          }
+        }
+      };
+      
+      verifyStatus();
+    }
+  }, [agent.instanceId]);
 
   const handleEdit = () => {
     // Prepare agent data for editing and navigate
@@ -56,31 +79,40 @@ export const AgentPanel: React.FC<AgentPanelProps> = ({ agent, onDelete, onToggl
   
   const handleDisconnectClick = async () => {
     const success = await handleDisconnect(agent.instanceId);
-    if (success && onToggleConnection) {
-      onToggleConnection(agent.id, false);
+    if (success) {
+      setIsConnected(false);
+      
+      // Update parent state if callback provided
+      if (onToggleConnection) {
+        onToggleConnection(agent.id, false);
+      }
     }
   };
   
   const handleConnectClick = () => {
-    handleGenerateQrCode();
+    // Generate QR code and set up connection callback
+    handleGenerateQrCode(handleQRConnected);
   };
   
   const handleQRConnected = () => {
-    // Handle the successful connection
+    // Handle successful connection
     handleConnected();
+    setIsConnected(true);
     
-    // Update agent connection status
+    // Update parent state if callback provided
     if (onToggleConnection) {
       console.log("QR code scanned successfully, updating agent connection status");
       onToggleConnection(agent.id, true);
-      toast.success("Agente conectado com sucesso!");
     }
+    
+    // Close QR dialog
+    setShowQRDialog(false);
   };
 
   return (
     <Card className="flex flex-col h-full overflow-hidden">
       <AgentHeader 
-        agent={agent} 
+        agent={{...agent, isConnected: isConnected}}
         onEdit={handleEdit}
         onOpenDeleteDialog={() => setShowDeleteDialog(true)}
       />
@@ -91,7 +123,7 @@ export const AgentPanel: React.FC<AgentPanelProps> = ({ agent, onDelete, onToggl
       />
       
       <AgentFooter
-        agent={agent}
+        agent={{...agent, isConnected: isConnected}}
         onGenerateQR={handleConnectClick}
         onDisconnect={handleDisconnectClick}
         isGeneratingQR={isGeneratingQR}
@@ -113,6 +145,7 @@ export const AgentPanel: React.FC<AgentPanelProps> = ({ agent, onDelete, onToggl
         qrCodeImage={qrCodeImage}
         timerCount={timerCount}
         onConnected={handleQRConnected}
+        connectionCheckAttempts={connectionCheckAttempts}
       />
     </Card>
   );

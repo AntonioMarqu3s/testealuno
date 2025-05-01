@@ -1,5 +1,5 @@
 
-import React, { useEffect, useState } from "react";
+import React from "react";
 import {
   Dialog,
   DialogContent,
@@ -16,6 +16,7 @@ interface QRCodeDialogProps {
   qrCodeImage: string | null;
   timerCount: number;
   onConnected?: () => void;
+  connectionCheckAttempts?: number;
 }
 
 export const QRCodeDialog: React.FC<QRCodeDialogProps> = ({
@@ -23,72 +24,10 @@ export const QRCodeDialog: React.FC<QRCodeDialogProps> = ({
   onOpenChange,
   qrCodeImage,
   timerCount,
-  onConnected
+  onConnected,
+  connectionCheckAttempts = 0,
 }) => {
-  // Add polling to check connection status when QR code is displayed
-  const [checkingConnection, setCheckingConnection] = useState(false);
-  
-  useEffect(() => {
-    let connectionCheckInterval: number | null = null;
-    
-    // Start polling for connection status when QR code is displayed
-    if (open && qrCodeImage) {
-      setCheckingConnection(true);
-      
-      // Poll every 5 seconds to check if connection was established
-      connectionCheckInterval = window.setInterval(async () => {
-        try {
-          console.log("Checking connection status...");
-          const instanceId = sessionStorage.getItem('currentInstanceId');
-          
-          if (!instanceId) {
-            console.log("No instance ID found to check status");
-            return;
-          }
-          
-          const response = await fetch('https://webhook.dev.matrixgpt.com.br/webhook/verificar-status', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ instanceId }),
-          });
-          
-          if (!response.ok) {
-            throw new Error('Failed to check connection status');
-          }
-          
-          const data = await response.json();
-          console.log("Connection status:", data);
-          
-          // If connected, trigger the onConnected callback
-          if (data.status === 'connected' || data.isConnected === true) {
-            console.log("Agent is now connected!");
-            setCheckingConnection(false);
-            
-            if (connectionCheckInterval) {
-              window.clearInterval(connectionCheckInterval);
-            }
-            
-            if (onConnected) {
-              onConnected();
-              onOpenChange(false); // Close dialog when connected
-            }
-          }
-        } catch (error) {
-          console.error("Error checking connection status:", error);
-        }
-      }, 5000); // Check every 5 seconds
-    }
-    
-    // Cleanup interval when dialog closes
-    return () => {
-      if (connectionCheckInterval) {
-        window.clearInterval(connectionCheckInterval);
-        setCheckingConnection(false);
-      }
-    };
-  }, [open, qrCodeImage, onConnected, onOpenChange]);
+  const isCheckingConnection = connectionCheckAttempts > 0;
   
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -113,10 +52,10 @@ export const QRCodeDialog: React.FC<QRCodeDialogProps> = ({
                 <p className="text-sm text-muted-foreground text-center">
                   Novo QR Code em: <span className="font-bold">{timerCount}s</span>
                 </p>
-                {checkingConnection && (
+                {isCheckingConnection && (
                   <p className="text-xs text-amber-600 flex items-center gap-1">
                     <span className="inline-block w-2 h-2 bg-amber-500 rounded-full animate-pulse"></span>
-                    Verificando conexão...
+                    Verificando conexão... {connectionCheckAttempts > 0 ? `(${connectionCheckAttempts})` : ''}
                   </p>
                 )}
               </div>

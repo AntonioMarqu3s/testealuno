@@ -8,13 +8,18 @@ export const useQRCodeGeneration = (agentName: string, agentType: string) => {
   const [qrCodeImage, setQrCodeImage] = useState<string | null>(null);
   const [timerCount, setTimerCount] = useState(30);
   const [instanceName, setInstanceName] = useState<string>("");
+  const [connectionCheckAttempts, setConnectionCheckAttempts] = useState(0);
   const timerIntervalRef = useRef<number | null>(null);
+  const connectionCheckIntervalRef = useRef<number | null>(null);
   
-  // Clear timer on unmount
+  // Clear intervals on unmount
   useEffect(() => {
     return () => {
       if (timerIntervalRef.current !== null) {
         window.clearInterval(timerIntervalRef.current);
+      }
+      if (connectionCheckIntervalRef.current !== null) {
+        window.clearInterval(connectionCheckIntervalRef.current);
       }
     };
   }, []);
@@ -25,9 +30,17 @@ export const useQRCodeGeneration = (agentName: string, agentType: string) => {
       window.clearInterval(timerIntervalRef.current);
       timerIntervalRef.current = null;
     }
+    if (connectionCheckIntervalRef.current !== null) {
+      window.clearInterval(connectionCheckIntervalRef.current);
+      connectionCheckIntervalRef.current = null;
+    }
+    
+    // Clear stored instance ID
+    sessionStorage.removeItem('currentInstanceId');
+    setConnectionCheckAttempts(0);
   };
   
-  const startQRCodeUpdateTimer = (instanceName: string) => {
+  const startQRCodeUpdateTimer = (instanceId: string) => {
     setTimerCount(30);
     
     // Clear any existing interval
@@ -40,7 +53,7 @@ export const useQRCodeGeneration = (agentName: string, agentType: string) => {
       setTimerCount((prevCount) => {
         if (prevCount <= 1) {
           // Update QR code
-          updateQRCode(instanceName);
+          updateQRCode(instanceId);
           return 30;
         }
         return prevCount - 1;
@@ -53,6 +66,8 @@ export const useQRCodeGeneration = (agentName: string, agentType: string) => {
   
   const updateQRCode = async (instanceName: string) => {
     try {
+      console.log("Updating QR code for instance:", instanceName);
+      
       const response = await fetch('https://webhook.dev.matrixgpt.com.br/webhook/atualizar-qr-code', {
         method: 'POST',
         headers: {
@@ -92,7 +107,63 @@ export const useQRCodeGeneration = (agentName: string, agentType: string) => {
     }
   };
   
-  const handleGenerateQrCode = async () => {
+  const startConnectionStatusCheck = (instanceName: string, onConnected: () => void) => {
+    // Clear any existing interval
+    if (connectionCheckIntervalRef.current !== null) {
+      window.clearInterval(connectionCheckIntervalRef.current);
+    }
+    
+    setConnectionCheckAttempts(0);
+    
+    // Start checking connection status every 5 seconds
+    const intervalId = window.setInterval(async () => {
+      try {
+        console.log("Checking connection status for:", instanceName);
+        
+        const response = await fetch('https://webhook.dev.matrixgpt.com.br/webhook/verificar-status', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ instanceId: instanceName }),
+        });
+        
+        if (!response.ok) {
+          throw new Error('Failed to check connection status');
+        }
+        
+        const data = await response.json();
+        console.log("Connection status response:", data);
+        
+        // If connected, trigger the onConnected callback
+        if (data.status === 'connected' || data.isConnected === true) {
+          console.log("Connection successful!");
+          
+          // Stop both intervals
+          if (timerIntervalRef.current !== null) {
+            window.clearInterval(timerIntervalRef.current);
+            timerIntervalRef.current = null;
+          }
+          
+          window.clearInterval(intervalId);
+          connectionCheckIntervalRef.current = null;
+          
+          // Call connected callback
+          onConnected();
+        } else {
+          // Increment connection check attempts
+          setConnectionCheckAttempts(prev => prev + 1);
+        }
+      } catch (error) {
+        console.error("Error checking connection status:", error);
+        setConnectionCheckAttempts(prev => prev + 1);
+      }
+    }, 5000); // Check every 5 seconds
+    
+    connectionCheckIntervalRef.current = intervalId;
+  };
+  
+  const handleGenerateQrCode = async (onConnected?: () => void) => {
     setIsGeneratingQR(true);
     setShowQRDialog(true);
     
@@ -105,7 +176,8 @@ export const useQRCodeGeneration = (agentName: string, agentType: string) => {
         "support": "Atendimento",
         "custom": "Personalizado",
       };
-      const instanceName = `${agentTypeMap[agentType] || agentType} - ${agentName}`;
+      const formattedAgentType = agentTypeMap[agentType] || agentType;
+      const instanceName = `${formattedAgentType} - ${agentName}`;
       setInstanceName(instanceName);
       
       // Store instance name for status checks
@@ -148,6 +220,12 @@ export const useQRCodeGeneration = (agentName: string, agentType: string) => {
       
       // Start timer for QR code updates
       startQRCodeUpdateTimer(instanceName);
+      
+      // Start interval for checking connection status if onConnected callback provided
+      if (onConnected) {
+        startConnectionStatusCheck(instanceName, onConnected);
+      }
+      
       toast.success("QR Code gerado com sucesso");
       
     } catch (error) {
@@ -160,18 +238,24 @@ export const useQRCodeGeneration = (agentName: string, agentType: string) => {
   };
   
   const handleConnected = () => {
-    // Clear any existing interval
+    // Clear any existing intervals
     if (timerIntervalRef.current !== null) {
       window.clearInterval(timerIntervalRef.current);
       timerIntervalRef.current = null;
     }
     
-    // Clear stored instance ID
-    sessionStorage.removeItem('currentInstanceId');
+    if (connectionCheckIntervalRef.current !== null) {
+      window.clearInterval(connectionCheckIntervalRef.current);
+      connectionCheckIntervalRef.current = null;
+    }
     
     // Reset states
     setQrCodeImage(null);
     setShowQRDialog(false);
+    setConnectionCheckAttempts(0);
+    
+    // Show success message
+    toast.success("Conexão estabelecida com sucesso!");
   };
 
   return {
@@ -180,6 +264,7 @@ export const useQRCodeGeneration = (agentName: string, agentType: string) => {
     qrCodeImage,
     timerCount,
     instanceName,
+    connectionCheckAttempts,
     handleGenerateQrCode,
     setShowQRDialog: handleCloseQRDialog,
     handleConnected

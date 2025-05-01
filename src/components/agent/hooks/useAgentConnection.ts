@@ -4,6 +4,7 @@ import { toast } from 'sonner';
 
 export const useAgentConnection = () => {
   const [isDisconnecting, setIsDisconnecting] = useState(false);
+  const [isCheckingStatus, setIsCheckingStatus] = useState(false);
   
   const handleDisconnect = async (instanceId?: string) => {
     if (!instanceId) {
@@ -46,7 +47,10 @@ export const useAgentConnection = () => {
   const checkConnectionStatus = async (instanceId?: string) => {
     if (!instanceId) return false;
     
+    setIsCheckingStatus(true);
+    
     try {
+      console.log("Checking connection status for instance:", instanceId);
       const response = await fetch('https://webhook.dev.matrixgpt.com.br/webhook/verificar-status', {
         method: 'POST',
         headers: {
@@ -60,15 +64,20 @@ export const useAgentConnection = () => {
       }
       
       const data = await response.json();
+      console.log("Connection status response:", data);
+      
+      setIsCheckingStatus(false);
       return data.status === 'connected' || data.isConnected === true;
     } catch (error) {
       console.error("Error checking connection status:", error);
+      setIsCheckingStatus(false);
       return false;
     }
   };
 
   return {
     isDisconnecting,
+    isCheckingStatus,
     handleDisconnect,
     checkConnectionStatus
   };
