@@ -1,21 +1,18 @@
 
 import { useNavigate, useLocation } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { AgentGrid } from "@/components/dashboard/AgentGrid";
 import MainLayout from "@/components/layout/MainLayout";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Separator } from "@/components/ui/separator";
-import { Plus, Users } from "lucide-react";
+import { getCurrentUserEmail } from "@/services/user/userService";
 import { 
   getUserPlan, 
   PlanType, 
   getTrialDaysRemaining, 
   hasTrialExpired 
 } from "@/services/plan/userPlanService";
-import { getCurrentUserEmail } from "@/services/user/userService";
 import { getUserAgents } from "@/services/agent/agentStorageService";
-import { Badge } from "@/components/ui/badge";
+import { WelcomeHeader } from "@/components/dashboard/WelcomeHeader";
+import { TrialBanner } from "@/components/dashboard/TrialBanner";
+import { AgentTypeTabs } from "@/components/dashboard/AgentTypeTabs";
+import { DashboardCards } from "@/components/dashboard/DashboardCards";
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -49,154 +46,31 @@ const Dashboard = () => {
   return (
     <MainLayout title="Dashboard">
       <div className="space-y-8">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          <div>
-            <h2 className="text-3xl font-bold tracking-tight">Bem-vindo ao Agent Hub</h2>
-            <p className="text-muted-foreground">
-              Crie e personalize seus agentes de IA para diferentes finalidades.
-            </p>
-          </div>
-          <Button className="md:w-auto w-full" onClick={handleCreateAgent}>
-            <Plus className="mr-2 h-4 w-4" /> Criar Novo Agente
-          </Button>
-        </div>
+        <WelcomeHeader onCreateAgent={handleCreateAgent} />
         
         {isTrialPlan && (
-          <Card className="bg-yellow-50 border-yellow-200">
-            <CardContent className="pt-6">
-              <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                <div>
-                  <h3 className="font-medium text-lg">
-                    {isTrialExpired ? (
-                      "Seu período de teste expirou!"
-                    ) : (
-                      `Seu período de teste termina em ${trialDaysRemaining} ${trialDaysRemaining === 1 ? 'dia' : 'dias'}`
-                    )}
-                  </h3>
-                  <p className="text-muted-foreground">
-                    {isTrialExpired 
-                      ? "Faça upgrade agora para continuar usando todos os recursos."
-                      : "Aproveite todos os recursos e benefícios durante seu período de teste gratuito."}
-                  </p>
-                </div>
-                <Button onClick={handleUpgrade} variant={isTrialExpired ? "default" : "outline"}>
-                  Fazer upgrade
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+          <TrialBanner 
+            isTrialExpired={isTrialExpired}
+            trialDaysRemaining={trialDaysRemaining}
+            onUpgrade={handleUpgrade}
+          />
         )}
         
-        <Tabs defaultValue={currentTab}>
-          <TabsList>
-            <TabsTrigger value="agents">Tipos de Agentes</TabsTrigger>
-            <TabsTrigger value="my-agents" onClick={handleNavigateToMyAgents}>Meus Agentes</TabsTrigger>
-          </TabsList>
-          <TabsContent value="agents" className="space-y-6">
-            <div className="mt-6">
-              <h3 className="text-lg font-medium mb-4">Escolha um tipo de agente para começar</h3>
-              <AgentGrid />
-            </div>
-          </TabsContent>
-          <TabsContent value="my-agents">
-            <div className="mt-6 flex flex-col items-center justify-center min-h-[400px] border border-dashed rounded-lg p-8">
-              <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-4">
-                <Users className="h-8 w-8 text-primary" />
-              </div>
-              <h3 className="text-xl font-medium">Nenhum agente criado ainda</h3>
-              <p className="text-muted-foreground text-center max-w-md mt-2 mb-6">
-                Crie seu primeiro agente de IA personalizado para automatizar tarefas de vendas, prospecção ou atendimento.
-              </p>
-              <Button onClick={handleCreateAgent}>
-                <Plus className="mr-2 h-4 w-4" /> Criar Agente
-              </Button>
-            </div>
-          </TabsContent>
-        </Tabs>
+        <AgentTypeTabs 
+          currentTab={currentTab}
+          onCreateAgent={handleCreateAgent}
+          onNavigateToAgents={handleNavigateToMyAgents}
+        />
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle>Recursos Disponíveis</CardTitle>
-              <CardDescription>Recursos incluídos no seu plano atual</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center justify-between py-2">
-                <span>Agentes criados</span>
-                <span className="font-medium">{userAgents.length} / {userPlan.agentLimit}</span>
-              </div>
-              <div className="flex items-center justify-between py-2">
-                <span>Usuários</span>
-                <span className="font-medium">1 / 1</span>
-              </div>
-              <div className="flex items-center justify-between py-2">
-                <span>Automações</span>
-                <span className="font-medium">0 / 2</span>
-              </div>
-              <Separator className="my-2" />
-              <div className="flex items-center justify-between py-2">
-                <span>Plano atual</span>
-                <div className="flex items-center gap-2">
-                  <span className="font-medium">{userPlan.name}</span>
-                  {isTrialPlan && (
-                    <Badge variant={isTrialExpired ? "destructive" : "outline"} className="text-xs">
-                      {isTrialExpired ? "Expirado" : `${trialDaysRemaining} dias restantes`}
-                    </Badge>
-                  )}
-                </div>
-              </div>
-            </CardContent>
-            <CardFooter>
-              <Button variant="outline" className="w-full" onClick={handleUpgrade}>Fazer upgrade</Button>
-            </CardFooter>
-          </Card>
-
-          <Card className="bg-gradient-to-br from-primary/10 to-accent/5 border-primary/20">
-            <CardHeader className="pb-2">
-              <CardTitle>Começando</CardTitle>
-              <CardDescription>Dicas para começar com o Agent Hub</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ul className="space-y-2">
-                <li className="flex gap-2 items-center">
-                  <div className="w-5 h-5 rounded-full bg-primary/20 flex items-center justify-center text-xs">1</div>
-                  <span>Escolha um tipo de agente para criar</span>
-                </li>
-                <li className="flex gap-2 items-center">
-                  <div className="w-5 h-5 rounded-full bg-primary/20 flex items-center justify-center text-xs">2</div>
-                  <span>Personalize o conhecimento e comportamento</span>
-                </li>
-                <li className="flex gap-2 items-center">
-                  <div className="w-5 h-5 rounded-full bg-primary/20 flex items-center justify-center text-xs">3</div>
-                  <span>Integre com suas ferramentas existentes</span>
-                </li>
-                <li className="flex gap-2 items-center">
-                  <div className="w-5 h-5 rounded-full bg-primary/20 flex items-center justify-center text-xs">4</div>
-                  <span>Teste e refine seu agente</span>
-                </li>
-              </ul>
-            </CardContent>
-            <CardFooter>
-              <Button variant="secondary" className="w-full">Ver tutorial</Button>
-            </CardFooter>
-          </Card>
-
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle>Suporte</CardTitle>
-              <CardDescription>Obtenha ajuda quando precisar</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm">
-                Tem dúvidas sobre como configurar seus agentes ou precisa de ajuda com integrações?
-                Nossa equipe está aqui para ajudar.
-              </p>
-            </CardContent>
-            <CardFooter>
-              <Button variant="outline" className="w-full">Contatar suporte</Button>
-            </CardFooter>
-          </Card>
-        </div>
+        <DashboardCards 
+          userAgentsCount={userAgents.length}
+          agentLimit={userPlan.agentLimit}
+          planName={userPlan.name}
+          isTrialPlan={isTrialPlan}
+          isTrialExpired={isTrialExpired}
+          trialDaysRemaining={trialDaysRemaining}
+          onUpgrade={handleUpgrade}
+        />
       </div>
     </MainLayout>
   );
