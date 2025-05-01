@@ -40,6 +40,7 @@ const App = () => {
             <Route path="/create-agent" element={<CreateAgent />} />
             <Route path="/edit-agent/:agentId" element={<CreateAgent />} />
             <Route path="/agents" element={<Agents />} />
+            <Route path="/my-agents" element={<Agents />} />
             <Route path="/agent-analytics/:agentId" element={<AgentAnalytics />} />
             <Route path="/checkout" element={<Checkout />} />
             <Route path="/plan-checkout" element={<PlanCheckout />} />

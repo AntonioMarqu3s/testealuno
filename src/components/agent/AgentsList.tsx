@@ -57,7 +57,7 @@ export function AgentsList({ agents, onDeleteAgent, isLoading = false }: AgentsL
             <div>
               <h3 className="font-medium">{agent.name}</h3>
               <p className="text-sm text-muted-foreground truncate max-w-md">
-                {agent.description || "Sem descrição"}
+                {agent.type || "Sem descrição"}
               </p>
             </div>
             <div className="flex items-center gap-2">

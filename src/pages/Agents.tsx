@@ -7,7 +7,7 @@ import { AgentsList } from "@/components/agent/AgentsList";
 import { EmptyAgentState } from "@/components/agent/EmptyAgentState";
 import { getCurrentUserEmail } from "@/services/user/userService";
 import { getUserPlan } from "@/services/plan/userPlanService";
-import { deleteAgent, getUserAgents } from "@/services/agent/agentStorageService";
+import { deleteUserAgent, getUserAgents } from "@/services/agent/agentStorageService";
 import { UpgradeModal } from "@/components/agent/UpgradeModal";
 import { useToast } from "@/hooks/use-toast";
 
@@ -27,7 +27,7 @@ const Agents = () => {
   const [isLoading, setIsLoading] = useState(false);
   
   const handleCreateAgent = () => {
-    navigate('/dashboard'); // Navigate to dashboard to select agent type
+    navigate('/create-agent'); // Navigate to create agent page directly
   };
   
   const handleUpgradeClick = () => {
@@ -41,7 +41,7 @@ const Agents = () => {
 
   const handleDeleteAgent = (agentId: string) => {
     try {
-      deleteAgent(userEmail, agentId);
+      deleteUserAgent(userEmail, agentId);
       toast({
         title: "Agente excluído",
         description: "O agente foi excluído com sucesso.",
