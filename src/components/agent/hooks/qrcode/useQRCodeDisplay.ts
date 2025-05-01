@@ -5,9 +5,11 @@ import { fetchQRCode } from '../api/qrCodeApi';
 
 export const useQRCodeDisplay = () => {
   const [qrCodeImage, setQrCodeImage] = useState<string | null>(null);
+  const [isGeneratingQRCode, setIsGeneratingQRCode] = useState(false);
   
   const updateQRCode = async (instanceName: string) => {
     try {
+      setIsGeneratingQRCode(true);
       console.log("Updating QR code for instance:", instanceName);
       
       const imgSrc = await fetchQRCode(instanceName);
@@ -23,12 +25,15 @@ export const useQRCodeDisplay = () => {
       console.error("Error updating QR code:", error);
       toast.error("Erro ao atualizar QR Code");
       return false;
+    } finally {
+      setIsGeneratingQRCode(false);
     }
   };
 
   return {
     qrCodeImage,
     setQrCodeImage,
+    isGeneratingQRCode,
     updateQRCode
   };
 };

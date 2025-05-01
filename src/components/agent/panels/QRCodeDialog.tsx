@@ -16,6 +16,7 @@ interface QRCodeDialogProps {
   qrCodeImage: string | null;
   timerCount: number;
   connectionCheckAttempts?: number;
+  isGeneratingQRCode?: boolean;
 }
 
 export const QRCodeDialog: React.FC<QRCodeDialogProps> = ({
@@ -24,6 +25,7 @@ export const QRCodeDialog: React.FC<QRCodeDialogProps> = ({
   qrCodeImage,
   timerCount,
   connectionCheckAttempts = 0,
+  isGeneratingQRCode = false,
 }) => {
   const isCheckingConnection = connectionCheckAttempts > 0;
   
@@ -37,7 +39,12 @@ export const QRCodeDialog: React.FC<QRCodeDialogProps> = ({
           </DialogDescription>
         </DialogHeader>
         <div className="flex flex-col items-center justify-center p-6">
-          {qrCodeImage ? (
+          {isGeneratingQRCode ? (
+            <div className="flex justify-center items-center h-[240px] w-[240px]">
+              <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+              <p className="text-sm text-muted-foreground ml-3">Gerando QR Code...</p>
+            </div>
+          ) : qrCodeImage ? (
             <>
               <div className="mb-4 border rounded-lg p-2 overflow-hidden">
                 <img 

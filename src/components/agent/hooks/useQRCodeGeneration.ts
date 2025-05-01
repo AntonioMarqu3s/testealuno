@@ -3,6 +3,8 @@ import { useState, useRef } from 'react';
 import { useQRCodeTimer } from './qrcode/useQRCodeTimer';
 import { useQRCodeDisplay } from './qrcode/useQRCodeDisplay';
 import { useQRCodeConnection } from './qrcode/useQRCodeConnection';
+import { toast } from 'sonner';
+import { useEffect } from 'react';
 
 export const useQRCodeGeneration = (agentName: string, agentType: string) => {
   const [isGeneratingQR, setIsGeneratingQR] = useState(false);
@@ -15,7 +17,8 @@ export const useQRCodeGeneration = (agentName: string, agentType: string) => {
   // Import QR code display functionality
   const { 
     qrCodeImage, 
-    setQrCodeImage, 
+    setQrCodeImage,
+    isGeneratingQRCode,
     updateQRCode 
   } = useQRCodeDisplay();
   
@@ -46,8 +49,47 @@ export const useQRCodeGeneration = (agentName: string, agentType: string) => {
     sessionStorage.removeItem('currentInstanceId');
   };
   
+  const createInstance = async (instanceName: string) => {
+    try {
+      setIsGeneratingQR(true);
+      
+      // Call the API to create instance
+      const response = await fetch('https://n8n-n8n.31kvca.easypanel.host/webhook/criar-instancia', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ instanceName }),
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to generate QR code');
+      }
+      
+      const data = await response.json();
+      console.log("Create instance response:", data);
+      
+      // Check if the response contains success status
+      if (data.status === 'sucess' || data.status === 'success') {
+        toast.success(data.mensagem || "QR Code gerado com sucesso");
+        
+        // Get the initial QR code
+        const qrSuccess = await updateQRCode(instanceName);
+        return qrSuccess;
+      } else {
+        throw new Error(data.mensagem || 'Erro ao gerar QR Code');
+      }
+    } catch (error) {
+      console.error("Error creating instance:", error);
+      toast.error("Erro ao criar instância");
+      return false;
+    } finally {
+      setIsGeneratingQR(false);
+    }
+  };
+  
   const handleGenerateQrCode = async (onConnected?: () => void) => {
-    setIsGeneratingQR(true);
+    // Open the QR dialog before generating the QR code
     setShowQRDialog(true);
     
     try {
@@ -84,45 +126,7 @@ export const useQRCodeGeneration = (agentName: string, agentType: string) => {
     } catch (error) {
       console.error("Error generating QR code:", error);
       toast.error("Erro ao gerar QR Code");
-      setShowQRDialog(false);
-    } finally {
-      setIsGeneratingQR(false);
-    }
-  };
-  
-  // Imported from qrCodeApi.ts
-  const createInstance = async (instanceName: string) => {
-    try {
-      // Call the API to create instance
-      const response = await fetch('https://n8n-n8n.31kvca.easypanel.host/webhook/criar-instancia', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ instanceName }),
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to generate QR code');
-      }
-      
-      const data = await response.json();
-      console.log("Create instance response:", data);
-      
-      // Check if the response contains success status
-      if (data.status === 'sucess' || data.status === 'success') {
-        toast.success(data.mensagem || "QR Code gerado com sucesso");
-        
-        // Get the initial QR code
-        const qrSuccess = await updateQRCode(instanceName);
-        return qrSuccess;
-      } else {
-        throw new Error(data.mensagem || 'Erro ao gerar QR Code');
-      }
-    } catch (error) {
-      console.error("Error creating instance:", error);
-      toast.error("Erro ao criar instância");
-      return false;
+      // Don't automatically close the dialog on error
     }
   };
   
@@ -150,6 +154,7 @@ export const useQRCodeGeneration = (agentName: string, agentType: string) => {
 
   return {
     isGeneratingQR,
+    isGeneratingQRCode,
     showQRDialog,
     qrCodeImage,
     timerCount,
@@ -160,7 +165,3 @@ export const useQRCodeGeneration = (agentName: string, agentType: string) => {
     handleConnected
   };
 };
-
-// Add missing imports
-import { toast } from 'sonner';
-import { useEffect } from 'react';

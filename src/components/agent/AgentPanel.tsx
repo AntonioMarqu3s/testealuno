@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
@@ -29,6 +30,7 @@ export const AgentPanel: React.FC<AgentPanelProps> = ({ agent, onDelete, onToggl
   // Custom hooks for QR code and connection
   const { 
     isGeneratingQR, 
+    isGeneratingQRCode,
     showQRDialog, 
     qrCodeImage, 
     timerCount,
@@ -147,6 +149,7 @@ export const AgentPanel: React.FC<AgentPanelProps> = ({ agent, onDelete, onToggl
         qrCodeImage={qrCodeImage}
         timerCount={timerCount}
         connectionCheckAttempts={connectionCheckAttempts}
+        isGeneratingQRCode={isGeneratingQRCode}
       />
     </Card>
   );
