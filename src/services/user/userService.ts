@@ -1,6 +1,7 @@
 
 import { getStorageItem, setStorageItem } from '../storage/localStorageService';
 import { transferUserPlanData } from '../plan/userPlanService';
+import { transferUserAgentData } from '../agent/agentStorageService';
 
 const USER_EMAIL_KEY = 'user_email';
 
@@ -32,8 +33,7 @@ export const updateCurrentUserEmail = (newEmail: string): void => {
     console.log(`Updating user email from ${oldEmail} to ${newEmail}`);
     
     // Transfer user data to new email
-    // Use the imported function from agentStorageService
-    const { transferUserAgentData } = require('../agent/agentStorageService');
+    // Use imported function instead of require
     transferUserAgentData(oldEmail, newEmail);
     transferUserPlanData(oldEmail, newEmail);
     
