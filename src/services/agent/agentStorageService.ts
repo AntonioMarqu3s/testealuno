@@ -1,15 +1,5 @@
-
 import { getStorageItem, setStorageItem, ALL_AGENTS_KEY } from '../storage/localStorageService';
-
-export interface Agent {
-  id: string;
-  name: string;
-  type: string;
-  isConnected: boolean;
-  createdAt: Date;
-  instanceId: string;
-  clientIdentifier?: string;
-}
+import { Agent } from '@/components/agent/AgentTypes';
 
 /**
  * Get all agents for a user

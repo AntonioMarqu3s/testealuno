@@ -10,6 +10,7 @@ import { getUserPlan, hasTrialExpired } from "@/services/plan/userPlanService";
 import { deleteUserAgent, getUserAgents, updateUserAgent } from "@/services/agent/agentStorageService";
 import { UpgradeModal } from "@/components/agent/UpgradeModal";
 import { useToast } from "@/hooks/use-toast";
+import { Agent } from "@/components/agent/AgentTypes";
 
 const Agents = () => {
   const navigate = useNavigate();
@@ -24,7 +25,7 @@ const Agents = () => {
   const isTrialExpired = hasTrialExpired(userEmail);
   
   // Get user agents with state management
-  const [userAgents, setUserAgents] = useState([]);
+  const [userAgents, setUserAgents] = useState<Agent[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   
   // Check for URL parameter to show upgrade modal

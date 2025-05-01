@@ -1,10 +1,9 @@
-
 import React from "react";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { QrCode, BarChart, WifiOff } from "lucide-react";
-import { Agent } from "@/components/agent/AgentPanel";
+import { Agent } from "./AgentTypes";
 
 interface AgentConfirmationPanelProps {
   agent: Agent;

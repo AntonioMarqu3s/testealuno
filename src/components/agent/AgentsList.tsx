@@ -4,7 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ChevronRight, Trash, Edit } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { Agent } from "@/services/agent/agentStorageService";
+import { Agent } from "./AgentTypes";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "../ui/alert-dialog";
 
 export interface AgentsListProps {

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -17,7 +16,7 @@ import {
   defaultValues, 
   type AgentFormValues 
 } from "./form/agentSchema";
-import { Agent } from "./AgentPanel";
+import { Agent } from "./AgentTypes";
 import { getCurrentUserEmail, generateAgentInstanceId } from "@/services";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
