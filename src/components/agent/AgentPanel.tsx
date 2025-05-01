@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
@@ -36,7 +37,7 @@ export const AgentPanel: React.FC<AgentPanelProps> = ({ agent, onDelete, onToggl
     connectionCheckAttempts,
     handleShowQRCode,
     handleCloseQRCode 
-  } = useQRCodeGeneration(agent.instanceId);
+  } = useQRCodeGeneration(agent.instanceId, agent.clientIdentifier);
   
   const { isDisconnecting, isCheckingStatus, handleDisconnect, checkConnectionStatus } = useAgentConnection();
 

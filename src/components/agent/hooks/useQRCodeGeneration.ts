@@ -5,7 +5,7 @@ import { useQRCodeDisplay } from "./qrcode/useQRCodeDisplay";
 import { useQRCodeTimer } from "./qrcode/useQRCodeTimer";
 import { useQRCodeConnection } from "./qrcode/useQRCodeConnection";
 
-export const useQRCodeGeneration = (instanceId: string) => {
+export const useQRCodeGeneration = (instanceId: string, clientIdentifier?: string) => {
   const [showQRCodeDialog, setShowQRCodeDialog] = useState(false);
   const { 
     qrCodeImage, 
@@ -19,7 +19,7 @@ export const useQRCodeGeneration = (instanceId: string) => {
     timerIntervalRef,
     startQRCodeUpdateTimer,
     clearQRCodeTimer 
-  } = useQRCodeTimer(updateQRCode);
+  } = useQRCodeTimer((instanceId) => updateQRCode(instanceId, clientIdentifier));
   
   const {
     connectionCheckAttempts,
@@ -53,7 +53,7 @@ export const useQRCodeGeneration = (instanceId: string) => {
 
   // Function to show QR code dialog and handle QR code generation
   const handleShowQRCode = useCallback(async () => {
-    console.log("Initiating QR code generation for:", instanceId);
+    console.log("Initiating QR code generation for:", instanceId, "Client ID:", clientIdentifier);
     setShowQRCodeDialog(true);
     
     // Reset state
@@ -62,7 +62,7 @@ export const useQRCodeGeneration = (instanceId: string) => {
     clearConnectionCheck();
     
     // Get QR code
-    const success = await updateQRCode(instanceId);
+    const success = await updateQRCode(instanceId, clientIdentifier);
     
     if (success) {
       console.log("QR code generated successfully, starting timers");
@@ -76,7 +76,8 @@ export const useQRCodeGeneration = (instanceId: string) => {
       toast.error("Erro ao gerar QR Code. Tente novamente.");
     }
   }, [
-    instanceId, 
+    instanceId,
+    clientIdentifier,
     setQrCodeImage, 
     clearQRCodeTimer, 
     clearConnectionCheck, 
