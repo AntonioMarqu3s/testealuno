@@ -1,12 +1,13 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { BarChart, QrCode, MessageSquare, WifiOff, Wifi, Trash2, Edit, Mail } from "lucide-react";
+import { BarChart, QrCode, MessageSquare, Wifi, WifiOff, Trash2, Edit, Mail, Timer, Check } from "lucide-react";
 import { toast } from "sonner";
 import { getCurrentUserEmail } from "@/services";
+import { getTrialDaysRemaining, hasTrialExpired } from "@/services/plan/userPlanService";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -54,11 +55,17 @@ const agentTypeMap: Record<string, string> = {
 export const AgentPanel: React.FC<AgentPanelProps> = ({ agent, onDelete }) => {
   const navigate = useNavigate();
   const [isGeneratingQR, setIsGeneratingQR] = useState(false);
+  const [isDisconnecting, setIsDisconnecting] = useState(false);
   const [showQRDialog, setShowQRDialog] = useState(false);
   const [qrCodeImage, setQrCodeImage] = useState<string | null>(null);
   const [timerCount, setTimerCount] = useState(30);
   const [timerInterval, setTimerIntervalState] = useState<number | null>(null);
   const userEmail = getCurrentUserEmail();
+  
+  // Trial period information
+  const trialDaysRemaining = getTrialDaysRemaining(userEmail);
+  const isTrialExpired = hasTrialExpired(userEmail);
+  const isInTrialPeriod = trialDaysRemaining > 0 && !isTrialExpired;
 
   const handleGenerateQrCode = async () => {
     setIsGeneratingQR(true);
@@ -110,6 +117,42 @@ export const AgentPanel: React.FC<AgentPanelProps> = ({ agent, onDelete }) => {
       toast.error("Erro ao gerar QR Code");
     } finally {
       setIsGeneratingQR(false);
+    }
+  };
+  
+  const handleDisconnect = async () => {
+    if (!agent.instanceId) return;
+    
+    setIsDisconnecting(true);
+    
+    try {
+      // Call disconnect webhook
+      const response = await fetch('https://webhook.dev.matrixgpt.com.br/webhook/desconectar-instancia', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ instanceId: agent.instanceId }),
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to disconnect instance');
+      }
+      
+      toast.success("Agente desconectado com sucesso");
+      
+      // Update local state to show disconnected status
+      // This would typically be done via a parent component update
+      // For now, we'll just reload the page after a short delay
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
+      
+    } catch (error) {
+      console.error("Error disconnecting agent:", error);
+      toast.error("Erro ao desconectar agente");
+    } finally {
+      setIsDisconnecting(false);
     }
   };
   
@@ -276,31 +319,56 @@ export const AgentPanel: React.FC<AgentPanelProps> = ({ agent, onDelete }) => {
       </CardHeader>
       <CardContent className="pb-2 flex-grow">
         <p className="text-sm mb-2">Tipo: <span className="font-medium">{agentTypeName}</span></p>
+        
         {userEmail && (
           <div className="flex items-center text-xs text-muted-foreground mb-2">
             <Mail className="h-3 w-3 mr-1" />
             <span>{userEmail}</span>
           </div>
         )}
+        
         <p className="text-xs text-muted-foreground mb-2">
           ID da Instância: <span className="font-mono">{displayInstanceId}</span>
         </p>
+        
         {agent.clientIdentifier && (
           <p className="text-xs text-muted-foreground mb-2">
             Cliente: <span className="font-mono">{agent.clientIdentifier}</span>
           </p>
         )}
+        
+        {/* Trial period information */}
+        {isInTrialPeriod && (
+          <div className="mt-3 flex items-center gap-2">
+            <Badge variant="outline" className="flex items-center gap-1 bg-amber-50 text-amber-700 border-amber-200">
+              <Timer className="h-3 w-3" />
+              <span>Período de teste: {trialDaysRemaining} {trialDaysRemaining === 1 ? 'dia' : 'dias'}</span>
+            </Badge>
+          </div>
+        )}
       </CardContent>
       <CardFooter className="flex justify-between gap-2 pt-2">
-        <Button 
-          variant="outline" 
-          className="flex-1" 
-          onClick={handleGenerateQrCode}
-          disabled={isGeneratingQR}
-        >
-          <QrCode className="mr-2 h-4 w-4" /> 
-          {isGeneratingQR ? "Gerando..." : "Gerar QR Code"}
-        </Button>
+        {agent.isConnected ? (
+          <Button 
+            variant="outline" 
+            className="flex-1 text-red-600 border-red-200 hover:bg-red-50" 
+            onClick={handleDisconnect}
+            disabled={isDisconnecting}
+          >
+            <WifiOff className="mr-2 h-4 w-4" /> 
+            {isDisconnecting ? "Desconectando..." : "Desconectar"}
+          </Button>
+        ) : (
+          <Button 
+            variant="outline" 
+            className="flex-1" 
+            onClick={handleGenerateQrCode}
+            disabled={isGeneratingQR}
+          >
+            <QrCode className="mr-2 h-4 w-4" /> 
+            {isGeneratingQR ? "Gerando..." : "Gerar QR Code"}
+          </Button>
+        )}
         <Button asChild className="flex-1 bg-purple-600 hover:bg-purple-700">
           <Link to={`/agent-analytics/${agent.id}`}>
             <BarChart className="mr-2 h-4 w-4" /> Análise

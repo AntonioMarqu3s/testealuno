@@ -7,7 +7,7 @@ import { AgentsList } from "@/components/agent/AgentsList";
 import { EmptyAgentState } from "@/components/agent/EmptyAgentState";
 import { getCurrentUserEmail } from "@/services/user/userService";
 import { getUserPlan, hasTrialExpired } from "@/services/plan/userPlanService";
-import { deleteUserAgent, getUserAgents } from "@/services/agent/agentStorageService";
+import { deleteUserAgent, getUserAgents, updateUserAgent } from "@/services/agent/agentStorageService";
 import { UpgradeModal } from "@/components/agent/UpgradeModal";
 import { useToast } from "@/hooks/use-toast";
 
@@ -80,6 +80,33 @@ const Agents = () => {
       });
     }
   };
+  
+  const handleToggleConnection = (agentId: string, isConnected: boolean) => {
+    try {
+      // Update agent connection status
+      updateUserAgent(userEmail, agentId, {
+        isConnected: isConnected
+      });
+      
+      // Update local state
+      setUserAgents(prevAgents => prevAgents.map(agent => 
+        agent.id === agentId ? { ...agent, isConnected } : agent
+      ));
+      
+      toast({
+        title: isConnected ? "Agente conectado" : "Agente desconectado",
+        description: isConnected ? 
+          "O agente foi conectado com sucesso." : 
+          "O agente foi desconectado com sucesso.",
+      });
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Erro",
+        description: `Não foi possível ${isConnected ? 'conectar' : 'desconectar'} o agente.`,
+      });
+    }
+  };
 
   return (
     <MainLayout title="Meus Agentes">
@@ -94,6 +121,7 @@ const Agents = () => {
           <AgentsList 
             agents={userAgents} 
             onDeleteAgent={handleDeleteAgent}
+            onToggleConnection={handleToggleConnection}
             isLoading={isLoading}
           />
         ) : (
