@@ -10,10 +10,11 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 export interface AgentsListProps {
   agents: Agent[];
   onDeleteAgent?: (id: string) => void;
+  onToggleConnection?: (id: string, isConnected: boolean) => void;
   isLoading?: boolean;
 }
 
-export function AgentsList({ agents, onDeleteAgent, isLoading = false }: AgentsListProps) {
+export function AgentsList({ agents, onDeleteAgent, onToggleConnection, isLoading = false }: AgentsListProps) {
   const navigate = useNavigate();
   const [agentToDelete, setAgentToDelete] = useState<string | null>(null);
 

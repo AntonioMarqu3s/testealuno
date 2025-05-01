@@ -85,15 +85,22 @@ CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
 DECLARE
   trial_end TIMESTAMP WITH TIME ZONE;
+  selected_plan INTEGER;
 BEGIN
   -- Calculate trial end date (5 days from now)
   trial_end := NOW() + INTERVAL '5 days';
+  
+  -- Get selected plan from user metadata if available
+  selected_plan := (NEW.raw_user_meta_data->>'plan')::INTEGER;
+  IF selected_plan IS NULL THEN
+    selected_plan := 0; -- Default to FREE_TRIAL if not specified
+  END IF;
   
   -- Create a profile for the new user
   INSERT INTO public.profiles (id, user_id, email)
   VALUES (NEW.id, NEW.id, NEW.email);
   
-  -- Create a free trial plan for the new user
+  -- Create a plan for the new user
   INSERT INTO public.user_plans (
     user_id, 
     plan, 
@@ -103,10 +110,25 @@ BEGIN
   )
   VALUES (
     NEW.id, 
-    0, -- FREE_TRIAL
-    'Teste Gratuito', 
-    1, -- agent limit
-    trial_end
+    selected_plan, 
+    CASE 
+      WHEN selected_plan = 0 THEN 'Teste Gratuito'
+      WHEN selected_plan = 1 THEN 'Inicial' 
+      WHEN selected_plan = 2 THEN 'Padrão'
+      WHEN selected_plan = 3 THEN 'Premium'
+      ELSE 'Teste Gratuito'
+    END,
+    CASE 
+      WHEN selected_plan = 0 THEN 1
+      WHEN selected_plan = 1 THEN 1
+      WHEN selected_plan = 2 THEN 3
+      WHEN selected_plan = 3 THEN 10
+      ELSE 1
+    END,
+    CASE 
+      WHEN selected_plan = 0 THEN trial_end
+      ELSE NULL
+    END
   );
   
   RETURN NEW;

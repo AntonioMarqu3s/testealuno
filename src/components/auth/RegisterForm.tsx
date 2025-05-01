@@ -7,6 +7,8 @@ import { CardContent, CardFooter } from "@/components/ui/card";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 import { updateCurrentUserEmail } from "@/services/user/userService";
+import { PlanType, updateUserPlan } from "@/services/plan/userPlanService";
+import { PlanSelector } from "./PlanSelector";
 
 interface RegisterFormProps {
   email: string;
@@ -31,6 +33,7 @@ export function RegisterForm({
 }: RegisterFormProps) {
   const [password, setPassword] = useState<string>("");
   const [confirmPassword, setConfirmPassword] = useState<string>("");
+  const [selectedPlan, setSelectedPlan] = useState<PlanType>(PlanType.BASIC);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -50,7 +53,8 @@ export function RegisterForm({
         options: {
           emailRedirectTo: `${window.location.origin}/auth-callback`,
           data: {
-            email // Store email in user metadata
+            email, // Store email in user metadata
+            plan: selectedPlan // Store selected plan in user metadata
           }
         }
       });
@@ -70,6 +74,9 @@ export function RegisterForm({
       
       // For demo mode, we allow proceeding even without real authentication
       updateCurrentUserEmail(email);
+      
+      // Update user plan based on selection
+      updateUserPlan(email, selectedPlan);
       
       toast.success("Conta criada com sucesso!", { 
         description: "O sistema está operando em modo de demonstração. Você agora pode navegar pelo aplicativo."
@@ -124,6 +131,11 @@ export function RegisterForm({
             required 
           />
         </div>
+        
+        <PlanSelector 
+          selectedPlan={selectedPlan}
+          onSelectPlan={setSelectedPlan}
+        />
       </CardContent>
       <CardFooter className="flex flex-col gap-2">
         <Button 
