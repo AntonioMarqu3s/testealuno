@@ -4,7 +4,7 @@ import { useQRCodeDisplay } from "./qrcode/useQRCodeDisplay";
 import { useQRCodeTimer } from "./qrcode/useQRCodeTimer";
 import { useQRCodeConnection } from "./qrcode/useQRCodeConnection";
 
-export const useQRCodeGeneration = (instanceName: string) => {
+export const useQRCodeGeneration = (instanceId: string) => {
   const [showQRCodeDialog, setShowQRCodeDialog] = useState(false);
   const { 
     qrCodeImage, 
@@ -58,14 +58,14 @@ export const useQRCodeGeneration = (instanceName: string) => {
     clearConnectionCheck();
     
     // Get QR code
-    const success = await updateQRCode(instanceName);
+    const success = await updateQRCode(instanceId);
     
     if (success) {
       // Start timer for QR code refresh
-      startQRCodeUpdateTimer(instanceName);
+      startQRCodeUpdateTimer(instanceId);
       
       // Start checking connection status
-      startConnectionStatusCheck(instanceName, handleConnected);
+      startConnectionStatusCheck(instanceId, handleConnected);
     }
   };
 
@@ -85,6 +85,7 @@ export const useQRCodeGeneration = (instanceName: string) => {
     timerCount,
     connectionCheckAttempts,
     handleShowQRCode,
-    handleCloseQRCode
+    handleCloseQRCode,
+    handleConnected
   };
 };

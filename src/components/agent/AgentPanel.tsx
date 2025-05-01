@@ -29,17 +29,15 @@ export const AgentPanel: React.FC<AgentPanelProps> = ({ agent, onDelete, onToggl
   
   // Custom hooks for QR code and connection
   const { 
-    isGeneratingQR, 
-    isGeneratingQRCode,
-    showQRDialog, 
+    showQRCodeDialog, 
+    setShowQRCodeDialog,
     qrCodeImage, 
+    isGeneratingQRCode,
     timerCount,
-    instanceName,
     connectionCheckAttempts,
-    handleGenerateQrCode, 
-    setShowQRDialog,
-    handleConnected 
-  } = useQRCodeGeneration(agent.name, agent.type);
+    handleShowQRCode,
+    handleCloseQRCode 
+  } = useQRCodeGeneration(agent.instanceId);
   
   const { isDisconnecting, isCheckingStatus, handleDisconnect, checkConnectionStatus } = useAgentConnection();
 
@@ -92,15 +90,11 @@ export const AgentPanel: React.FC<AgentPanelProps> = ({ agent, onDelete, onToggl
   
   const handleConnectClick = () => {
     // Generate QR code and set up connection callback
-    handleGenerateQrCode(() => {
-      // This is the callback that will be executed when connected
-      handleQRConnected();
-    });
+    handleShowQRCode();
   };
   
   const handleQRConnected = () => {
     // Handle successful connection
-    handleConnected();
     setIsConnected(true);
     
     // Update parent state if callback provided
@@ -110,7 +104,7 @@ export const AgentPanel: React.FC<AgentPanelProps> = ({ agent, onDelete, onToggl
     }
     
     // Close QR dialog
-    setShowQRDialog(false);
+    setShowQRCodeDialog(false);
   };
 
   return (
@@ -130,7 +124,7 @@ export const AgentPanel: React.FC<AgentPanelProps> = ({ agent, onDelete, onToggl
         agent={{...agent, isConnected: isConnected}}
         onGenerateQR={handleConnectClick}
         onDisconnect={handleDisconnectClick}
-        isGeneratingQR={isGeneratingQR}
+        isGeneratingQR={isGeneratingQRCode}
         isDisconnecting={isDisconnecting}
       />
       
@@ -144,8 +138,8 @@ export const AgentPanel: React.FC<AgentPanelProps> = ({ agent, onDelete, onToggl
       
       {/* QR Code Dialog */}
       <QRCodeDialog
-        open={showQRDialog}
-        onOpenChange={setShowQRDialog}
+        open={showQRCodeDialog}
+        onOpenChange={setShowQRCodeDialog}
         qrCodeImage={qrCodeImage}
         timerCount={timerCount}
         connectionCheckAttempts={connectionCheckAttempts}
