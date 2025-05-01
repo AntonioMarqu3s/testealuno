@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import MainLayout from "@/components/layout/MainLayout";
 import { AgentsHeader } from "@/components/agent/AgentsHeader";
@@ -22,9 +22,19 @@ const Agents = () => {
   // Get user plan
   const userPlan = getUserPlan(userEmail);
   
-  // Get user agents
-  const userAgents = getUserAgents(userEmail);
-  const [isLoading, setIsLoading] = useState(false);
+  // Get user agents with state management
+  const [userAgents, setUserAgents] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  
+  // Load agents on component mount and when email changes
+  useEffect(() => {
+    if (userEmail) {
+      setIsLoading(true);
+      const agents = getUserAgents(userEmail);
+      setUserAgents(agents);
+      setIsLoading(false);
+    }
+  }, [userEmail]);
   
   const handleCreateAgent = () => {
     navigate('/create-agent'); // Navigate to create agent page directly
@@ -42,6 +52,8 @@ const Agents = () => {
   const handleDeleteAgent = (agentId: string) => {
     try {
       deleteUserAgent(userEmail, agentId);
+      // Update local state after deletion
+      setUserAgents(prevAgents => prevAgents.filter(agent => agent.id !== agentId));
       toast({
         title: "Agente excluído",
         description: "O agente foi excluído com sucesso.",

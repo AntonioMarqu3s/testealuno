@@ -8,9 +8,9 @@ export const ALL_AGENTS_KEY = 'all_agents';
  * Generic localStorage getter with JSON parsing
  */
 export const getStorageItem = <T>(key: string, defaultValue: T): T => {
-  const data = localStorage.getItem(key);
-  if (!data) return defaultValue;
   try {
+    const data = localStorage.getItem(key);
+    if (!data) return defaultValue;
     return JSON.parse(data) as T;
   } catch (error) {
     console.error(`Error parsing localStorage data for key ${key}:`, error);

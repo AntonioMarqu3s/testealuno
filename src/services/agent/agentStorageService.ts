@@ -8,7 +8,7 @@ export interface Agent {
   isConnected: boolean;
   createdAt: Date;
   instanceId: string;
-  clientIdentifier?: string; // Add client identifier
+  clientIdentifier?: string;
 }
 
 /**
@@ -16,7 +16,18 @@ export interface Agent {
  */
 export const getUserAgents = (email: string): Agent[] => {
   const allAgentsData = getStorageItem<Record<string, Agent[]>>(ALL_AGENTS_KEY, {});
-  return allAgentsData[email] || [];
+  
+  // Initialize if no agents exist for this user
+  if (!allAgentsData[email]) {
+    allAgentsData[email] = [];
+    setStorageItem(ALL_AGENTS_KEY, allAgentsData);
+  }
+  
+  // Convert date strings back to Date objects
+  return allAgentsData[email]?.map(agent => ({
+    ...agent,
+    createdAt: new Date(agent.createdAt)
+  })) || [];
 };
 
 /**
