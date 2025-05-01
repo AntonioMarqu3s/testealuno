@@ -8,6 +8,8 @@ export const useQRCodeTimer = (updateQRCodeFn: UpdateQRCodeFunction) => {
   const timerIntervalRef = useRef<number | null>(null);
   const updateInProgressRef = useRef<boolean>(false);
   const updateTimeoutRef = useRef<number | null>(null);
+  const lastUpdateTimeRef = useRef<number>(0);
+  const MIN_UPDATE_INTERVAL = 15000; // Minimum 15 seconds between updates
 
   // Clean up on unmount
   useEffect(() => {
@@ -40,6 +42,9 @@ export const useQRCodeTimer = (updateQRCodeFn: UpdateQRCodeFunction) => {
     // Clear any existing timers
     clearQRCodeTimer();
     
+    // Record when we're starting this timer
+    lastUpdateTimeRef.current = Date.now();
+    
     setTimerCount(30); // Start from 30 seconds
     
     // Start new timer
@@ -49,9 +54,18 @@ export const useQRCodeTimer = (updateQRCodeFn: UpdateQRCodeFunction) => {
         if (prevCount <= 1) {
           console.log("QR Code timer expired, updating QR code...");
           
-          // Only start update if not already in progress
+          // Only start update if not already in progress and minimum time has elapsed
           if (!updateInProgressRef.current) {
+            const currentTime = Date.now();
+            const timeSinceLastUpdate = currentTime - lastUpdateTimeRef.current;
+            
+            if (timeSinceLastUpdate < MIN_UPDATE_INTERVAL) {
+              console.log(`Too soon since last update (${timeSinceLastUpdate}ms), waiting...`);
+              return 1; // Keep at 1 and check again next interval
+            }
+            
             updateInProgressRef.current = true;
+            lastUpdateTimeRef.current = currentTime;
             
             // Schedule update with delay to avoid race conditions
             updateTimeoutRef.current = window.setTimeout(async () => {

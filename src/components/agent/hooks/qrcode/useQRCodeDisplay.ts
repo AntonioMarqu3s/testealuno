@@ -7,6 +7,8 @@ import { fetchQRCode } from '../api/qrCodeApi';
 export const useQRCodeDisplay = () => {
   const [qrCodeImage, setQrCodeImage] = useState<string | null>(null);
   const [isGeneratingQRCode, setIsGeneratingQRCode] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
+  const MAX_RETRIES = 3;
   
   const updateQRCode = useCallback(async (instanceName: string, clientIdentifier?: string) => {
     try {
@@ -34,20 +36,29 @@ export const useQRCodeDisplay = () => {
         
         if (imgSrc) {
           console.log("QR code updated successfully, length:", imgSrc.length);
-          console.log("QR code data starts with:", imgSrc.substring(0, 50));
+          console.log("QR code data starts with:", imgSrc.substring(0, 50) + "...");
           
           // Validate image data before setting it
           const isValidBase64 = /^data:image\/(png|jpeg|jpg|gif);base64,[A-Za-z0-9+/=]+$/.test(imgSrc);
-          if (!isValidBase64) {
-            console.log("QR code data may not be valid base64, checking if it's a blob URL");
-            // Check if it's a blob URL instead
-            if (!imgSrc.startsWith('blob:') && !imgSrc.startsWith('data:image')) {
-              console.error("QR code data doesn't seem to be a valid image format");
-              console.log("Attempting to fix image data format");
-              // Try to fix common issues with data format
-              const fixedImgSrc = imgSrc.trim().replace(/^[\s\uFEFF\xA0]+|[\s\uFEFF\xA0]+$/g, '');
-              if (fixedImgSrc.startsWith('data:image') || fixedImgSrc.startsWith('blob:')) {
-                console.log("Fixed image data format");
+          const isBlobUrl = imgSrc.startsWith('blob:');
+          
+          if (!isValidBase64 && !isBlobUrl) {
+            console.log("QR code data may not be valid, attempting to fix format");
+            
+            // Try to fix common issues with data format
+            const fixedImgSrc = imgSrc.trim();
+            
+            // Create a proper base64 image URL if needed
+            if (!fixedImgSrc.startsWith('data:image') && !fixedImgSrc.startsWith('blob:')) {
+              // Check if it looks like base64
+              const base64Pattern = /^[A-Za-z0-9+/=]+$/;
+              if (base64Pattern.test(fixedImgSrc)) {
+                console.log("String looks like raw base64, adding data:image prefix");
+                const formattedData = `data:image/png;base64,${fixedImgSrc}`;
+                setQrCodeImage(formattedData);
+                toast.success("QR Code atualizado");
+                setIsGeneratingQRCode(false);
+                return true;
               }
             }
           }
@@ -61,13 +72,25 @@ export const useQRCodeDisplay = () => {
             clearTimeout(imageLoadTimeoutId);
             setQrCodeImage(imgSrc);
             toast.success("QR Code atualizado");
+            setRetryCount(0); // Reset retry count on success
             setIsGeneratingQRCode(false);
           };
           
           testImg.onerror = () => {
             console.error("QR code image failed to load");
             clearTimeout(imageLoadTimeoutId);
+            
+            // Retry logic
+            if (retryCount < MAX_RETRIES) {
+              console.log(`Retrying QR code fetch attempt ${retryCount + 1} of ${MAX_RETRIES}`);
+              setRetryCount(prev => prev + 1);
+              // Try again but with slight delay
+              setTimeout(() => updateQRCode(instanceName, clientIdentifier), 2000);
+              return;
+            }
+            
             toast.error("Erro ao carregar QR Code");
+            setRetryCount(0);
             
             // Use placeholder in development
             if (process.env.NODE_ENV === 'development') {
@@ -116,7 +139,7 @@ export const useQRCodeDisplay = () => {
       setIsGeneratingQRCode(false);
       return false;
     }
-  }, []);
+  }, [retryCount, MAX_RETRIES]);
 
   return {
     qrCodeImage,

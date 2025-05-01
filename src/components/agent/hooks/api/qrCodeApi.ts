@@ -26,17 +26,24 @@ export const fetchQRCode = async (instanceName: string): Promise<string | null> 
       const contentType = response.headers.get('content-type');
       console.log("Response content type:", contentType);
       
-      // For text/plain responses (which might be base64)
+      // First try to get raw binary data for image
+      if (contentType && contentType.includes('image/')) {
+        console.log("Received direct image response");
+        const blob = await response.blob();
+        return URL.createObjectURL(blob);
+      }
+      
+      // Handle text/plain responses (which might be base64)
       if (contentType && contentType.includes('text/plain')) {
         const textData = await response.text();
         console.log("Received text response, length:", textData.length);
         if (textData.length > 100) { // Likely base64 data
-          console.log("Text response sample:", textData.substring(0, 50));
+          console.log("Text response sample:", textData.substring(0, 50) + "...");
           // Check if already has data:image prefix
           if (textData.startsWith('data:image')) {
             return textData;
           }
-          return `data:image/png;base64,${textData}`;
+          return `data:image/png;base64,${textData.trim()}`;
         } else {
           console.error("Text response too short to be valid QR code:", textData);
         }
@@ -48,26 +55,30 @@ export const fetchQRCode = async (instanceName: string): Promise<string | null> 
         console.log("Received JSON response:", Object.keys(data));
         
         // Check various possible response formats
-        const base64Data = data.qrcode || data.qrCode || data.mensagem || data.qrCodeBase64 || data.base64;
+        const base64Data = data.qrcode || data.qrCode || data.mensagem || data.qrCodeBase64 || data.base64 || data.data;
         
         if (base64Data) {
           console.log("Found base64 data in response, length:", base64Data.length);
-          console.log("Base64 sample:", base64Data.substring(0, 50));
+          console.log("Base64 sample:", base64Data.substring(0, 50) + "...");
           // Check if already has data:image prefix
           if (base64Data.startsWith('data:image')) {
             return base64Data;
           }
-          return `data:image/png;base64,${base64Data}`;
+          return `data:image/png;base64,${base64Data.trim()}`;
         } else {
           console.error("JSON response didn't contain QR code data:", data);
         }
       }
       
-      // For binary responses
-      if (contentType && contentType.includes('image/')) {
-        console.log("Received image response");
-        const blob = await response.blob();
-        return URL.createObjectURL(blob);
+      // Try to parse as text anyway as last resort
+      try {
+        const text = await response.text();
+        if (text && text.length > 100) {
+          console.log("Attempting to use raw response as base64, length:", text.length);
+          return `data:image/png;base64,${text.trim()}`;
+        }
+      } catch (textError) {
+        console.error("Failed to extract text from response:", textError);
       }
       
       console.error("Could not extract QR code from response");
@@ -103,12 +114,12 @@ export const fetchQRCode = async (instanceName: string): Promise<string | null> 
           const textData = await fallbackResponse.text();
           console.log("Received text response from fallback, length:", textData.length);
           if (textData.length > 100) { // Likely base64 data
-            console.log("Text fallback sample:", textData.substring(0, 50));
+            console.log("Text fallback sample:", textData.substring(0, 50) + "...");
             // Check if already has data:image prefix
             if (textData.startsWith('data:image')) {
               return textData;
             }
-            return `data:image/png;base64,${textData}`;
+            return `data:image/png;base64,${textData.trim()}`;
           } else {
             console.error("Fallback text response too short:", textData);
           }
@@ -119,16 +130,16 @@ export const fetchQRCode = async (instanceName: string): Promise<string | null> 
           const data = await fallbackResponse.json();
           console.log("Received JSON response from fallback:", Object.keys(data));
           
-          const base64Data = data.qrcode || data.qrCode || data.mensagem || data.qrCodeBase64 || data.base64;
+          const base64Data = data.qrcode || data.qrCode || data.mensagem || data.qrCodeBase64 || data.base64 || data.data;
           
           if (base64Data) {
             console.log("Found base64 data in fallback response, length:", base64Data.length);
-            console.log("Base64 fallback sample:", base64Data.substring(0, 50));
+            console.log("Base64 fallback sample:", base64Data.substring(0, 50) + "...");
             // Check if already has data:image prefix
             if (base64Data.startsWith('data:image')) {
               return base64Data;
             }
-            return `data:image/png;base64,${base64Data}`;
+            return `data:image/png;base64,${base64Data.trim()}`;
           } else {
             console.error("JSON fallback didn't contain QR code:", data);
           }
@@ -139,6 +150,17 @@ export const fetchQRCode = async (instanceName: string): Promise<string | null> 
           console.log("Received image response from fallback");
           const blob = await fallbackResponse.blob();
           return URL.createObjectURL(blob);
+        }
+        
+        // Try to parse as text anyway as last resort
+        try {
+          const text = await fallbackResponse.text();
+          if (text && text.length > 100) {
+            console.log("Attempting to use raw fallback response as base64, length:", text.length);
+            return `data:image/png;base64,${text.trim()}`;
+          }
+        } catch (textError) {
+          console.error("Failed to extract text from fallback response:", textError);
         }
       } catch (fallbackError) {
         console.error("Fallback endpoint error:", fallbackError);
