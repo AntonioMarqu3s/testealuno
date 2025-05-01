@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
@@ -23,7 +24,7 @@ export const useAgentSubmission = (agentType: string) => {
     setIsSubmitting(true);
     
     // Get actual user email
-    const userEmail = getCurrentUserEmail();
+    const userEmail = getCurrentUserEmail() || "vladimirfreire@hotmail.com";
     
     // Verificar se o usuário pode criar mais agentes
     if (!canCreateAgent(userEmail)) {
@@ -54,8 +55,10 @@ export const useAgentSubmission = (agentType: string) => {
       isConnected: false,
       createdAt: new Date(),
       instanceId,
-      clientIdentifier // Add client identifier
+      clientIdentifier
     };
+
+    console.log("Saving new agent:", newAgent);
 
     // Salvar agente no localStorage
     saveAgent(userEmail, newAgent);
@@ -66,8 +69,9 @@ export const useAgentSubmission = (agentType: string) => {
         description: `O agente ${values.agentName} foi criado e está pronto para uso.`,
       });
       
-      // We won't navigate automatically, user will close the confirmation panel
       setIsSubmitting(false);
+      // Redirect to agents dashboard after creation
+      navigate('/agents');
     }, 1000);
   };
 

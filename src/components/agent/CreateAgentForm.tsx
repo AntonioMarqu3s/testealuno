@@ -1,8 +1,9 @@
+
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Form } from "@/components/ui/form";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 
 import AgentBasicInfoForm from "./form/AgentBasicInfoForm";
 import CompanyInfoForm from "./form/CompanyInfoForm";
@@ -53,7 +54,7 @@ const CreateAgentForm = ({
   // Load agent data if editing
   useEffect(() => {
     if (isEditing && agentId) {
-      const userEmail = getCurrentUserEmail();
+      const userEmail = getCurrentUserEmail() || "vladimirfreire@hotmail.com";
       const userAgents = getUserAgents(userEmail);
       const agentToEdit = userAgents.find(agent => agent.id === agentId);
       
@@ -82,7 +83,7 @@ const CreateAgentForm = ({
   }, [initialValues, form]);
 
   const onSubmit = (values: AgentFormValues) => {
-    const userEmail = getCurrentUserEmail();
+    const userEmail = getCurrentUserEmail() || "vladimirfreire@hotmail.com";
     const instanceId = generateAgentInstanceId(userEmail, values.agentName);
     
     // Create agent object for confirmation panel
@@ -174,12 +175,15 @@ const CreateAgentForm = ({
       <Dialog open={showConfirmation} onOpenChange={setShowConfirmation}>
         <DialogContent className="sm:max-w-md p-0" onInteractOutside={(e) => e.preventDefault()}>
           {createdAgent && (
-            <AgentConfirmationPanel
-              agent={createdAgent}
-              onClose={handleCloseConfirmation}
-              onAnalyze={handleAnalyze}
-              onGenerateQR={handleGenerateQR}
-            />
+            <>
+              <DialogTitle className="sr-only">Confirmação do Agente</DialogTitle>
+              <AgentConfirmationPanel
+                agent={createdAgent}
+                onClose={handleCloseConfirmation}
+                onAnalyze={handleAnalyze}
+                onGenerateQR={handleGenerateQR}
+              />
+            </>
           )}
         </DialogContent>
       </Dialog>
