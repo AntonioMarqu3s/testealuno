@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import MainLayout from "@/components/layout/MainLayout";
@@ -110,6 +109,23 @@ const Agents = () => {
       });
     }
   };
+
+  const searchParams = new URLSearchParams(location.search);
+  const showQRParam = searchParams.get('showQR');
+
+  useEffect(() => {
+    if (showQRParam) {
+      // Se temos um ID de agente para mostrar QR code
+      const userAgents = getUserAgents(userEmail);
+      const targetAgent = userAgents.find(agent => agent.id === showQRParam);
+      
+      if (targetAgent) {
+        // Simular um clique no botão de gerar QR code para este agente
+        console.log("Auto showing QR code for agent:", targetAgent.name);
+        // Aqui você pode implementar a lógica para mostrar automaticamente o QR code
+      }
+    }
+  }, [showQRParam, userEmail]);
 
   return (
     <MainLayout title="Meus Agentes">

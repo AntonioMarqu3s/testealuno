@@ -16,9 +16,13 @@ export const useAgentConfirmation = (agentType: string) => {
 
   const handleGenerateQR = () => {
     console.log("Generating QR code for agent:", createdAgent?.name);
-    // Implementation handled in AgentConfirmation component
+    // Permanecemos na mesma página em vez de navegar para análise
     if (createdAgent?.id) {
-      navigate(`/agent-analytics/${createdAgent.id}?showQR=true`);
+      // Apenas mostre o diálogo QR em vez de redirecionar para analytics com showQR
+      setShowConfirmation(false); // Fechamos o diálogo de confirmação
+      
+      // Redireciona para a página de agentes com parâmetro para mostrar QR code
+      navigate(`/agents?showQR=${createdAgent.id}`);
     }
   };
 

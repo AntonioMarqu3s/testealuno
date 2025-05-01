@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
@@ -100,8 +99,9 @@ export const AgentPanel: React.FC<AgentPanelProps> = ({ agent, onDelete, onToggl
   };
   
   const handleConnectClick = () => {
-    // Generate QR code and set up connection callback
+    // Gera QR code e configura callback de conexão
     handleShowQRCode();
+    // Evitar navegação para página de análise aqui
   };
   
   const handleQRConnected = () => {
