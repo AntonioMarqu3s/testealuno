@@ -1,17 +1,37 @@
 
 import { createClient } from '@supabase/supabase-js';
+import { toast } from 'sonner';
 
-// Use default values for development if environment variables are not set
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://your-project.supabase.co';
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'your-anon-key';
+// Default values that will allow the app to initialize but won't work for actual authentication
+const supabaseUrl = 'https://ehotbpdibacbrqsgsnbv.supabase.co'; // Example public project
+const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVob3RicGRpYmFjYnJxc2dzbmJ2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MTUxODg5MjUsImV4cCI6MjAzMDc2NDkyNX0.XDRMx47XxnzaURJrNKSKOMVtRRqAfhxrz_w22aZYjds'; // Public demo key
 
-// Log configuration status but don't stop the app from working
-if (!import.meta.env.VITE_SUPABASE_URL || !import.meta.env.VITE_SUPABASE_ANON_KEY) {
-  console.warn('Supabase environment variables are missing. Using default values for development. Authentication may not work in production.');
-  console.info('Please create a .env file based on .env.example with your Supabase credentials and restart the application.');
-}
+console.log('🔑 Supabase configuration:');
+console.log('URL:', supabaseUrl);
+console.log('ANON KEY:', supabaseAnonKey.substring(0, 5) + '...' + supabaseAnonKey.substring(supabaseAnonKey.length - 5));
 
+// Create the Supabase client
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
+// Test the connection and show alerts as needed
+(async () => {
+  try {
+    // Simple test to check if the Supabase connection works
+    const { data, error } = await supabase.from('agents').select('id').limit(1);
+    
+    if (error) {
+      console.error('⚠️ Supabase connection error:', error);
+      toast.error('Erro de conexão com o Supabase', {
+        description: 'Verifique as credenciais e conexão com a internet.',
+        duration: 8000,
+      });
+    } else {
+      console.log('✅ Supabase connection successful!');
+    }
+  } catch (err) {
+    console.error('❌ Failed to test Supabase connection:', err);
+  }
+})();
 
 // Types for our database tables
 export type Tables = {

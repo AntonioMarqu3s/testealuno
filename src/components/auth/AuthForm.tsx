@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -18,6 +17,7 @@ export function AuthForm() {
   const [password, setPassword] = useState<string>("");
   const [confirmPassword, setConfirmPassword] = useState<string>("");
   const [showConnectionError, setShowConnectionError] = useState<boolean>(false);
+  const [connectionErrorDetails, setConnectionErrorDetails] = useState<string>("");
 
   const handleSubmit = async (e: React.FormEvent, mode: 'login' | 'register') => {
     e.preventDefault();
@@ -31,6 +31,7 @@ export function AuthForm() {
           return;
         }
         
+        console.log(`Attempting to register with email: ${email}`);
         const { data, error } = await supabase.auth.signUp({
           email,
           password,
@@ -43,14 +44,19 @@ export function AuthForm() {
         });
         
         if (error) {
+          console.error('Registration error:', error);
+          
           if (error.message.includes('fetch') || error.message === 'Failed to fetch') {
             // Network error
+            setConnectionErrorDetails(`Erro de conexão: ${error.message}`);
             setShowConnectionError(true);
             throw error;
           }
           throw error;
         }
 
+        console.log('Registration successful:', data);
+        
         // Update local storage email for the transition period
         updateCurrentUserEmail(email);
         
@@ -61,19 +67,25 @@ export function AuthForm() {
         navigate("/dashboard");
       } else {
         // Login
+        console.log(`Attempting to login with email: ${email}`);
         const { data, error } = await supabase.auth.signInWithPassword({
           email,
           password
         });
         
         if (error) {
+          console.error('Login error:', error);
+          
           if (error.message.includes('fetch') || error.message === 'Failed to fetch') {
             // Network error
+            setConnectionErrorDetails(`Erro de conexão: ${error.message}`);
             setShowConnectionError(true);
             throw error;
           }
           throw error;
         }
+        
+        console.log('Login successful:', data);
         
         // Update local storage email for the transition period
         updateCurrentUserEmail(email);
@@ -85,7 +97,7 @@ export function AuthForm() {
       if (!showConnectionError) {
         toast.error(error.message || "Ocorreu um erro durante a autenticação.");
       }
-      console.error(error);
+      console.error("Auth error details:", error);
     } finally {
       setIsLoading(false);
     }
@@ -99,12 +111,16 @@ export function AuthForm() {
     
     setIsLoading(true);
     try {
+      console.log(`Attempting to send reset password email to: ${email}`);
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: `${window.location.origin}/reset-password`,
       });
       
       if (error) {
+        console.error('Reset password error:', error);
+        
         if (error.message.includes('fetch') || error.message === 'Failed to fetch') {
+          setConnectionErrorDetails(`Erro de conexão: ${error.message}`);
           setShowConnectionError(true);
           throw error;
         }
@@ -118,6 +134,7 @@ export function AuthForm() {
       if (!showConnectionError) {
         toast.error(error.message || "Não foi possível enviar o email de redefinição de senha.");
       }
+      console.error("Password reset error details:", error);
     } finally {
       setIsLoading(false);
     }
@@ -244,17 +261,27 @@ export function AuthForm() {
           <AlertDialogHeader>
             <AlertDialogTitle>Erro de Conexão</AlertDialogTitle>
             <AlertDialogDescription>
-              Não foi possível se conectar ao servidor de autenticação. Isso pode ocorrer pelos seguintes motivos:
-              <ul className="list-disc pl-6 mt-2 space-y-1">
-                <li>Suas credenciais do Supabase não estão configuradas corretamente</li>
-                <li>O arquivo .env não foi criado com base no .env.example</li>
-                <li>Você está enfrentando problemas de conexão com a internet</li>
-              </ul>
-              <div className="bg-amber-50 dark:bg-amber-950 p-3 rounded-md mt-3 border border-amber-200 dark:border-amber-800">
-                <p className="text-amber-800 dark:text-amber-300 text-sm">
-                  <strong>Solução:</strong> Crie um arquivo .env na raiz do projeto com suas credenciais do Supabase e reinicie a aplicação.
+              <p className="mb-2">
+                Não foi possível se conectar ao servidor de autenticação. Estamos usando credenciais de demonstração que permitem que o aplicativo inicialize, mas não funcionam para autenticação real.
+              </p>
+              
+              <div className="mt-3 p-3 bg-amber-50 dark:bg-amber-950 rounded-md border border-amber-200 dark:border-amber-800">
+                <p className="text-amber-800 dark:text-amber-300 text-sm font-medium">
+                  Para resolver este problema:
                 </p>
+                <ol className="list-decimal pl-5 mt-2 space-y-1 text-amber-700 dark:text-amber-300 text-sm">
+                  <li>Crie uma conta no Supabase (supabase.com)</li>
+                  <li>Crie um novo projeto</li>
+                  <li>Vá para as configurações do projeto na seção API</li>
+                  <li>Copie a URL do projeto e a chave anônima</li>
+                  <li>Substitua os valores no arquivo .env que criamos para você</li>
+                  <li>Reinicie a aplicação</li>
+                </ol>
               </div>
+              
+              <p className="mt-3 text-sm text-gray-600 dark:text-gray-400">
+                {connectionErrorDetails ? `Detalhes técnicos: ${connectionErrorDetails}` : ''}
+              </p>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
