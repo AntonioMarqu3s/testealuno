@@ -15,7 +15,6 @@ interface QRCodeDialogProps {
   onOpenChange: (open: boolean) => void;
   qrCodeImage: string | null;
   timerCount: number;
-  onConnected?: () => void;
   connectionCheckAttempts?: number;
 }
 
@@ -24,7 +23,6 @@ export const QRCodeDialog: React.FC<QRCodeDialogProps> = ({
   onOpenChange,
   qrCodeImage,
   timerCount,
-  onConnected,
   connectionCheckAttempts = 0,
 }) => {
   const isCheckingConnection = connectionCheckAttempts > 0;
