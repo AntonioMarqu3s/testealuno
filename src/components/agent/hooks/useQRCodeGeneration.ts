@@ -1,167 +1,49 @@
 
-import { useState, useEffect, useRef } from 'react';
-import { toast } from 'sonner';
+import { useState, useRef } from 'react';
+import { useQRCodeTimer } from './qrcode/useQRCodeTimer';
+import { useQRCodeDisplay } from './qrcode/useQRCodeDisplay';
+import { useQRCodeConnection } from './qrcode/useQRCodeConnection';
 
 export const useQRCodeGeneration = (agentName: string, agentType: string) => {
   const [isGeneratingQR, setIsGeneratingQR] = useState(false);
   const [showQRDialog, setShowQRDialog] = useState(false);
-  const [qrCodeImage, setQrCodeImage] = useState<string | null>(null);
-  const [timerCount, setTimerCount] = useState(30);
   const [instanceName, setInstanceName] = useState<string>("");
-  const [connectionCheckAttempts, setConnectionCheckAttempts] = useState(0);
-  const timerIntervalRef = useRef<number | null>(null);
-  const connectionCheckIntervalRef = useRef<number | null>(null);
   
-  // Clear intervals on unmount
-  useEffect(() => {
-    return () => {
-      if (timerIntervalRef.current !== null) {
-        window.clearInterval(timerIntervalRef.current);
-      }
-      if (connectionCheckIntervalRef.current !== null) {
-        window.clearInterval(connectionCheckIntervalRef.current);
-      }
-    };
-  }, []);
+  // Reference to store if component is mounted
+  const isMountedRef = useRef(true);
+  
+  // Import QR code display functionality
+  const { 
+    qrCodeImage, 
+    setQrCodeImage, 
+    updateQRCode 
+  } = useQRCodeDisplay();
+  
+  // Import timer functionality
+  const { 
+    timerCount, 
+    timerIntervalRef,
+    startQRCodeUpdateTimer, 
+    clearQRCodeTimer 
+  } = useQRCodeTimer(updateQRCode);
+  
+  // Import connection check functionality
+  const {
+    connectionCheckAttempts,
+    connectionCheckIntervalRef,
+    startConnectionStatusCheck,
+    clearConnectionCheck
+  } = useQRCodeConnection();
   
   const handleCloseQRDialog = () => {
     setShowQRDialog(false);
-    if (timerIntervalRef.current !== null) {
-      window.clearInterval(timerIntervalRef.current);
-      timerIntervalRef.current = null;
-    }
-    if (connectionCheckIntervalRef.current !== null) {
-      window.clearInterval(connectionCheckIntervalRef.current);
-      connectionCheckIntervalRef.current = null;
-    }
+    
+    // Clear timers and intervals
+    clearQRCodeTimer();
+    clearConnectionCheck();
     
     // Clear stored instance ID
     sessionStorage.removeItem('currentInstanceId');
-    setConnectionCheckAttempts(0);
-  };
-  
-  const startQRCodeUpdateTimer = (instanceId: string) => {
-    setTimerCount(30);
-    
-    // Clear any existing interval
-    if (timerIntervalRef.current !== null) {
-      window.clearInterval(timerIntervalRef.current);
-    }
-    
-    // Set new interval
-    const intervalId = window.setInterval(() => {
-      setTimerCount((prevCount) => {
-        if (prevCount <= 1) {
-          // Update QR code
-          updateQRCode(instanceId);
-          return 30;
-        }
-        return prevCount - 1;
-      });
-    }, 1000);
-    
-    // Store interval ID for cleanup
-    timerIntervalRef.current = intervalId;
-  };
-  
-  const updateQRCode = async (instanceName: string) => {
-    try {
-      console.log("Updating QR code for instance:", instanceName);
-      
-      // Updated webhook URL
-      const response = await fetch('https://n8n-n8n.31kvca.easypanel.host/webhook/atualizar-qr-code', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ instanceName }),
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to update QR code');
-      }
-      
-      // Parse response
-      const contentType = response.headers.get('content-type');
-      let imgSrc;
-      
-      if (contentType && contentType.includes('application/json')) {
-        const data = await response.json();
-        const base64Data = data.mensagem || data.qrCodeBase64;
-        
-        if (!base64Data) {
-          throw new Error('Invalid response format');
-        }
-        
-        imgSrc = `data:image/png;base64,${base64Data}`;
-      } else {
-        const blob = await response.blob();
-        imgSrc = URL.createObjectURL(blob);
-      }
-      
-      setQrCodeImage(imgSrc);
-      toast.info("QR Code atualizado");
-      
-    } catch (error) {
-      console.error("Error updating QR code:", error);
-      toast.error("Erro ao atualizar QR Code");
-    }
-  };
-  
-  const startConnectionStatusCheck = (instanceName: string, onConnected: () => void) => {
-    // Clear any existing interval
-    if (connectionCheckIntervalRef.current !== null) {
-      window.clearInterval(connectionCheckIntervalRef.current);
-    }
-    
-    setConnectionCheckAttempts(0);
-    
-    // Start checking connection status every 5 seconds
-    const intervalId = window.setInterval(async () => {
-      try {
-        console.log("Checking connection status for:", instanceName);
-        
-        const response = await fetch('https://n8n-n8n.31kvca.easypanel.host/webhook/verificar-status', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ instanceId: instanceName }),
-        });
-        
-        if (!response.ok) {
-          throw new Error('Failed to check connection status');
-        }
-        
-        const data = await response.json();
-        console.log("Connection status response:", data);
-        
-        // If connected, trigger the onConnected callback
-        if (data.status === 'connected' || data.isConnected === true) {
-          console.log("Connection successful!");
-          
-          // Stop both intervals
-          if (timerIntervalRef.current !== null) {
-            window.clearInterval(timerIntervalRef.current);
-            timerIntervalRef.current = null;
-          }
-          
-          window.clearInterval(intervalId);
-          connectionCheckIntervalRef.current = null;
-          
-          // Call connected callback
-          onConnected();
-        } else {
-          // Increment connection check attempts
-          setConnectionCheckAttempts(prev => prev + 1);
-        }
-      } catch (error) {
-        console.error("Error checking connection status:", error);
-        setConnectionCheckAttempts(prev => prev + 1);
-      }
-    }, 5000); // Check every 5 seconds
-    
-    connectionCheckIntervalRef.current = intervalId;
   };
   
   const handleGenerateQrCode = async (onConnected?: () => void) => {
@@ -186,7 +68,32 @@ export const useQRCodeGeneration = (agentName: string, agentType: string) => {
       
       console.log("Generating QR code for instance:", instanceName);
       
-      // Updated webhook URL for creating instance
+      // Create instance and get initial QR code
+      const success = await createInstance(instanceName);
+      
+      if (success) {
+        // Start timer for QR code updates
+        startQRCodeUpdateTimer(instanceName);
+        
+        // Start interval for checking connection status if onConnected callback provided
+        if (onConnected && isMountedRef.current) {
+          startConnectionStatusCheck(instanceName, onConnected);
+        }
+      }
+      
+    } catch (error) {
+      console.error("Error generating QR code:", error);
+      toast.error("Erro ao gerar QR Code");
+      setShowQRDialog(false);
+    } finally {
+      setIsGeneratingQR(false);
+    }
+  };
+  
+  // Imported from qrCodeApi.ts
+  const createInstance = async (instanceName: string) => {
+    try {
+      // Call the API to create instance
       const response = await fetch('https://n8n-n8n.31kvca.easypanel.host/webhook/criar-instancia', {
         method: 'POST',
         headers: {
@@ -199,7 +106,6 @@ export const useQRCodeGeneration = (agentName: string, agentType: string) => {
         throw new Error('Failed to generate QR code');
       }
       
-      // Parse response
       const data = await response.json();
       console.log("Create instance response:", data);
       
@@ -207,79 +113,40 @@ export const useQRCodeGeneration = (agentName: string, agentType: string) => {
       if (data.status === 'sucess' || data.status === 'success') {
         toast.success(data.mensagem || "QR Code gerado com sucesso");
         
-        // For this new API, we need to make a separate call to get the QR code
-        const qrResponse = await fetch('https://n8n-n8n.31kvca.easypanel.host/webhook/atualizar-qr-code', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ instanceName }),
-        });
-        
-        if (!qrResponse.ok) {
-          throw new Error('Failed to get QR code');
-        }
-        
-        // Parse QR code response
-        const contentType = qrResponse.headers.get('content-type');
-        let imgSrc;
-        
-        if (contentType && contentType.includes('application/json')) {
-          const qrData = await qrResponse.json();
-          const base64Data = qrData.mensagem || qrData.qrCodeBase64;
-          
-          if (!base64Data) {
-            throw new Error('Invalid QR code response format');
-          }
-          
-          imgSrc = `data:image/png;base64,${base64Data}`;
-        } else {
-          const blob = await qrResponse.blob();
-          imgSrc = URL.createObjectURL(blob);
-        }
-        
-        setQrCodeImage(imgSrc);
-        
-        // Start timer for QR code updates
-        startQRCodeUpdateTimer(instanceName);
-        
-        // Start interval for checking connection status if onConnected callback provided
-        if (onConnected) {
-          startConnectionStatusCheck(instanceName, onConnected);
-        }
+        // Get the initial QR code
+        const qrSuccess = await updateQRCode(instanceName);
+        return qrSuccess;
       } else {
         throw new Error(data.mensagem || 'Erro ao gerar QR Code');
       }
-      
     } catch (error) {
-      console.error("Error generating QR code:", error);
-      toast.error("Erro ao gerar QR Code");
-      setShowQRDialog(false);
-    } finally {
-      setIsGeneratingQR(false);
+      console.error("Error creating instance:", error);
+      toast.error("Erro ao criar instância");
+      return false;
     }
   };
   
   const handleConnected = () => {
     // Clear any existing intervals
-    if (timerIntervalRef.current !== null) {
-      window.clearInterval(timerIntervalRef.current);
-      timerIntervalRef.current = null;
-    }
-    
-    if (connectionCheckIntervalRef.current !== null) {
-      window.clearInterval(connectionCheckIntervalRef.current);
-      connectionCheckIntervalRef.current = null;
-    }
+    clearQRCodeTimer();
+    clearConnectionCheck();
     
     // Reset states
     setQrCodeImage(null);
     setShowQRDialog(false);
-    setConnectionCheckAttempts(0);
     
     // Show success message
     toast.success("Conexão estabelecida com sucesso!");
   };
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      isMountedRef.current = false;
+      clearQRCodeTimer();
+      clearConnectionCheck();
+    };
+  }, []);
 
   return {
     isGeneratingQR,
@@ -293,3 +160,7 @@ export const useQRCodeGeneration = (agentName: string, agentType: string) => {
     handleConnected
   };
 };
+
+// Add missing imports
+import { toast } from 'sonner';
+import { useEffect } from 'react';
