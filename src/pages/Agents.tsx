@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import MainLayout from "@/components/layout/MainLayout";
 import { AgentsHeader } from "@/components/agent/AgentsHeader";
 import { AgentsList } from "@/components/agent/AgentsList";
@@ -14,6 +14,7 @@ import { Agent } from "@/components/agent/AgentTypes";
 
 const Agents = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const { toast } = useToast();
   
@@ -34,7 +35,7 @@ const Agents = () => {
     if (searchParams.get('showUpgrade') === 'true') {
       setShowUpgradeModal(true);
     }
-  }, []);
+  }, [location]);
   
   // Load agents on component mount and when email changes
   useEffect(() => {
@@ -119,12 +120,16 @@ const Agents = () => {
         />
         
         {userAgents.length > 0 ? (
-          <AgentsList 
-            agents={userAgents} 
-            onDeleteAgent={handleDeleteAgent}
-            onToggleConnection={handleToggleConnection}
-            isLoading={isLoading}
-          />
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {userAgents.map(agent => (
+              <AgentPanel 
+                key={agent.id}
+                agent={agent}
+                onDelete={handleDeleteAgent}
+                onToggleConnection={handleToggleConnection}
+              />
+            ))}
+          </div>
         ) : (
           <EmptyAgentState onCreateAgent={handleCreateAgent} />
         )}

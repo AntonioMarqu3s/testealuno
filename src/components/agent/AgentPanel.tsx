@@ -18,9 +18,10 @@ import { useAgentConnection } from "./hooks/useAgentConnection";
 interface AgentPanelProps {
   agent: Agent;
   onDelete?: (agentId: string) => void;
+  onToggleConnection?: (agentId: string, isConnected: boolean) => void;
 }
 
-export const AgentPanel: React.FC<AgentPanelProps> = ({ agent, onDelete }) => {
+export const AgentPanel: React.FC<AgentPanelProps> = ({ agent, onDelete, onToggleConnection }) => {
   const navigate = useNavigate();
   const userEmail = getCurrentUserEmail();
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
@@ -53,12 +54,13 @@ export const AgentPanel: React.FC<AgentPanelProps> = ({ agent, onDelete }) => {
   
   const handleDisconnectClick = async () => {
     const success = await handleDisconnect(agent.instanceId);
-    if (success) {
-      // Reload the page after a short delay to refresh agent status
-      setTimeout(() => {
-        window.location.reload();
-      }, 1000);
+    if (success && onToggleConnection) {
+      onToggleConnection(agent.id, false);
     }
+  };
+  
+  const handleConnectClick = () => {
+    handleGenerateQrCode();
   };
 
   return (
@@ -76,7 +78,7 @@ export const AgentPanel: React.FC<AgentPanelProps> = ({ agent, onDelete }) => {
       
       <AgentFooter
         agent={agent}
-        onGenerateQR={handleGenerateQrCode}
+        onGenerateQR={handleConnectClick}
         onDisconnect={handleDisconnectClick}
         isGeneratingQR={isGeneratingQR}
         isDisconnecting={isDisconnecting}
