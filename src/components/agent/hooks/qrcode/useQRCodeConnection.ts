@@ -1,13 +1,25 @@
 
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { checkConnectionStatus } from '../api/qrCodeApi';
 import { toast } from 'sonner';
+
+type ConnectionCallbackFunction = () => void;
 
 export const useQRCodeConnection = () => {
   const [connectionCheckAttempts, setConnectionCheckAttempts] = useState(0);
   const connectionCheckIntervalRef = useRef<number | null>(null);
-  const MAX_ATTEMPTS = 20; // Maximum number of attempts (5 minutes at 15-second intervals)
-  
+  const MAX_CONNECTION_CHECKS = 50; // Maximum number of connection check attempts
+  const CONNECTION_CHECK_INTERVAL = 6000; // Check every 6 seconds
+
+  // Clean up interval on unmount
+  useEffect(() => {
+    return () => {
+      if (connectionCheckIntervalRef.current !== null) {
+        window.clearInterval(connectionCheckIntervalRef.current);
+      }
+    };
+  }, []);
+
   const clearConnectionCheck = useCallback(() => {
     if (connectionCheckIntervalRef.current !== null) {
       window.clearInterval(connectionCheckIntervalRef.current);
@@ -15,50 +27,45 @@ export const useQRCodeConnection = () => {
     }
     setConnectionCheckAttempts(0);
   }, []);
-  
-  const startConnectionStatusCheck = useCallback((instanceName: string, onConnected: () => void) => {
+
+  const startConnectionStatusCheck = useCallback((instanceId: string, onConnected: ConnectionCallbackFunction) => {
     // Clear any existing interval
     clearConnectionCheck();
     
-    console.log("Starting connection status check for:", instanceName);
+    // Reset attempt counter
+    setConnectionCheckAttempts(1);
     
-    // Start checking connection status every 15 seconds
-    const intervalId = window.setInterval(async () => {
+    // Start checking connection status at regular intervals
+    connectionCheckIntervalRef.current = window.setInterval(async () => {
       try {
-        // Increment connection check attempts first so UI shows correct attempt number
-        setConnectionCheckAttempts(prev => {
-          const newAttempt = prev + 1;
-          console.log("Checking connection status for:", instanceName, "- Attempt:", newAttempt);
-          
-          // Check if we've exceeded max attempts
-          if (newAttempt >= MAX_ATTEMPTS) {
-            clearConnectionCheck();
-            toast.error("Tempo limite de conexão excedido. Por favor, tente novamente.");
-            return 0; // Reset attempts
-          }
-          
-          return newAttempt;
-        });
+        console.log(`Checking connection status (attempt ${connectionCheckAttempts + 1}/${MAX_CONNECTION_CHECKS})...`);
         
-        const isConnected = await checkConnectionStatus(instanceName);
+        const isConnected = await checkConnectionStatus(instanceId);
         
-        // If connected, trigger the onConnected callback
         if (isConnected) {
-          console.log("Connection successful!");
-          
-          // Clear connection check interval
+          console.log("Connection successful! Agent is connected.");
           clearConnectionCheck();
-          
-          // Call connected callback
           onConnected();
+        } else {
+          console.log(`Connection check failed (attempt ${connectionCheckAttempts + 1}). Will retry...`);
+          setConnectionCheckAttempts(prev => {
+            // If we've reached the maximum number of attempts, stop checking
+            if (prev >= MAX_CONNECTION_CHECKS) {
+              console.log("Maximum connection check attempts reached. Stopping checks.");
+              clearConnectionCheck();
+              toast.error("Não foi possível estabelecer conexão após várias tentativas.");
+              return prev;
+            }
+            return prev + 1;
+          });
         }
       } catch (error) {
         console.error("Error checking connection status:", error);
+        setConnectionCheckAttempts(prev => prev + 1);
       }
-    }, 15000); // Check every 15 seconds instead of 5 seconds to reduce API calls
+    }, CONNECTION_CHECK_INTERVAL);
     
-    connectionCheckIntervalRef.current = intervalId;
-  }, [clearConnectionCheck, MAX_ATTEMPTS]);
+  }, [connectionCheckAttempts, clearConnectionCheck, MAX_CONNECTION_CHECKS]);
 
   return {
     connectionCheckAttempts,
