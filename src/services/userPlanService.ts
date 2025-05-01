@@ -1,18 +1,13 @@
 
 // Re-export from user modules
 export { 
-  getCurrentUserEmail, 
-  setCurrentUserEmail, 
-  getUserEmail, 
-  validateEmail 
+  getCurrentUserEmail 
 } from './user/userService';
 
 // Re-export from plan modules
 export { 
   getUserPlan, 
-  initializeUserPlan, 
-  upgradeToPremium, 
-  downgradeToBasic 
+  initializeUserPlan
 } from './plan/userPlanService';
 
 // Re-export from agent modules
