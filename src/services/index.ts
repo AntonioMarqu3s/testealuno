@@ -13,3 +13,6 @@ export * from './analytics/agentPerformanceService';
 
 // Export checkout services
 export * from './checkout';
+
+// Export user services
+export * from './user';

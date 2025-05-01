@@ -32,14 +32,19 @@ const CreateAgent = () => {
         });
       }
     }
-  }, [agentId]);
+    
+    // Check if type is valid, if not redirect (moved to useEffect)
+    if (!type) {
+      toast({
+        title: "Selecione um tipo de agente",
+        description: "Por favor, escolha um tipo de agente antes de prosseguir com a criação.",
+      });
+      navigate('/dashboard?tab=agents');
+    }
+  }, [agentId, type, toast, navigate]);
 
+  // Return early if no type, but only after the useEffect has run
   if (!type) {
-    toast({
-      title: "Selecione um tipo de agente",
-      description: "Por favor, escolha um tipo de agente antes de prosseguir com a criação.",
-    });
-    navigate('/dashboard?tab=agents');
     return null;
   }
 
