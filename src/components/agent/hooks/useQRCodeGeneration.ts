@@ -1,167 +1,90 @@
 
-import { useState, useRef } from 'react';
-import { useQRCodeTimer } from './qrcode/useQRCodeTimer';
-import { useQRCodeDisplay } from './qrcode/useQRCodeDisplay';
-import { useQRCodeConnection } from './qrcode/useQRCodeConnection';
-import { toast } from 'sonner';
-import { useEffect } from 'react';
+import { useState, useEffect, useRef } from "react";
+import { useQRCodeDisplay } from "./qrcode/useQRCodeDisplay";
+import { useQRCodeTimer } from "./qrcode/useQRCodeTimer";
+import { useQRCodeConnection } from "./qrcode/useQRCodeConnection";
 
-export const useQRCodeGeneration = (agentName: string, agentType: string) => {
-  const [isGeneratingQR, setIsGeneratingQR] = useState(false);
-  const [showQRDialog, setShowQRDialog] = useState(false);
-  const [instanceName, setInstanceName] = useState<string>("");
-  
-  // Reference to store if component is mounted
-  const isMountedRef = useRef(true);
-  
-  // Import QR code display functionality
+export const useQRCodeGeneration = (instanceName: string) => {
+  const [showQRCodeDialog, setShowQRCodeDialog] = useState(false);
   const { 
     qrCodeImage, 
-    setQrCodeImage,
+    setQrCodeImage, 
     isGeneratingQRCode,
     updateQRCode 
   } = useQRCodeDisplay();
   
-  // Import timer functionality
   const { 
     timerCount, 
     timerIntervalRef,
-    startQRCodeUpdateTimer, 
+    startQRCodeUpdateTimer,
     clearQRCodeTimer 
   } = useQRCodeTimer(updateQRCode);
   
-  // Import connection check functionality
   const {
     connectionCheckAttempts,
     connectionCheckIntervalRef,
     startConnectionStatusCheck,
     clearConnectionCheck
   } = useQRCodeConnection();
-  
-  const handleCloseQRDialog = () => {
-    setShowQRDialog(false);
-    
-    // Clear timers and intervals
-    clearQRCodeTimer();
-    clearConnectionCheck();
-    
-    // Clear stored instance ID
-    sessionStorage.removeItem('currentInstanceId');
-  };
-  
-  const createInstance = async (instanceName: string) => {
-    try {
-      setIsGeneratingQR(true);
-      
-      // Call the API to create instance
-      const response = await fetch('https://n8n-n8n.31kvca.easypanel.host/webhook/criar-instancia', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ instanceName }),
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to generate QR code');
-      }
-      
-      const data = await response.json();
-      console.log("Create instance response:", data);
-      
-      // Check if the response contains success status
-      if (data.status === 'sucess' || data.status === 'success') {
-        toast.success(data.mensagem || "QR Code gerado com sucesso");
-        
-        // Get the initial QR code
-        const qrSuccess = await updateQRCode(instanceName);
-        return qrSuccess;
-      } else {
-        throw new Error(data.mensagem || 'Erro ao gerar QR Code');
-      }
-    } catch (error) {
-      console.error("Error creating instance:", error);
-      toast.error("Erro ao criar instância");
-      return false;
-    } finally {
-      setIsGeneratingQR(false);
-    }
-  };
-  
-  const handleGenerateQrCode = async (onConnected?: () => void) => {
-    // Open the QR dialog before generating the QR code
-    setShowQRDialog(true);
-    
-    try {
-      // Create instance name in the format expected by the webhook
-      const agentTypeMap: Record<string, string> = {
-        "sales": "Vendedor",
-        "sdr": "SDR",
-        "closer": "Closer",
-        "support": "Atendimento",
-        "custom": "Personalizado",
-      };
-      const formattedAgentType = agentTypeMap[agentType] || agentType;
-      const instanceName = `${formattedAgentType} - ${agentName}`;
-      setInstanceName(instanceName);
-      
-      // Store instance name for status checks
-      sessionStorage.setItem('currentInstanceId', instanceName);
-      
-      console.log("Generating QR code for instance:", instanceName);
-      
-      // Create instance and get initial QR code
-      const success = await createInstance(instanceName);
-      
-      if (success) {
-        // Start timer for QR code updates
-        startQRCodeUpdateTimer(instanceName);
-        
-        // Start interval for checking connection status if onConnected callback provided
-        if (onConnected && isMountedRef.current) {
-          startConnectionStatusCheck(instanceName, onConnected);
-        }
-      }
-      
-    } catch (error) {
-      console.error("Error generating QR code:", error);
-      toast.error("Erro ao gerar QR Code");
-      // Don't automatically close the dialog on error
-    }
-  };
-  
-  const handleConnected = () => {
-    // Clear any existing intervals
-    clearQRCodeTimer();
-    clearConnectionCheck();
-    
-    // Reset states
-    setQrCodeImage(null);
-    setShowQRDialog(false);
-    
-    // Show success message
-    toast.success("Conexão estabelecida com sucesso!");
-  };
 
-  // Cleanup on unmount
+  // Clear intervals when component unmounts
   useEffect(() => {
     return () => {
-      isMountedRef.current = false;
-      clearQRCodeTimer();
-      clearConnectionCheck();
+      if (timerIntervalRef.current !== null) {
+        window.clearInterval(timerIntervalRef.current);
+      }
+      if (connectionCheckIntervalRef.current !== null) {
+        window.clearInterval(connectionCheckIntervalRef.current);
+      }
     };
-  }, []);
+  }, [timerIntervalRef, connectionCheckIntervalRef]);
+
+  // Function to handle successful connection
+  const handleConnected = () => {
+    console.log("Agent connected successfully!");
+    setShowQRCodeDialog(false);
+    setQrCodeImage(null);
+    clearQRCodeTimer();
+    // Additional logic for when agent is connected
+  };
+
+  // Function to show QR code dialog and handle QR code generation
+  const handleShowQRCode = async () => {
+    setShowQRCodeDialog(true);
+    
+    // Reset state
+    setQrCodeImage(null);
+    clearQRCodeTimer();
+    clearConnectionCheck();
+    
+    // Get QR code
+    const success = await updateQRCode(instanceName);
+    
+    if (success) {
+      // Start timer for QR code refresh
+      startQRCodeUpdateTimer(instanceName);
+      
+      // Start checking connection status
+      startConnectionStatusCheck(instanceName, handleConnected);
+    }
+  };
+
+  // Function to close QR code dialog and clean up
+  const handleCloseQRCode = () => {
+    setShowQRCodeDialog(false);
+    setQrCodeImage(null);
+    clearQRCodeTimer();
+    clearConnectionCheck();
+  };
 
   return {
-    isGeneratingQR,
-    isGeneratingQRCode,
-    showQRDialog,
+    showQRCodeDialog,
+    setShowQRCodeDialog,
     qrCodeImage,
+    isGeneratingQRCode,
     timerCount,
-    instanceName,
     connectionCheckAttempts,
-    handleGenerateQrCode,
-    setShowQRDialog: handleCloseQRDialog,
-    handleConnected
+    handleShowQRCode,
+    handleCloseQRCode
   };
 };
