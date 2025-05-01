@@ -12,13 +12,13 @@ import {
 } from "@/components/ui/dialog";
 import { PLAN_DETAILS, PlanType, getPlanPrice } from "@/services/plan/userPlanService";
 
-interface UpgradeModalProps {
+export interface UpgradeModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onUpgrade: () => void;
+  onConfirm: () => void;
 }
 
-export const UpgradeModal = ({ open, onOpenChange, onUpgrade }: UpgradeModalProps) => {
+export const UpgradeModal = ({ open, onOpenChange, onConfirm }: UpgradeModalProps) => {
   const navigate = useNavigate();
   
   const handleUpgradeClick = () => {
@@ -61,7 +61,7 @@ export const UpgradeModal = ({ open, onOpenChange, onUpgrade }: UpgradeModalProp
 
         <DialogFooter className="flex flex-col sm:flex-row sm:justify-between gap-3">
           <Button variant="outline" className="sm:flex-1" onClick={() => onOpenChange(false)}>Cancelar</Button>
-          <Button className="sm:flex-1" onClick={handleUpgradeClick}>
+          <Button className="sm:flex-1" onClick={onConfirm}>
             <CreditCard className="mr-2 h-4 w-4" /> Ver planos
           </Button>
         </DialogFooter>

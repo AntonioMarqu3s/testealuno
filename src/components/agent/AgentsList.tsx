@@ -1,36 +1,99 @@
 
-import { Agent, AgentPanel } from "@/components/agent/AgentPanel";
+import { useState } from "react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { ChevronRight, Trash } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { Agent } from "@/services/agent/agentStorageService";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "../ui/alert-dialog";
 
-interface AgentsListProps {
+export interface AgentsListProps {
   agents: Agent[];
-  onDeleteAgent: (agentId: string) => void;
-  isLoading: boolean;
+  onDeleteAgent?: (id: string) => void;
+  isLoading?: boolean;
 }
 
-export const AgentsList = ({ agents, onDeleteAgent, isLoading }: AgentsListProps) => {
+export function AgentsList({ agents, onDeleteAgent, isLoading = false }: AgentsListProps) {
+  const navigate = useNavigate();
+  const [agentToDelete, setAgentToDelete] = useState<string | null>(null);
+
+  const handleViewAnalytics = (agentId: string) => {
+    navigate(`/agent-analytics/${agentId}`);
+  };
+
+  const handleDeleteClick = (agentId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setAgentToDelete(agentId);
+  };
+
+  const confirmDelete = () => {
+    if (agentToDelete && onDeleteAgent) {
+      onDeleteAgent(agentToDelete);
+    }
+    setAgentToDelete(null);
+  };
+
   if (isLoading) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="space-y-4">
         {[1, 2, 3].map((i) => (
-          <div key={i} className="h-48 rounded-lg bg-muted animate-pulse"></div>
+          <Card key={i} className="animate-pulse bg-muted/50">
+            <CardContent className="p-6 h-24"></CardContent>
+          </Card>
         ))}
       </div>
     );
   }
 
-  if (agents.length === 0) {
-    return null;
-  }
-
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div className="space-y-4">
       {agents.map((agent) => (
-        <AgentPanel 
-          key={agent.id} 
-          agent={agent} 
-          onDelete={onDeleteAgent}
-        />
+        <Card
+          key={agent.id}
+          className="transition-all hover:shadow cursor-pointer"
+          onClick={() => handleViewAnalytics(agent.id)}
+        >
+          <CardContent className="p-6 flex items-center justify-between">
+            <div>
+              <h3 className="font-medium">{agent.name}</h3>
+              <p className="text-sm text-muted-foreground truncate max-w-md">
+                {agent.description || "Sem descrição"}
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              {onDeleteAgent && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                  onClick={(e) => handleDeleteClick(agent.id, e)}
+                >
+                  <Trash className="h-5 w-5" />
+                  <span className="sr-only">Deletar agente</span>
+                </Button>
+              )}
+              <ChevronRight className="h-5 w-5 text-muted-foreground" />
+            </div>
+          </CardContent>
+        </Card>
       ))}
+
+      <AlertDialog open={!!agentToDelete} onOpenChange={() => setAgentToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Você tem certeza?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta ação não pode ser desfeita. Este agente será permanentemente excluído.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Deletar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
-};
+}

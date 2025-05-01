@@ -14,6 +14,7 @@ import Agents from "./pages/Agents";
 import AgentAnalytics from "./pages/AgentAnalytics";
 import Checkout from "./pages/Checkout";
 import PlanCheckout from "./pages/PlanCheckout";
+import Plans from "./pages/Plans";
 import { initializeUserEmail } from "./services/user/userService";
 import { initializeUserPlan } from "./services/plan/userPlanService";
 
@@ -42,6 +43,7 @@ const App = () => {
             <Route path="/agent-analytics/:agentId" element={<AgentAnalytics />} />
             <Route path="/checkout" element={<Checkout />} />
             <Route path="/plan-checkout" element={<PlanCheckout />} />
+            <Route path="/plans" element={<Plans />} />
             <Route path="/update-email" element={<Dashboard />} />
             <Route path="*" element={<NotFound />} />
           </Routes>

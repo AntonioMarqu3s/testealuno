@@ -17,7 +17,7 @@ import {
   Grid2X2, 
   PlusCircle, 
   Settings, 
-  Users, 
+  CreditCard, 
   LayoutDashboard, 
   LogOut 
 } from "lucide-react";
@@ -50,9 +50,9 @@ export function AppSidebar() {
       icon: PlusCircle,
     },
     {
-      title: "Time",
-      path: "/team",
-      icon: Users,
+      title: "Planos",
+      path: "/plans",
+      icon: CreditCard,
     },
     {
       title: "Configurações",

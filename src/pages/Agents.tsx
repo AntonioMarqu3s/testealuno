@@ -7,7 +7,7 @@ import { AgentsList } from "@/components/agent/AgentsList";
 import { EmptyAgentState } from "@/components/agent/EmptyAgentState";
 import { getCurrentUserEmail } from "@/services/user/userService";
 import { getUserPlan } from "@/services/plan/userPlanService";
-import { getUserAgents } from "@/services/agent/agentStorageService";
+import { deleteAgent, getUserAgents } from "@/services/agent/agentStorageService";
 import { UpgradeModal } from "@/components/agent/UpgradeModal";
 import { useToast } from "@/hooks/use-toast";
 
@@ -24,6 +24,7 @@ const Agents = () => {
   
   // Get user agents
   const userAgents = getUserAgents(userEmail);
+  const [isLoading, setIsLoading] = useState(false);
   
   const handleCreateAgent = () => {
     navigate('/dashboard'); // Navigate to dashboard to select agent type
@@ -38,6 +39,22 @@ const Agents = () => {
     navigate('/plan-checkout');
   };
 
+  const handleDeleteAgent = (agentId: string) => {
+    try {
+      deleteAgent(userEmail, agentId);
+      toast({
+        title: "Agente excluído",
+        description: "O agente foi excluído com sucesso.",
+      });
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Erro",
+        description: "Não foi possível excluir o agente.",
+      });
+    }
+  };
+
   return (
     <MainLayout title="Meus Agentes">
       <div className="space-y-6">
@@ -48,7 +65,11 @@ const Agents = () => {
         />
         
         {userAgents.length > 0 ? (
-          <AgentsList agents={userAgents} />
+          <AgentsList 
+            agents={userAgents} 
+            onDeleteAgent={handleDeleteAgent}
+            isLoading={isLoading}
+          />
         ) : (
           <EmptyAgentState onCreateAgent={handleCreateAgent} />
         )}
@@ -56,7 +77,7 @@ const Agents = () => {
       
       <UpgradeModal 
         open={showUpgradeModal} 
-        onClose={() => setShowUpgradeModal(false)}
+        onOpenChange={setShowUpgradeModal}
         onConfirm={handleUpgradeConfirm}
       />
     </MainLayout>

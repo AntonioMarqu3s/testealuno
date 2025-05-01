@@ -1,4 +1,3 @@
-
 import { getStorageItem, setStorageItem } from '../storage/localStorageService';
 
 // Define plan types
@@ -30,7 +29,7 @@ export const PLAN_DETAILS = {
   [PlanType.PREMIUM]: { 
     name: 'Premium', 
     agentLimit: 10, 
-    price: 600.00
+    price: 700.00
   }
 };
 
