@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import MainLayout from "@/components/layout/MainLayout";
@@ -28,6 +29,7 @@ const Agents = () => {
   // Get user agents with state management
   const [userAgents, setUserAgents] = useState<Agent[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [qrAgentId, setQrAgentId] = useState<string | null>(null);
   
   // Check for URL parameter to show upgrade modal
   useEffect(() => {
@@ -110,22 +112,17 @@ const Agents = () => {
     }
   };
 
-  const searchParams = new URLSearchParams(location.search);
-  const showQRParam = searchParams.get('showQR');
-
+  // Handle QR code display from URL parameter
   useEffect(() => {
+    const searchParams = new URLSearchParams(location.search);
+    const showQRParam = searchParams.get('showQR');
+    
     if (showQRParam) {
-      // Se temos um ID de agente para mostrar QR code
-      const userAgents = getUserAgents(userEmail);
-      const targetAgent = userAgents.find(agent => agent.id === showQRParam);
-      
-      if (targetAgent) {
-        // Simular um clique no botão de gerar QR code para este agente
-        console.log("Auto showing QR code for agent:", targetAgent.name);
-        // Aqui você pode implementar a lógica para mostrar automaticamente o QR code
-      }
+      setQrAgentId(showQRParam);
+    } else {
+      setQrAgentId(null);
     }
-  }, [showQRParam, userEmail]);
+  }, [location.search]);
 
   return (
     <MainLayout title="Meus Agentes">
@@ -144,6 +141,7 @@ const Agents = () => {
                 agent={agent}
                 onDelete={handleDeleteAgent}
                 onToggleConnection={handleToggleConnection}
+                autoShowQR={agent.id === qrAgentId}
               />
             ))}
           </div>

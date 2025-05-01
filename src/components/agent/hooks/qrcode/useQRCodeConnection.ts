@@ -8,8 +8,8 @@ type ConnectionCallbackFunction = () => void;
 export const useQRCodeConnection = () => {
   const [connectionCheckAttempts, setConnectionCheckAttempts] = useState(0);
   const connectionCheckIntervalRef = useRef<number | null>(null);
-  const MAX_CONNECTION_CHECKS = 50; // Maximum number of connection check attempts
-  const CONNECTION_CHECK_INTERVAL = 6000; // Check every 6 seconds
+  const MAX_CONNECTION_CHECKS = 20; // Reduced from 50 to 20
+  const CONNECTION_CHECK_INTERVAL = 8000; // Increased from 6s to 8s to reduce request frequency
 
   // Clean up interval on unmount
   useEffect(() => {
@@ -46,26 +46,35 @@ export const useQRCodeConnection = () => {
           console.log("Connection successful! Agent is connected.");
           clearConnectionCheck();
           onConnected();
+          toast.success("Agente conectado com sucesso!");
         } else {
-          console.log(`Connection check failed (attempt ${connectionCheckAttempts + 1}). Will retry...`);
           setConnectionCheckAttempts(prev => {
+            const newCount = prev + 1;
+            console.log(`Connection check failed (attempt ${newCount}). Will retry...`);
+            
             // If we've reached the maximum number of attempts, stop checking
-            if (prev >= MAX_CONNECTION_CHECKS) {
+            if (newCount >= MAX_CONNECTION_CHECKS) {
               console.log("Maximum connection check attempts reached. Stopping checks.");
               clearConnectionCheck();
               toast.error("Não foi possível estabelecer conexão após várias tentativas.");
-              return prev;
             }
-            return prev + 1;
+            return newCount;
           });
         }
       } catch (error) {
         console.error("Error checking connection status:", error);
-        setConnectionCheckAttempts(prev => prev + 1);
+        setConnectionCheckAttempts(prev => {
+          const newCount = prev + 1;
+          if (newCount >= MAX_CONNECTION_CHECKS) {
+            clearConnectionCheck();
+            toast.error("Não foi possível verificar a conexão. Tente novamente mais tarde.");
+          }
+          return newCount;
+        });
       }
     }, CONNECTION_CHECK_INTERVAL);
     
-  }, [connectionCheckAttempts, clearConnectionCheck, MAX_CONNECTION_CHECKS]);
+  }, [clearConnectionCheck, MAX_CONNECTION_CHECKS]);
 
   return {
     connectionCheckAttempts,

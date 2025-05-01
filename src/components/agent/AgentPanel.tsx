@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
@@ -18,9 +19,15 @@ interface AgentPanelProps {
   agent: Agent;
   onDelete?: (agentId: string) => void;
   onToggleConnection?: (agentId: string, isConnected: boolean) => void;
+  autoShowQR?: boolean;
 }
 
-export const AgentPanel: React.FC<AgentPanelProps> = ({ agent, onDelete, onToggleConnection }) => {
+export const AgentPanel: React.FC<AgentPanelProps> = ({ 
+  agent, 
+  onDelete, 
+  onToggleConnection,
+  autoShowQR = false
+}) => {
   const navigate = useNavigate();
   const userEmail = getCurrentUserEmail();
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
@@ -66,6 +73,14 @@ export const AgentPanel: React.FC<AgentPanelProps> = ({ agent, onDelete, onToggl
       verifyStatus();
     }
   }, [agent.instanceId, checkConnectionStatus, isConnected, agent.id, onToggleConnection]);
+
+  // Handle auto show QR code when directed from agent creation
+  useEffect(() => {
+    if (autoShowQR && !showQRCodeDialog) {
+      console.log("Auto showing QR code for agent:", agent.name);
+      setTimeout(() => handleShowQRCode(), 300);
+    }
+  }, [autoShowQR, agent.name, showQRCodeDialog, handleShowQRCode]);
 
   const handleEdit = () => {
     // Prepare agent data for editing and navigate
