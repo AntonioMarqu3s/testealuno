@@ -1,3 +1,4 @@
+
 /**
  * API functions for QR code operations
  */
@@ -19,7 +20,7 @@ export const fetchQRCode = async (instanceName: string): Promise<string | null> 
       
       if (!response.ok) {
         console.error("Primary endpoint error status:", response.status);
-        throw new Error('Failed to fetch QR code from primary endpoint');
+        throw new Error(`Failed to fetch QR code from primary endpoint: ${response.status}`);
       }
       
       const contentType = response.headers.get('content-type');
@@ -31,6 +32,8 @@ export const fetchQRCode = async (instanceName: string): Promise<string | null> 
         console.log("Received text response, length:", textData.length);
         if (textData.length > 100) { // Likely base64 data
           return `data:image/png;base64,${textData}`;
+        } else {
+          console.error("Text response too short to be valid QR code:", textData);
         }
       }
       
@@ -43,7 +46,7 @@ export const fetchQRCode = async (instanceName: string): Promise<string | null> 
         const base64Data = data.qrcode || data.qrCode || data.mensagem || data.qrCodeBase64 || data.base64;
         
         if (base64Data) {
-          console.log("Found base64 data in response");
+          console.log("Found base64 data in response, length:", base64Data.length);
           return `data:image/png;base64,${base64Data}`;
         } else {
           console.error("JSON response didn't contain QR code data:", data);
@@ -74,8 +77,10 @@ export const fetchQRCode = async (instanceName: string): Promise<string | null> 
       });
       
       if (!fallbackResponse.ok) {
-        console.error("Fallback response not OK:", await fallbackResponse.text());
-        throw new Error('Failed to fetch QR code from fallback endpoint');
+        console.error("Fallback response not OK:", fallbackResponse.status);
+        const errorText = await fallbackResponse.text();
+        console.error("Fallback error text:", errorText);
+        throw new Error(`Failed to fetch QR code from fallback endpoint: ${fallbackResponse.status}`);
       }
       
       const contentType = fallbackResponse.headers.get('content-type');
@@ -87,6 +92,8 @@ export const fetchQRCode = async (instanceName: string): Promise<string | null> 
         console.log("Received text response from fallback, length:", textData.length);
         if (textData.length > 100) { // Likely base64 data
           return `data:image/png;base64,${textData}`;
+        } else {
+          console.error("Fallback text response too short:", textData);
         }
       }
       
@@ -98,8 +105,10 @@ export const fetchQRCode = async (instanceName: string): Promise<string | null> 
         const base64Data = data.qrcode || data.qrCode || data.mensagem || data.qrCodeBase64 || data.base64;
         
         if (base64Data) {
-          console.log("Found base64 data in fallback response");
+          console.log("Found base64 data in fallback response, length:", base64Data.length);
           return `data:image/png;base64,${base64Data}`;
+        } else {
+          console.error("JSON fallback didn't contain QR code:", data);
         }
       }
       
@@ -111,9 +120,11 @@ export const fetchQRCode = async (instanceName: string): Promise<string | null> 
       }
       
       console.error("Could not extract QR code from fallback response");
+      throw new Error('Invalid fallback response format');
     }
   } catch (error) {
     console.error("Error fetching QR code:", error);
+    throw error; // Rethrow to handle in the caller
   }
   
   // For development purposes, return a placeholder QR code
@@ -125,7 +136,7 @@ export const fetchQRCode = async (instanceName: string): Promise<string | null> 
   return null;
 };
 
-// Check connection status
+// Check connection status - no changes to this function
 export const checkConnectionStatus = async (instanceName: string): Promise<boolean> => {
   try {
     console.log(`Checking connection status for instance: ${instanceName}`);

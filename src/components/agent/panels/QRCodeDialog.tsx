@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -28,6 +28,14 @@ export const QRCodeDialog: React.FC<QRCodeDialogProps> = ({
   isGeneratingQRCode = false,
 }) => {
   const isCheckingConnection = connectionCheckAttempts > 0;
+  
+  // Debug QR code image
+  useEffect(() => {
+    if (open && qrCodeImage) {
+      console.log("QR Code image in dialog:", qrCodeImage.substring(0, 50) + "..." + (qrCodeImage.length > 100 ? qrCodeImage.substring(qrCodeImage.length - 50) : ""));
+      console.log("QR Code image length:", qrCodeImage.length);
+    }
+  }, [open, qrCodeImage]);
   
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -62,12 +70,12 @@ export const QRCodeDialog: React.FC<QRCodeDialogProps> = ({
                   onError={(e) => {
                     console.error("QR Code image load failed");
                     // Log error details
-                    console.log("QR code src that failed:", qrCodeImage);
+                    console.log("QR code src that failed:", qrCodeImage ? qrCodeImage.substring(0, 50) + "..." : "null");
                     // Set to placeholder if needed
                     e.currentTarget.src = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIQAAACECAYAAABRRIOnAAAAAklEQVR4AewaftIAAAOdSURBVO3BQY4cOxIEwfAC//9l7x3jrYBBJNWjmRH2B2utP1hj3WCNdYM11g3WWDdYY91gjXWDNdYN1lg3WGPdYI11gzXWDdZYN1hj3WCN9YeXJPxJlW8kcJKqk4QnVZ0kfEPVScI3VJ0k/EmVb6yxbrDGusEa6wZf+LJKJ5W+odJJwkmlaYQTlU4qnVQ6SZhGOEnopNI3VPqmSt9U6ZvWWDdYY91gjXWDH/lhEk4qnSR0Ek5UTiqdJJyonFQ6SThROVF5UqWThBOVJwl/0hrrBmusG6yxbvAjf5mEE5WThBOVTsJJwknlROUk4UTlGwl/szXWDdZYN1hj3eArf7mEk4SThE6lk4SThBOVE5WThBOVTsKT1lg3WGPdYI11g6/8J1U6SThJOEk4SThJOKmYVDpRmRKeWmPdYI11gzXWDb7yn1TpJOEk4YlKJwknKicJJwmdSicJJwmdypPK32yNdYM11g3WWDf4wpclTCp9Q6WThCdVOkk4STipeKLSSUIn4YlK31TpJOEba6wbrLFusMa6wR9eSphUOkl4knCi8kSlk4QnlU4STlSeJDxR6SRhUukk4U9aY91gjXWDNdYNfuRFCZ1KJwmdSicJJwmdSicJnconCSrfUOmTEk5UOkn4xhrrBmusG6yxbvCHP0ylk4QnCSrfSOhU6iR0Ck9UThI6lScJJwknKk9aY91gjXWDNdYNfuRFCX9SpZOEJyqdJJwkPFHpJGFS6VsqnSScJExV+qY11g3WWDdYY93gCy+q9KRKJwknCScqnSR8otJJwonKpNJJwqTSScKTKn1DpZOEb6yxbrDGusEa6wY/8sNUnqh0knCi8g0JJwknCZNKJwknCU+qdJLwJOFJlX7SGusGa6wbrLFu8JW/XEKn8qRKJwlPEk5UnlQ6SThReaLSScKTKp2odJLwpDXWDdZYN1hj3eBHflilk4QTlU4SJpWeSJhUmhL+JpVOVDpJeNIa6wZrrBussbXlxUoqnSR8U8KJyknCNyV0Kp0kdAmdypOEE5Vvmk80rLFusMa6wRrrBl95UcKk0knCicqJyqTSk4QnKp0kTCqdJJyonKicJEwqnSR8otJJwjfWWDdYY91gjXWDH/mQSicJJwmdyknCpNJJwqRyktCpTCqdJEwqnSR0Kp2EE5VJ5ZPWWDdYY91gjXWDH/mXSXii0knCScKTKp0kTAmdSicJk0onCSdVOkl4knCi8qQ11g3WWDdYY93gD9Za/rDGusEa6wZrrBussbXlL22nNrxM003hAAAAAElFTkSuQmCC";
                   }}
                 />
-                {/* Overlay for better visibility of loading/error states */}
+                {/* Add an overlay for better visibility of QR code */}
                 <div className="absolute inset-0 bg-transparent pointer-events-none"></div>
               </div>
               <div className="flex flex-col items-center gap-2">
