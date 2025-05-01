@@ -1,8 +1,11 @@
+
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Form } from "@/components/ui/form";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 
 import AgentBasicInfoForm from "./form/AgentBasicInfoForm";
 import CompanyInfoForm from "./form/CompanyInfoForm";
@@ -18,8 +21,6 @@ import {
 } from "./form/agentSchema";
 import { Agent } from "./AgentTypes";
 import { getCurrentUserEmail, generateAgentInstanceId } from "@/services";
-import { useNavigate } from "react-router-dom";
-import { toast } from "sonner";
 import { getUserAgents } from "@/services/agent/agentStorageService";
 
 interface CreateAgentFormProps {
@@ -48,6 +49,7 @@ const CreateAgentForm = ({
   const form = useForm<AgentFormValues>({
     resolver: zodResolver(agentFormSchema),
     defaultValues: formDefaultValues,
+    mode: "onChange"
   });
 
   // Load agent data if editing
@@ -62,7 +64,6 @@ const CreateAgentForm = ({
         form.setValue('agentName', agentToEdit.name);
         
         // In a real implementation, we would load all other agent data here
-        // This is just a basic implementation
         toast.info("Dados do agente carregados para edição", {
           description: `Editando: ${agentToEdit.name}`
         });
@@ -82,6 +83,8 @@ const CreateAgentForm = ({
   }, [initialValues, form]);
 
   const onSubmit = (values: AgentFormValues) => {
+    console.log("Form submitted with values:", values);
+    
     const userEmail = getCurrentUserEmail() || "vladimirfreire@hotmail.com";
     const instanceId = generateAgentInstanceId(userEmail, values.agentName);
     
@@ -98,10 +101,6 @@ const CreateAgentForm = ({
     setCreatedAgent(agent);
     setShowConfirmation(true);
     
-    // Create client identifier for the system
-    const clientIdentifier = `${userEmail}-${values.agentName}`.replace(/\s+/g, '-').toLowerCase();
-    console.log("Client identifier:", clientIdentifier);
-    
     // Actually save or update the agent
     if (isEditing && agentId) {
       handleUpdateAgent(values, agentId);
@@ -110,8 +109,14 @@ const CreateAgentForm = ({
     }
   };
 
-  const handleNext = () => {
-    setStep(prev => Math.min(prev + 1, totalSteps));
+  const handleNext = async () => {
+    // Validate the current step before proceeding
+    const fieldsToValidate = getFieldsForCurrentStep();
+    const isValid = await form.trigger(fieldsToValidate as any[]);
+    
+    if (isValid) {
+      setStep(prev => Math.min(prev + 1, totalSteps));
+    }
   };
 
   const handleBack = () => {
@@ -133,6 +138,20 @@ const CreateAgentForm = ({
     if (createdAgent?.id) {
       handleCloseConfirmation();
       navigate(`/agent-analytics/${createdAgent.id}`);
+    }
+  };
+
+  // Helper function to determine which fields to validate based on current step
+  const getFieldsForCurrentStep = (): (keyof AgentFormValues)[] => {
+    switch (step) {
+      case 1:
+        return ['agentName', 'personality', 'customPersonality'];
+      case 2:
+        return ['companyName', 'companyDescription', 'segment', 'mission', 'vision', 'mainDifferentials', 'competitors', 'commonObjections'];
+      case 3:
+        return ['productName', 'productDescription', 'problemsSolved', 'benefits', 'differentials'];
+      default:
+        return [];
     }
   };
 

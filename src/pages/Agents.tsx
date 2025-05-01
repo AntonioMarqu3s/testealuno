@@ -11,6 +11,7 @@ import { deleteUserAgent, getUserAgents, updateUserAgent } from "@/services/agen
 import { UpgradeModal } from "@/components/agent/UpgradeModal";
 import { useToast } from "@/hooks/use-toast";
 import { Agent } from "@/components/agent/AgentTypes";
+import { AgentPanel } from "@/components/agent/AgentPanel";
 
 const Agents = () => {
   const navigate = useNavigate();

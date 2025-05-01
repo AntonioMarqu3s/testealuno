@@ -26,7 +26,7 @@ export const useAgentSubmission = (agentType: string) => {
     // Get actual user email
     const userEmail = getCurrentUserEmail() || "vladimirfreire@hotmail.com";
     
-    // Verificar se o usuário pode criar mais agentes
+    // Check if the user can create more agents
     if (!canCreateAgent(userEmail)) {
       toastHook({
         title: "Limite de plano atingido",
@@ -38,16 +38,16 @@ export const useAgentSubmission = (agentType: string) => {
       return;
     }
     
-    // Gerar ID de instância
+    // Generate instance ID
     const instanceId = generateAgentInstanceId(userEmail, values.agentName);
     
     // Create client identifier
     const clientIdentifier = `${userEmail}-${values.agentName}`.replace(/\s+/g, '-').toLowerCase();
     
-    // Incrementar contagem de agentes do usuário
+    // Increment user's agent count
     incrementAgentCount(userEmail);
     
-    // Criar objeto do agente
+    // Create agent object
     const newAgent = {
       id: `agent-${Date.now()}`, // Use timestamp for unique ID
       name: values.agentName,
@@ -60,10 +60,10 @@ export const useAgentSubmission = (agentType: string) => {
 
     console.log("Saving new agent:", newAgent);
 
-    // Salvar agente no localStorage
+    // Save agent to localStorage
     saveAgent(userEmail, newAgent);
     
-    // Simulação - normalmente aqui você faria uma chamada à API
+    // Simulate API call - normally you would make an API call here
     setTimeout(() => {
       toast.success("Agente criado com sucesso", {
         description: `O agente ${values.agentName} foi criado e está pronto para uso.`,
@@ -102,6 +102,9 @@ export const useAgentSubmission = (agentType: string) => {
     sessionStorage.removeItem('editingAgent');
     
     setIsSubmitting(false);
+    
+    // Navigate back to agents page after update
+    navigate('/agents');
   };
 
   const handleDeleteAgent = (agentId: string) => {
@@ -113,6 +116,9 @@ export const useAgentSubmission = (agentType: string) => {
     toast.success("Agente removido com sucesso", {
       description: "O agente foi excluído com sucesso.",
     });
+    
+    // Navigate back to agents page after deletion
+    navigate('/agents');
   };
 
   return {
