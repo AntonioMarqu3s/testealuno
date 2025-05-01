@@ -1,32 +1,14 @@
 
-// Re-export everything from userPlanService for easier imports
-export * from './plan/userPlanService';
-
-// Export plan limitation services
-export * from './plan/planLimitService';
-
-// Export specific agent services
 export * from './agent';
-
-// Export storage services
-export * from './storage/localStorageService';
-
-// Export analytics services
-export * from './analytics/agentPerformanceService';
-
-// Export checkout services
+export * from './analytics';
+export * from './auth';
 export * from './checkout';
-
-// Export user services
+export * from './plan';
+export * from './storage';
 export * from './user';
 
-// Fix the conflict between the two transferUserAgentData functions
-// Only export the one from agentStorageService
-export { transferUserAgentData } from './agent/agentStorageService';
-
-// Fix the conflict between the two generateInstanceId functions
-export { generateInstanceId as generateAgentInstanceId } from './agent/agentInstanceService';
-export { generateInstanceId as generateUserInstanceId } from './user/userService';
-
-// We'll use the agent implementation as our default generateInstanceId
-export { generateInstanceId } from './agent/agentInstanceService';
+// Re-export specific functions to maintain backward compatibility
+export { generateAgentInstanceId, generateUniqueInstanceId } from './agent/agentInstanceService';
+export { getUserAgents, saveAgent, deleteUserAgent, updateUserAgent } from './agent/agentStorageService';
+export { canCreateAgent, incrementAgentCount } from './plan/planLimitService';
+export { getCurrentUserEmail } from './user/userService';

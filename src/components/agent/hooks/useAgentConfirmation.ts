@@ -17,6 +17,9 @@ export const useAgentConfirmation = (agentType: string) => {
   const handleGenerateQR = () => {
     console.log("Generating QR code for agent:", createdAgent?.name);
     // Implementation handled in AgentConfirmation component
+    if (createdAgent?.id) {
+      navigate(`/agent-analytics/${createdAgent.id}?showQR=true`);
+    }
   };
 
   const handleAnalyze = () => {
@@ -28,7 +31,7 @@ export const useAgentConfirmation = (agentType: string) => {
   };
 
   const prepareAgentConfirmation = (values: any, agentId?: string) => {
-    const userEmail = getCurrentUserEmail() || "vladimirfreire@hotmail.com";
+    const userEmail = getCurrentUserEmail() || "user@example.com";
     const instanceId = generateAgentInstanceId(userEmail, values.agentName);
     
     // Create agent object for confirmation panel

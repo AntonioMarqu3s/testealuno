@@ -23,92 +23,104 @@ export const useAgentSubmission = (agentType: string) => {
   const handleSubmitAgent = (values: AgentFormValues) => {
     setIsSubmitting(true);
     
-    // Get actual user email
-    const userEmail = getCurrentUserEmail() || "vladimirfreire@hotmail.com";
-    
-    // Check if the user can create more agents
-    if (!canCreateAgent(userEmail)) {
-      toastHook({
-        title: "Limite de plano atingido",
-        description: "Seu plano atual permite apenas 1 agente. Faça upgrade para o plano Premium para criar mais agentes.",
-        variant: "destructive"
-      });
-      setIsSubmitting(false);
-      navigate('/agents?showUpgrade=true');
-      return;
-    }
-    
-    // Generate instance ID
-    const instanceId = generateAgentInstanceId(userEmail, values.agentName);
-    
-    // Create client identifier
-    const clientIdentifier = `${userEmail}-${values.agentName}`.replace(/\s+/g, '-').toLowerCase();
-    
-    // Increment user's agent count
-    incrementAgentCount(userEmail);
-    
-    // Create agent object
-    const newAgent = {
-      id: `agent-${Date.now()}`, // Use timestamp for unique ID
-      name: values.agentName,
-      type: agentType,
-      isConnected: false,
-      createdAt: new Date(),
-      instanceId,
-      clientIdentifier
-    };
+    try {
+      // Get actual user email
+      const userEmail = getCurrentUserEmail() || "user@example.com";
+      
+      // Check if the user can create more agents
+      if (!canCreateAgent(userEmail)) {
+        toastHook({
+          title: "Limite de plano atingido",
+          description: "Seu plano atual permite apenas 1 agente. Faça upgrade para o plano Premium para criar mais agentes.",
+          variant: "destructive"
+        });
+        setIsSubmitting(false);
+        navigate('/agents?showUpgrade=true');
+        return;
+      }
+      
+      // Generate instance ID
+      const instanceId = generateAgentInstanceId(userEmail, values.agentName);
+      
+      // Create client identifier
+      const clientIdentifier = `${userEmail}-${values.agentName}`.replace(/\s+/g, '-').toLowerCase();
+      
+      // Increment user's agent count
+      incrementAgentCount(userEmail);
+      
+      // Create agent object
+      const newAgent = {
+        id: `agent-${Date.now()}`, // Use timestamp for unique ID
+        name: values.agentName,
+        type: agentType,
+        isConnected: false,
+        createdAt: new Date(),
+        instanceId,
+        clientIdentifier
+      };
 
-    console.log("Saving new agent:", newAgent);
+      console.log("Saving new agent:", newAgent);
 
-    // Save agent to localStorage
-    saveAgent(userEmail, newAgent);
-    
-    // Simulate API call - normally you would make an API call here
-    setTimeout(() => {
+      // Save agent to localStorage
+      saveAgent(userEmail, newAgent);
+      
+      // Show success message
       toast.success("Agente criado com sucesso", {
         description: `O agente ${values.agentName} foi criado e está pronto para uso.`,
       });
       
       setIsSubmitting(false);
-      // Redirect to agents dashboard after creation
-      navigate('/agents');
-    }, 1000);
+    } catch (error) {
+      console.error("Error creating agent:", error);
+      toast.error("Erro ao criar agente", {
+        description: "Ocorreu um erro ao criar o agente. Por favor, tente novamente.",
+      });
+      setIsSubmitting(false);
+    }
   };
 
   const handleUpdateAgent = (values: AgentFormValues, agentId: string) => {
     setIsSubmitting(true);
     
-    // Get user email
-    const userEmail = getCurrentUserEmail();
-    
-    // Update instance ID if name changed
-    const instanceId = generateAgentInstanceId(userEmail, values.agentName);
-    
-    // Create client identifier
-    const clientIdentifier = `${userEmail}-${values.agentName}`.replace(/\s+/g, '-').toLowerCase();
-    
-    // Update agent in localStorage
-    updateUserAgent(userEmail, agentId, {
-      name: values.agentName,
-      instanceId,
-      clientIdentifier // Add client identifier
-    });
-    
-    toast.success("Agente atualizado com sucesso", {
-      description: `O agente ${values.agentName} foi atualizado com sucesso.`,
-    });
-    
-    // Clear the editing session
-    sessionStorage.removeItem('editingAgent');
-    
-    setIsSubmitting(false);
-    
-    // Navigate back to agents page after update
-    navigate('/agents');
+    try {
+      // Get user email
+      const userEmail = getCurrentUserEmail() || "user@example.com";
+      
+      // Update instance ID if name changed
+      const instanceId = generateAgentInstanceId(userEmail, values.agentName);
+      
+      // Create client identifier
+      const clientIdentifier = `${userEmail}-${values.agentName}`.replace(/\s+/g, '-').toLowerCase();
+      
+      // Update agent in localStorage
+      updateUserAgent(userEmail, agentId, {
+        name: values.agentName,
+        instanceId,
+        clientIdentifier // Add client identifier
+      });
+      
+      toast.success("Agente atualizado com sucesso", {
+        description: `O agente ${values.agentName} foi atualizado com sucesso.`,
+      });
+      
+      // Clear the editing session
+      sessionStorage.removeItem('editingAgent');
+      
+      setIsSubmitting(false);
+      
+      // Navigate back to agents page after update
+      navigate('/agents');
+    } catch (error) {
+      console.error("Error updating agent:", error);
+      toast.error("Erro ao atualizar agente", {
+        description: "Ocorreu um erro ao atualizar o agente. Por favor, tente novamente.",
+      });
+      setIsSubmitting(false);
+    }
   };
 
   const handleDeleteAgent = (agentId: string) => {
-    const userEmail = getCurrentUserEmail();
+    const userEmail = getCurrentUserEmail() || "user@example.com";
     
     // Delete agent from localStorage
     deleteUserAgent(userEmail, agentId);
