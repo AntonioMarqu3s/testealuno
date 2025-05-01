@@ -111,7 +111,7 @@ export function AppSidebar() {
             </Avatar>
             <div className="flex flex-col">
               <span className="text-sm font-medium">Minha Conta</span>
-              <span className="text-xs text-muted-foreground">{userEmail || "Sem email"}</span>
+              <span className="text-xs text-muted-foreground">{userEmail}</span>
             </div>
           </div>
           <Button variant="ghost" size="icon" onClick={handleLogout}>

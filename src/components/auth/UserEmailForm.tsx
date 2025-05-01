@@ -14,7 +14,8 @@ export function UserEmailForm() {
 
   // Load current email on component mount
   useEffect(() => {
-    setEmail(getCurrentUserEmail());
+    const currentEmail = getCurrentUserEmail();
+    setEmail(currentEmail);
   }, []);
 
   const handleUpdateEmail = (e: React.FormEvent) => {
