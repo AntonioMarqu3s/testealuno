@@ -2,7 +2,7 @@
 import { AgentCard, AgentType } from "./AgentCard";
 
 interface AgentGridProps {
-  onCreateAgent: () => void;
+  onCreateAgent: (type: AgentType) => void;
   isChecking?: boolean;
 }
 
@@ -67,7 +67,7 @@ export function AgentGrid({ onCreateAgent, isChecking = false }: AgentGridProps)
           description={agent.description}
           icon={agent.icon}
           type={agent.type}
-          onSelect={() => onCreateAgent()}
+          onSelect={() => onCreateAgent(agent.type)}
           isLoading={isChecking}
         />
       ))}

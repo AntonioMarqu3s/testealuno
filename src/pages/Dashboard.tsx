@@ -13,6 +13,7 @@ import { getUserAgents } from "@/services/agent/agentStorageService";
 import { WelcomeHeader } from "@/components/dashboard/WelcomeHeader";
 import { TrialBanner } from "@/components/dashboard/TrialBanner";
 import { AgentTypeTabs } from "@/components/dashboard/AgentTypeTabs";
+import { ResourcesCard } from "@/components/dashboard/ResourcesCard";
 import { useToast } from "@/hooks/use-toast";
 import { useCallback, useState } from "react";
 import { canCreateAgent } from "@/services/plan/planLimitService";
@@ -69,8 +70,8 @@ const Dashboard = () => {
         // Add a small delay before redirecting to prevent loop issues
         setTimeout(() => navigate('/plans'), 100);
       } else {
-        // Navigate to agent type selection
-        navigate('/create-agent');
+        // Navigate to agent type selection - redirect to discover tab
+        navigate('/dashboard?tab=discover');
       }
     } catch (error) {
       console.error("Error checking agent creation permissions:", error);
@@ -109,12 +110,32 @@ const Dashboard = () => {
           />
         )}
         
-        <AgentTypeTabs 
-          currentTab={currentTab}
-          onCreateAgent={handleCreateAgent}
-          onNavigateToAgents={handleNavigateToMyAgents}
-          isChecking={isChecking}
-        />
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2">
+            <AgentTypeTabs 
+              currentTab={currentTab}
+              onCreateAgent={(type) => {
+                // Agora navegamos diretamente para criar o agente com o tipo selecionado
+                navigate(`/create-agent?type=${type}`);
+              }}
+              onNavigateToAgents={handleNavigateToMyAgents}
+              isChecking={isChecking}
+            />
+          </div>
+          
+          <div className="lg:col-span-1">
+            <ResourcesCard 
+              userAgentsCount={userAgents.length}
+              agentLimit={userPlan.agentLimit}
+              planName={userPlan.name}
+              isTrialPlan={isTrialPlan}
+              isTrialExpired={isTrialExpired}
+              isSubscriptionExpired={isSubscriptionExpired}
+              trialDaysRemaining={trialDaysRemaining}
+              onUpgrade={handleUpgrade}
+            />
+          </div>
+        </div>
       </div>
     </MainLayout>
   );

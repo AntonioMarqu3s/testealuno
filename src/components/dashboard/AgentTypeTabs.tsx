@@ -6,10 +6,11 @@ import { Button } from "@/components/ui/button";
 import { getCurrentUserEmail } from "@/services/user/userService";
 import { getUserAgents } from "@/services/agent/agentStorageService";
 import { PlusCircle } from "lucide-react";
+import { AgentType } from "./AgentCard";
 
 interface AgentTypeTabsProps {
   currentTab: string;
-  onCreateAgent: () => void;
+  onCreateAgent: (type: AgentType) => void;
   onNavigateToAgents: () => void;
   isChecking?: boolean;
 }
@@ -55,7 +56,10 @@ export function AgentTypeTabs({
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4">
-              <Button onClick={onCreateAgent} disabled={isChecking}>
+              <Button 
+                onClick={() => navigate('/dashboard?tab=discover')} 
+                disabled={isChecking}
+              >
                 <PlusCircle className="mr-2 h-4 w-4" />
                 {isChecking ? "Verificando..." : "Criar Novo Agente"}
               </Button>
@@ -71,7 +75,10 @@ export function AgentTypeTabs({
             <p className="text-muted-foreground mb-4">
               Crie seu primeiro agente para começar a usar nossa plataforma.
             </p>
-            <Button onClick={onCreateAgent} disabled={isChecking}>
+            <Button 
+              onClick={() => navigate('/dashboard?tab=discover')} 
+              disabled={isChecking}
+            >
               {isChecking ? "Verificando..." : "Criar meu primeiro agente"}
             </Button>
           </div>
