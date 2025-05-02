@@ -1,4 +1,3 @@
-
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useNavigate } from "react-router-dom";
 import { AgentGrid } from "./AgentGrid";
@@ -6,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { getCurrentUserEmail } from "@/services/user/userService";
 import { getUserAgents } from "@/services/agent/agentStorageService";
 import { PlusCircle } from "lucide-react";
-import { AgentType } from "./AgentCard";
+import { AgentType, AgentCard } from "./AgentCard";
 
 interface AgentTypeTabsProps {
   currentTab: string;
