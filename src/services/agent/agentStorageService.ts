@@ -60,23 +60,45 @@ export const saveAgent = (email: string, agent: Agent): void => {
  */
 export const deleteWhatsAppInstance = async (instanceName: string): Promise<boolean> => {
   try {
-    // Try to call the webhook to delete the instance
-    const response = await fetch('https://n8n-n8n.31kvca.easypanel.host/webhook/delete-ínstancia', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ instanceName }),
-    });
+    console.log("Deleting WhatsApp instance:", instanceName);
     
-    if (!response.ok) {
-      console.error("Error deleting WhatsApp instance:", response.status);
-      return false;
+    // Try multiple webhook endpoints in case one fails
+    const endpoints = [
+      'https://n8n-n8n.31kvca.easypanel.host/webhook/delete-instancia',
+      'https://webhook.dev.matrixgpt.com.br/webhook/delete-instancia'
+    ];
+    
+    let success = false;
+    
+    // Try each endpoint until one succeeds
+    for (const endpoint of endpoints) {
+      try {
+        console.log(`Trying webhook endpoint: ${endpoint}`);
+        
+        const response = await fetch(endpoint, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ instanceName }),
+        });
+        
+        if (response.ok) {
+          console.log("Successfully deleted WhatsApp instance");
+          success = true;
+          break;
+        } else {
+          console.warn(`Error response from endpoint ${endpoint}:`, response.status);
+        }
+      } catch (endpointError) {
+        console.warn(`Failed to call endpoint ${endpoint}:`, endpointError);
+        // Continue to try next endpoint
+      }
     }
     
-    return true;
+    return success;
   } catch (error) {
-    console.error("Failed to call delete instance webhook:", error);
+    console.error("Failed to delete WhatsApp instance:", error);
     return false;
   }
 };
@@ -94,12 +116,19 @@ export const deleteUserAgent = async (email: string, agentId: string): Promise<b
     if (agent && agent.instanceId) {
       // Call webhook to delete the instance from WhatsApp server
       try {
+        console.log("Attempting to delete WhatsApp instance:", agent.instanceId);
         const webhookSuccess = await deleteWhatsAppInstance(agent.instanceId);
-        if (!webhookSuccess) {
+        
+        if (webhookSuccess) {
+          console.log("Successfully deleted WhatsApp instance:", agent.instanceId);
+          toast.success("Instância do WhatsApp removida com sucesso");
+        } else {
           console.warn("Could not delete WhatsApp instance, but will proceed with local deletion");
+          toast.warning("A instância do WhatsApp pode não ter sido completamente removida");
         }
       } catch (error) {
         console.error("Error calling delete webhook:", error);
+        toast.warning("A instância do WhatsApp pode não ter sido completamente removida");
         // Continue with deletion even if webhook fails
       }
     }

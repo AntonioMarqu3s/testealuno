@@ -9,15 +9,18 @@ import {
   AlertDialogCancel,
   AlertDialogAction,
 } from "@/components/ui/alert-dialog";
+import { Loader2 } from "lucide-react";
 
 interface DeleteAgentDialogProps {
   agentName: string;
   onDelete: () => void;
+  isDeleting?: boolean;
 }
 
 export const DeleteAgentDialog: React.FC<DeleteAgentDialogProps> = ({
   agentName,
-  onDelete
+  onDelete,
+  isDeleting = false
 }) => {
   return (
     <AlertDialogContent>
@@ -33,12 +36,20 @@ export const DeleteAgentDialog: React.FC<DeleteAgentDialogProps> = ({
         </AlertDialogDescription>
       </AlertDialogHeader>
       <AlertDialogFooter>
-        <AlertDialogCancel>Cancelar</AlertDialogCancel>
+        <AlertDialogCancel disabled={isDeleting}>Cancelar</AlertDialogCancel>
         <AlertDialogAction 
           onClick={onDelete}
           className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+          disabled={isDeleting}
         >
-          Excluir
+          {isDeleting ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Excluindo...
+            </>
+          ) : (
+            "Excluir"
+          )}
         </AlertDialogAction>
       </AlertDialogFooter>
     </AlertDialogContent>

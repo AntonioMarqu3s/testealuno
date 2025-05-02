@@ -76,8 +76,12 @@ const Agents = () => {
   };
 
   const handleDeleteAgent = async (agentId: string) => {
+    console.log("Starting deletion process for agent:", agentId);
     try {
       const agent = userAgents.find(a => a.id === agentId);
+      if (agent) {
+        console.log(`Attempting to delete agent ${agent.name} with instance ${agent.instanceId}`);
+      }
       
       // Delete agent from localStorage and call webhook
       const deletedSuccessfully = await deleteUserAgent(userEmail, agentId);

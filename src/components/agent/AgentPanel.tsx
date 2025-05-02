@@ -92,8 +92,10 @@ export const AgentPanel: React.FC<AgentPanelProps> = ({
   const handleDelete = async () => {
     if (onDelete && !isDeleting) {
       setIsDeleting(true);
+      
       try {
-        onDelete(agent.id);
+        console.log(`Deleting agent: ${agent.id} with instance: ${agent.instanceId}`);
+        await onDelete(agent.id);
         toast.success("Agente removido com sucesso!", {
           description: "O agente e sua instância no WhatsApp foram excluídos."
         });
@@ -172,6 +174,7 @@ export const AgentPanel: React.FC<AgentPanelProps> = ({
         <DeleteAgentDialog 
           agentName={agent.name}
           onDelete={handleDelete}
+          isDeleting={isDeleting}
         />
       </AlertDialog>
       
