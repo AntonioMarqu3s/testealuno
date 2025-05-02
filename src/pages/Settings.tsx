@@ -5,16 +5,20 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getCurrentUserEmail } from "@/services";
 import { getUserPlan, getTrialDaysRemaining, getSubscriptionDaysRemaining, PlanType } from "@/services/plan/userPlanService";
 import { useAuth } from "@/context/AuthContext";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { updatePlanConnectionStatus } from "@/services/plan/supabsePlanService";
 
 export default function Settings() {
   const { user } = useAuth();
   const [userEmail, setUserEmail] = useState<string>("");
   const [plan, setPlan] = useState<any>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [connectInstancia, setConnectInstancia] = useState(false);
+  const [isUpdatingConnection, setIsUpdatingConnection] = useState(false);
 
   useEffect(() => {
     async function loadUserData() {
@@ -43,8 +47,10 @@ export default function Settings() {
                 subscriptionEndsAt: data.subscription_ends_at,
                 paymentDate: data.payment_date,
                 paymentStatus: data.payment_status,
+                connectInstancia: data.connect_instancia,
                 updatedAt: data.updated_at
               });
+              setConnectInstancia(data.connect_instancia || false);
               console.log("Loaded plan data from Supabase:", data);
               setIsLoading(false);
               return;
@@ -56,6 +62,7 @@ export default function Settings() {
           // Fallback to local storage if no Supabase data
           const userPlan = getUserPlan(email);
           setPlan(userPlan);
+          setConnectInstancia(userPlan.connectInstancia || false);
           console.log("Loaded plan data from localStorage:", userPlan);
         }
       } catch (error) {
@@ -68,6 +75,34 @@ export default function Settings() {
 
     loadUserData();
   }, [user?.email, user?.id]);
+
+  // Handle connection toggle
+  const handleConnectionToggle = async () => {
+    if (!user?.id) {
+      toast.error("Você precisa estar logado para alterar essa configuração");
+      return;
+    }
+
+    setIsUpdatingConnection(true);
+    try {
+      const success = await updatePlanConnectionStatus(user.id, !connectInstancia);
+      if (success) {
+        setConnectInstancia(!connectInstancia);
+        toast.success(
+          !connectInstancia 
+            ? "Conexão automática ativada" 
+            : "Conexão automática desativada"
+        );
+      } else {
+        toast.error("Erro ao atualizar a configuração");
+      }
+    } catch (error) {
+      console.error("Error updating connection status:", error);
+      toast.error("Erro ao atualizar a configuração");
+    } finally {
+      setIsUpdatingConnection(false);
+    }
+  };
 
   // Format dates for display
   const formatDate = (dateString?: string) => {
@@ -141,6 +176,28 @@ export default function Settings() {
                     Para alterar, contate o administrador.
                   </p>
                 </div>
+              </div>
+            </CardContent>
+          </Card>
+          
+          {/* Auto Connection Settings */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Configurações de Conexão</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-lg font-medium">Conectar instâncias automaticamente</h3>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Ao ativar, novos agentes tentarão se conectar automaticamente quando criados
+                  </p>
+                </div>
+                <Switch 
+                  checked={connectInstancia}
+                  onCheckedChange={handleConnectionToggle}
+                  disabled={isUpdatingConnection || isLoading}
+                />
               </div>
             </CardContent>
           </Card>

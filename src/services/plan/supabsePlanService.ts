@@ -1,4 +1,3 @@
-
 import { supabase } from '@/lib/supabase';
 import { PlanType, UserPlan } from './userPlanService';
 import { Tables } from '@/lib/supabase';
@@ -26,6 +25,7 @@ export const getUserPlanFromSupabase = async (userId: string): Promise<UserPlan 
     paymentDate: data.payment_date,
     subscriptionEndsAt: data.subscription_ends_at,
     paymentStatus: data.payment_status,
+    connectInstancia: data.connect_instancia,
     updatedAt: data.updated_at
   };
 };
@@ -39,7 +39,8 @@ export const saveUserPlanToSupabase = async (
   trialEndsAt?: string,
   paymentDate?: string,
   subscriptionEndsAt?: string,
-  paymentStatus?: string
+  paymentStatus?: string,
+  connectInstancia?: boolean
 ): Promise<boolean> => {
   const { error } = await supabase
     .from('user_plans')
@@ -52,6 +53,7 @@ export const saveUserPlanToSupabase = async (
       payment_date: paymentDate,
       subscription_ends_at: subscriptionEndsAt,
       payment_status: paymentStatus,
+      connect_instancia: connectInstancia,
       updated_at: new Date().toISOString()
     }]);
 
@@ -171,6 +173,7 @@ export const migratePlanToSupabase = async (userId: string, email: string, plan:
       subscription_ends_at: subscriptionEndsAt,
       payment_date: plan.plan !== PlanType.FREE_TRIAL ? plan.updatedAt : null,
       payment_status: plan.plan !== PlanType.FREE_TRIAL ? 'completed' : 'pending',
+      connect_instancia: plan.connectInstancia || false,
       updated_at: plan.updatedAt || new Date().toISOString()
     }]);
     
@@ -206,4 +209,43 @@ export const updatePlanPaymentInfo = async (
   }
 
   return true;
+};
+
+// Update user plan connection status in Supabase
+export const updatePlanConnectionStatus = async (
+  userId: string,
+  connectInstancia: boolean
+): Promise<boolean> => {
+  const { error } = await supabase
+    .from('user_plans')
+    .update({
+      connect_instancia: connectInstancia,
+      updated_at: new Date().toISOString()
+    })
+    .eq('user_id', userId);
+
+  if (error) {
+    console.error('Error updating plan connection status:', error);
+    return false;
+  }
+
+  return true;
+};
+
+// Get user plan connection status from Supabase
+export const getPlanConnectionStatus = async (
+  userId: string
+): Promise<boolean> => {
+  const { data, error } = await supabase
+    .from('user_plans')
+    .select('connect_instancia')
+    .eq('user_id', userId)
+    .single();
+
+  if (error || !data) {
+    console.error('Error getting plan connection status:', error);
+    return false;
+  }
+
+  return data.connect_instancia || false;
 };

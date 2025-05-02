@@ -63,6 +63,7 @@ export type Database = {
       user_plans: {
         Row: {
           agent_limit: number
+          connect_instancia: boolean | null
           id: string
           name: string
           payment_date: string | null
@@ -75,6 +76,7 @@ export type Database = {
         }
         Insert: {
           agent_limit?: number
+          connect_instancia?: boolean | null
           id?: string
           name: string
           payment_date?: string | null
@@ -87,6 +89,7 @@ export type Database = {
         }
         Update: {
           agent_limit?: number
+          connect_instancia?: boolean | null
           id?: string
           name?: string
           payment_date?: string | null

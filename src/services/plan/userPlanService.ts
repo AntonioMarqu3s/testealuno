@@ -43,6 +43,7 @@ export interface UserPlan {
   subscriptionEndsAt?: string; // ISO date string for subscription expiration
   paymentDate?: string; // ISO date string for last payment
   paymentStatus?: string; // Status of payment: 'pending', 'completed', 'failed'
+  connectInstancia?: boolean; // Flag to indicate if user has connection to instancia
   updatedAt: string;
 }
 
