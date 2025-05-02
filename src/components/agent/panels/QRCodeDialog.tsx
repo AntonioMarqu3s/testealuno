@@ -1,4 +1,3 @@
-
 import React, { useEffect } from "react";
 import {
   Dialog,
@@ -51,12 +50,17 @@ export const QRCodeDialog: React.FC<QRCodeDialogProps> = ({
   
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md" onInteractOutside={(e) => {
-        // Prevent closing when clicking outside to avoid accidental interruptions
-        if (isGeneratingQRCode || isCheckingConnection) {
+      <DialogContent 
+        className="sm:max-w-md" 
+        onInteractOutside={(e) => {
+          // Prevent closing when clicking outside - always prevent to keep dialog open until button is clicked
           e.preventDefault();
-        }
-      }}>
+        }}
+        onEscapeKeyDown={(e) => {
+          // Prevent closing with escape key to keep dialog open until button is clicked
+          e.preventDefault();
+        }}
+      >
         <DialogHeader>
           <DialogTitle>QR Code do Agente</DialogTitle>
           <DialogDescription>

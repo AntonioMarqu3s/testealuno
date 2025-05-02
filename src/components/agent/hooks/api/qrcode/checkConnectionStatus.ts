@@ -18,7 +18,7 @@ export const checkConnectionStatus = async (instanceName: string): Promise<boole
     }, STATUS_CHECK_TIMEOUT);
     
     try {
-      // Use the Evolution API endpoint
+      // Use the Evolution API endpoint with the exact URL format
       const response = await fetch(`https://n8n-evolution-api.31kvca.easypanel.host/instance/connectionState/${instanceName}`, {
         method: 'GET',
         headers: {

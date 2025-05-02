@@ -145,6 +145,39 @@ export const AgentPanel: React.FC<AgentPanelProps> = ({
     handleShowQRCode();
   };
 
+  // Handler for dialog close event
+  const handleQRDialogClose = async (open: boolean) => {
+    if (!open) {
+      // Dialog is closing, check connection status before final close
+      try {
+        console.log("QR dialog closing, checking connection status for:", agent.instanceId);
+        const isStillConnected = await checkConnectionStatus(agent.instanceId);
+        
+        // Update connection status based on check
+        if (isStillConnected && !isConnected) {
+          console.log("Connection detected on dialog close!");
+          setIsConnected(true);
+          setQRConnected(true);
+          
+          // Update parent state if callback provided
+          if (onToggleConnection) {
+            onToggleConnection(agent.id, true);
+          }
+          
+          toast.success("Agente conectado com sucesso!");
+        }
+      } catch (error) {
+        console.error("Error checking connection on dialog close:", error);
+      }
+      
+      // Close dialog regardless of connection status
+      handleCloseQRCode();
+      setShowQRCodeDialog(false);
+    } else {
+      setShowQRCodeDialog(true);
+    }
+  };
+
   return (
     <Card className="flex flex-col h-full overflow-hidden">
       <AgentHeader 
@@ -177,12 +210,7 @@ export const AgentPanel: React.FC<AgentPanelProps> = ({
       {/* QR Code Dialog */}
       <QRCodeDialog
         open={showQRCodeDialog}
-        onOpenChange={(open) => {
-          if (!open) {
-            handleCloseQRCode();
-          }
-          setShowQRCodeDialog(open);
-        }}
+        onOpenChange={handleQRDialogClose}
         qrCodeImage={qrCodeImage}
         timerCount={timerCount}
         connectionCheckAttempts={connectionCheckAttempts}
