@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import MainLayout from "@/components/layout/MainLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,7 +9,7 @@ import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { updatePlanConnectionStatus } from "@/services/plan/supabsePlanService";
+import { updatePlanConnectionStatus } from "@/services/plan/supabasePlanService";
 
 export default function Settings() {
   const { user } = useAuth();
