@@ -1,4 +1,3 @@
-
 import { getStorageItem, setStorageItem, ALL_AGENTS_KEY } from '../storage/localStorageService';
 import { Agent } from '@/components/agent/AgentTypes';
 
@@ -55,58 +54,12 @@ export const saveAgent = (email: string, agent: Agent): void => {
 };
 
 /**
- * Trigger webhook to delete agent instance
- */
-export const deleteAgentWebhook = async (instanceId: string): Promise<boolean> => {
-  try {
-    const webhookUrl = "https://n8n-n8n.31kvca.easypanel.host/webhook/delete-instancia";
-    const response = await fetch(webhookUrl, {
-      method: "DELETE",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        instanceId: instanceId,
-        timestamp: new Date().toISOString()
-      }),
-    });
-    
-    // Check if webhook call was successful
-    return response.ok;
-  } catch (error) {
-    console.error("Error calling delete webhook:", error);
-    return false;
-  }
-};
-
-/**
  * Delete an agent for the user
  */
-export const deleteUserAgent = async (email: string, agentId: string): Promise<{ success: boolean; error?: string }> => {
+export const deleteUserAgent = (email: string, agentId: string): void => {
   const allAgentsData = getStorageItem<Record<string, Agent[]>>(ALL_AGENTS_KEY, {});
   
-  if (!allAgentsData[email]) {
-    return { success: false, error: "Agente não encontrado" };
-  }
-  
-  // Find agent to get instanceId before deletion
-  const agentToDelete = allAgentsData[email].find(agent => agent.id === agentId);
-  
-  if (!agentToDelete) {
-    return { success: false, error: "Agente não encontrado" };
-  }
-  
-  try {
-    // Call webhook to delete the instance from external service
-    if (agentToDelete.instanceId) {
-      const webhookSuccess = await deleteAgentWebhook(agentToDelete.instanceId);
-      
-      if (!webhookSuccess) {
-        console.warn("Webhook deletion failed for instance:", agentToDelete.instanceId);
-        // Continue with local deletion even if webhook fails
-      }
-    }
-    
+  if (allAgentsData[email]) {
     // Filter out deleted agent
     allAgentsData[email] = allAgentsData[email].filter(agent => agent.id !== agentId);
     
@@ -114,13 +67,8 @@ export const deleteUserAgent = async (email: string, agentId: string): Promise<{
     setStorageItem(ALL_AGENTS_KEY, allAgentsData);
     
     // Decrement the agent count in the user's plan
-    const { decrementAgentCount } = require('../plan/planLimitService');
+    const decrementAgentCount = require('../plan/userPlanService').decrementAgentCount;
     decrementAgentCount(email);
-    
-    return { success: true };
-  } catch (error) {
-    console.error("Error deleting agent:", error);
-    return { success: false, error: "Erro ao excluir o agente" };
   }
 };
 

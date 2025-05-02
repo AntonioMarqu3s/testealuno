@@ -1,3 +1,4 @@
+
 import { toast } from 'sonner';
 import { supabase } from '@/lib/supabase';
 import { User } from '@supabase/supabase-js';
@@ -5,7 +6,7 @@ import { updateCurrentUserEmail } from '../user/userService';
 import { getUserAgents } from '../agent/agentStorageService';
 import { getUserPlan } from '../plan/userPlanService';
 import { migrateAgentsToSupabase } from '../agent/supabaseAgentService';
-import { migratePlanToSupabase } from '../plan/supabase/planMigrationService';
+import { migratePlanToSupabase } from '../plan/supabsePlanService';
 
 // Get the current authenticated user
 export const getCurrentUser = async (): Promise<User | null> => {

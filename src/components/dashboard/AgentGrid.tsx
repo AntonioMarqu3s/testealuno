@@ -1,74 +1,64 @@
 
 import { AgentCard, AgentType } from "./AgentCard";
+import { 
+  Users, 
+  UserCheck, 
+  HeadsetIcon, 
+  UserPlus,
+  PlusCircle,
+  Send
+} from "lucide-react";
+import { useMemo } from "react";
 
-interface AgentGridProps {
-  onCreateAgent: (type: AgentType) => void;
-  isChecking?: boolean;
-}
-
-export function AgentGrid({ onCreateAgent, isChecking = false }: AgentGridProps) {
-  const agentTypes = [
+export function AgentGrid() {
+  const agentTypes = useMemo(() => [
     {
-      type: "sales" as AgentType,
       title: "Vendedor",
       description: "Agente especializado em vendas e negociação",
-      icon: "👨‍💼"
+      type: "sales" as AgentType,
+      icon: <Users className="h-5 w-5" />,
     },
     {
-      type: "sdr" as AgentType, 
       title: "SDR",
       description: "Especialista em prospecção e qualificação",
-      icon: "🔍"
+      type: "sdr" as AgentType,
+      icon: <UserPlus className="h-5 w-5" />,
     },
     {
-      type: "closer" as AgentType,
       title: "Closer",
-      description: "Especialista em fechamento de negócio",
-      icon: "🤝"
+      description: "Especialista em fechamento de negócios",
+      type: "closer" as AgentType,
+      icon: <UserCheck className="h-5 w-5" />,
     },
     {
-      type: "support" as AgentType,
       title: "Atendimento",
       description: "Suporte ao cliente e atendimento",
-      icon: "🎧"
+      type: "support" as AgentType,
+      icon: <HeadsetIcon className="h-5 w-5" />,
     },
     {
-      type: "broadcast" as AgentType,
       title: "Disparo",
-      description: "Especialista em disparos de mensagens em massa",
-      icon: "📣"
+      description: "Especialista em disparo de mensagens em massa",
+      type: "broadcast" as AgentType,
+      icon: <Send className="h-5 w-5" />,
     },
     {
-      type: "secretary" as AgentType,
-      title: "Secretária Pessoal",
-      description: "Gerencia agenda, contatos e relatórios",
-      icon: "📝"
-    },
-    {
-      type: "helpdesk" as AgentType,
-      title: "Helpdesk",
-      description: "Suporte técnico e solução de problemas",
-      icon: "🛠️"
-    },
-    {
-      type: "custom" as AgentType,
       title: "Personalizado",
       description: "Crie um agente personalizado para sua necessidade",
-      icon: "⚙️"
-    }
-  ];
+      type: "custom" as AgentType,
+      icon: <PlusCircle className="h-5 w-5" />,
+    },
+  ], []);
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
       {agentTypes.map((agent) => (
-        <AgentCard 
+        <AgentCard
           key={agent.type}
           title={agent.title}
           description={agent.description}
-          icon={agent.icon}
           type={agent.type}
-          onSelect={() => onCreateAgent(agent.type)}
-          isLoading={isChecking}
+          icon={agent.icon}
         />
       ))}
     </div>

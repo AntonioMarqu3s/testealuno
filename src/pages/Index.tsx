@@ -1,7 +1,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { Users, UserPlus, UserCheck, HeadsetIcon, BarChart3, MessageCircle, Target, TrendingUp, Calendar } from "lucide-react";
+import { Users, UserPlus, UserCheck, HeadsetIcon, BarChart3, MessageCircle, Target, TrendingUp } from "lucide-react";
 
 const Index = () => {
   return (
@@ -131,15 +131,6 @@ const Index = () => {
               </div>
               <h3 className="text-xl font-medium mb-2">Atendimento</h3>
               <p className="text-muted-foreground">Suporte ao cliente 24/7 respondendo dúvidas e resolvendo problemas.</p>
-            </div>
-            
-            {/* New Secretary Card */}
-            <div className="bg-card p-6 rounded-lg shadow-sm border">
-              <div className="w-12 h-12 bg-purple-100 text-purple-600 rounded-lg flex items-center justify-center mb-4">
-                <Calendar className="h-6 w-6" />
-              </div>
-              <h3 className="text-xl font-medium mb-2">Secretária Pessoal</h3>
-              <p className="text-muted-foreground">Gerencia agenda, emails e cria relatórios para otimizar sua produtividade.</p>
             </div>
           </div>
         </div>

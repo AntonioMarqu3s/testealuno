@@ -9,7 +9,6 @@ interface DashboardCardsProps {
   planName: string;
   isTrialPlan: boolean;
   isTrialExpired: boolean;
-  isSubscriptionExpired?: boolean;
   trialDaysRemaining: number;
   onUpgrade: () => void;
 }
@@ -20,7 +19,6 @@ export const DashboardCards = ({
   planName,
   isTrialPlan,
   isTrialExpired,
-  isSubscriptionExpired = false,
   trialDaysRemaining,
   onUpgrade
 }: DashboardCardsProps) => {
@@ -32,7 +30,6 @@ export const DashboardCards = ({
         planName={planName}
         isTrialPlan={isTrialPlan}
         isTrialExpired={isTrialExpired}
-        isSubscriptionExpired={isSubscriptionExpired}
         trialDaysRemaining={trialDaysRemaining}
         onUpgrade={onUpgrade}
       />

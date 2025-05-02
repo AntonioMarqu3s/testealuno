@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
 
-export type AgentType = "sales" | "sdr" | "closer" | "support" | "broadcast" | "secretary" | "helpdesk" | "custom";
+export type AgentType = "sales" | "sdr" | "closer" | "support" | "broadcast" | "custom";
 
 interface AgentCardProps {
   title: string;
@@ -12,19 +12,9 @@ interface AgentCardProps {
   type: AgentType;
   icon: React.ReactNode;
   path?: string;
-  onSelect?: () => void;
-  isLoading?: boolean;
 }
 
-export function AgentCard({ 
-  title, 
-  description, 
-  type, 
-  icon, 
-  path = "/create-agent", 
-  onSelect,
-  isLoading = false 
-}: AgentCardProps) {
+export function AgentCard({ title, description, type, icon, path = "/create-agent" }: AgentCardProps) {
   const navigate = useNavigate();
   
   const colorMap: Record<AgentType, string> = {
@@ -33,25 +23,16 @@ export function AgentCard({
     closer: "from-amber-500 to-amber-700",
     support: "from-emerald-500 to-emerald-700",
     broadcast: "from-rose-500 to-rose-700",
-    secretary: "from-purple-500 to-purple-700",
-    helpdesk: "from-teal-500 to-teal-700",
     custom: "from-violet-500 to-violet-700"
   };
 
   const handleClick = () => {
-    if (onSelect) {
-      onSelect();
-    } else {
-      navigate(`${path}?type=${type}`);
-    }
+    navigate(`${path}?type=${type}`);
   };
 
   return (
     <Card 
-      className={cn(
-        "h-full overflow-hidden transition-all hover:shadow-md hover:-translate-y-1 cursor-pointer",
-        isLoading && "opacity-70 pointer-events-none"
-      )}
+      className="h-full overflow-hidden transition-all hover:shadow-md hover:-translate-y-1 cursor-pointer"
       onClick={handleClick}
     >
       <div className={cn(
@@ -71,7 +52,7 @@ export function AgentCard({
         <CardTitle className="text-xl">{title}</CardTitle>
         <CardDescription>{description}</CardDescription>
       </CardHeader>
-      <CardContent className="pb-2">
+      <CardContent className="pb-6">
         <ul className="space-y-1 text-sm">
           <li className="flex items-center">
             <div className="w-1.5 h-1.5 rounded-full bg-primary mr-2" />
@@ -94,9 +75,8 @@ export function AgentCard({
             colorMap[type]
           )}
           onClick={handleClick}
-          disabled={isLoading}
         >
-          {isLoading ? "Carregando..." : "Criar Agente"}
+          Criar Agente
         </Button>
       </CardFooter>
     </Card>

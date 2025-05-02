@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import MainLayout from "@/components/layout/MainLayout";
@@ -11,16 +10,14 @@ import { deleteUserAgent, getUserAgents, updateUserAgent } from "@/services/agen
 import { updateAgentConnectionStatus } from "@/services/agent/supabaseAgentService";
 import { UpgradeModal } from "@/components/agent/UpgradeModal";
 import { useToast } from "@/hooks/use-toast";
-import { toast } from "sonner";
 import { Agent } from "@/components/agent/AgentTypes";
 import { AgentPanel } from "@/components/agent/AgentPanel";
-import { canCreateAgent } from "@/services/plan/planLimitService";
 
 const Agents = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
-  const { toast: toastHook } = useToast();
+  const { toast } = useToast();
   
   // Get current user email
   const userEmail = getCurrentUserEmail();
@@ -53,14 +50,8 @@ const Agents = () => {
   }, [userEmail]);
   
   const handleCreateAgent = () => {
-    // Check if user can create more agents based on their plan
-    const canCreate = canCreateAgent(userEmail);
-    
-    // If trial expired or user reached their plan limit, show upgrade modal
-    if (isTrialExpired || !canCreate) {
-      toast.warning("Limite de plano atingido", {
-        description: "Seu plano atual não permite criar mais agentes. Faça upgrade para um plano maior."
-      });
+    // If trial expired, show upgrade modal
+    if (isTrialExpired) {
       setShowUpgradeModal(true);
     } else {
       navigate('/create-agent'); // Navigate to create agent page directly
@@ -76,28 +67,17 @@ const Agents = () => {
     navigate('/plan-checkout');
   };
 
-  const handleDeleteAgent = async (agentId: string) => {
+  const handleDeleteAgent = (agentId: string) => {
     try {
-      if (!userEmail) return;
-      
-      const result = await deleteUserAgent(userEmail, agentId);
-      
-      if (result.success) {
-        // Update local state after deletion
-        setUserAgents(prevAgents => prevAgents.filter(agent => agent.id !== agentId));
-        toastHook({
-          title: "Agente excluído",
-          description: "O agente foi excluído com sucesso.",
-        });
-      } else {
-        toastHook({
-          variant: "destructive",
-          title: "Erro",
-          description: result.error || "Não foi possível excluir o agente.",
-        });
-      }
+      deleteUserAgent(userEmail, agentId);
+      // Update local state after deletion
+      setUserAgents(prevAgents => prevAgents.filter(agent => agent.id !== agentId));
+      toast({
+        title: "Agente excluído",
+        description: "O agente foi excluído com sucesso.",
+      });
     } catch (error) {
-      toastHook({
+      toast({
         variant: "destructive",
         title: "Erro",
         description: "Não foi possível excluir o agente.",
@@ -121,14 +101,14 @@ const Agents = () => {
         agent.id === agentId ? { ...agent, isConnected, connectInstancia: isConnected } : agent
       ));
       
-      toastHook({
+      toast({
         title: isConnected ? "Agente conectado" : "Agente desconectado",
         description: isConnected ? 
           "O agente foi conectado com sucesso." : 
           "O agente foi desconectado com sucesso.",
       });
     } catch (error) {
-      toastHook({
+      toast({
         variant: "destructive",
         title: "Erro",
         description: `Não foi possível ${isConnected ? 'conectar' : 'desconectar'} o agente.`,
@@ -155,7 +135,6 @@ const Agents = () => {
           userPlanType={userPlan.plan} 
           onCreateAgent={handleCreateAgent} 
           onUpgradeClick={handleUpgradeClick}
-          agentCount={userAgents.length}
         />
         
         {userAgents.length > 0 ? (

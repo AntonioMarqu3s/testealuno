@@ -17,6 +17,5 @@ export enum AgentTypeEnum {
   CLOSER = "closer",
   SUPPORT = "support",
   BROADCAST = "broadcast",
-  SECRETARY = "secretary", // Added new secretary agent type
   CUSTOM = "custom"
 }

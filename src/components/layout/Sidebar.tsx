@@ -15,6 +15,7 @@ import {
 import { cn } from "@/lib/utils";
 import { 
   Grid2X2, 
+  PlusCircle, 
   CreditCard, 
   LayoutDashboard, 
   LogOut,
@@ -49,8 +50,13 @@ export function AppSidebar() {
     },
     {
       title: "Meus Agentes",
-      path: "/dashboard?tab=agents",
+      path: "/agents",
       icon: Grid2X2,
+    },
+    {
+      title: "Criar Agente",
+      path: "/create-agent",
+      icon: PlusCircle,
     },
     {
       title: "Planos",
@@ -62,17 +68,6 @@ export function AppSidebar() {
   const handleLogout = async () => {
     await signOut();
     navigate("/auth");
-  };
-
-  // Helper function to check if a path is active
-  const isPathActive = (path: string) => {
-    if (path === "/dashboard") {
-      return currentPath === "/dashboard" && !location.search.includes("tab=agents");
-    }
-    if (path === "/dashboard?tab=agents") {
-      return currentPath === "/dashboard" && location.search.includes("tab=agents");
-    }
-    return currentPath === path;
   };
 
   return (
@@ -96,7 +91,8 @@ export function AppSidebar() {
                     asChild
                     className={cn(
                       "gap-2",
-                      isPathActive(item.path) && 
+                      (currentPath === item.path || 
+                       (currentPath === "/my-agents" && item.path === "/agents")) && 
                       "bg-sidebar-accent text-accent-foreground"
                     )}
                   >

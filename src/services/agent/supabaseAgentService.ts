@@ -94,25 +94,3 @@ export const getAgentConnectionStatus = async (agentId: string): Promise<boolean
     return false;
   }
 };
-
-/**
- * Delete agent from Supabase
- */
-export const deleteAgentFromSupabase = async (agentId: string): Promise<boolean> => {
-  try {
-    const { error } = await supabase
-      .from('agents')
-      .delete()
-      .eq('id', agentId);
-      
-    if (error) {
-      console.error('Error deleting agent from Supabase:', error);
-      return false;
-    }
-    
-    return true;
-  } catch (error) {
-    console.error('Exception deleting agent from Supabase:', error);
-    return false;
-  }
-};

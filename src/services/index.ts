@@ -7,8 +7,9 @@ export * from './user';
 // Re-export specific functions to maintain backward compatibility
 export { generateAgentInstanceId, generateUniqueInstanceId } from './agent/agentInstanceService';
 export { getUserAgents, saveAgent, deleteUserAgent, updateUserAgent } from './agent/agentStorageService';
-export { canCreateAgent, incrementAgentCount, decrementAgentCount } from './plan/planLimitService';
+export { canCreateAgent, incrementAgentCount } from './plan/planLimitService';
 export { getCurrentUserEmail } from './user/userService';
 
 // Re-export local storage functions for backward compatibility
 export { getStorageItem, setStorageItem } from './storage/localStorageService';
+
