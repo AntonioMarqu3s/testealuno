@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardDescription, CardHeader } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { updateCurrentUserEmail } from "@/services/user/userService";
@@ -40,7 +40,13 @@ export function AuthForm() {
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <CardHeader>
             <div className="flex justify-between items-center">
-              <CardTitle className="text-2xl">Agent Hub</CardTitle>
+              <div className="flex items-center">
+                <img 
+                  src="/lovable-uploads/ae7fc171-78fa-4833-b4b7-66e45c9191ab.png" 
+                  alt="Agente Conecta A.I." 
+                  className="h-8"
+                />
+              </div>
               <TabsList>
                 <TabsTrigger value="login">Login</TabsTrigger>
                 <TabsTrigger value="register">Cadastro</TabsTrigger>
