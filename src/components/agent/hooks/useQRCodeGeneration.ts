@@ -24,7 +24,7 @@ export const useQRCodeGeneration = (instanceId: string, clientIdentifier?: strin
     timerIntervalRef,
     startQRCodeUpdateTimer,
     clearQRCodeTimer 
-  } = useQRCodeTimer((instanceId) => updateQRCode(instanceId, clientIdentifier));
+  } = useQRCodeTimer((instanceId) => refreshQRCode(instanceId, clientIdentifier));
   
   const {
     connectionCheckAttempts,
@@ -57,6 +57,38 @@ export const useQRCodeGeneration = (instanceId: string, clientIdentifier?: strin
     setIsConnected(true); // Update connected state
     // Additional logic for when agent is connected
   }, [clearQRCodeTimer, clearConnectionCheck, setQrCodeImage]);
+
+  // Function to refresh QR code without closing the dialog
+  const refreshQRCode = useCallback(async (instanceId: string, clientId?: string) => {
+    console.log("Refreshing QR code for instance:", instanceId);
+    if (isGeneratingQRCode) {
+      console.log("QR code generation already in progress, skipping refresh");
+      return false;
+    }
+    
+    const success = await updateQRCode(instanceId, clientId);
+    
+    if (success) {
+      console.log("QR code refreshed successfully");
+      startQRCodeUpdateTimer(instanceId);
+    } else {
+      console.error("Failed to refresh QR code");
+      toast.error("Erro ao atualizar QR Code. Tentando novamente em breve.");
+    }
+    
+    return success;
+  }, [isGeneratingQRCode, updateQRCode, startQRCodeUpdateTimer]);
+  
+  // Exposed method for manual refresh from UI
+  const handleRefreshQRCode = useCallback(() => {
+    if (!instanceId) {
+      console.error("No instance ID available for refresh");
+      return false;
+    }
+    
+    clearQRCodeTimer();
+    return refreshQRCode(instanceId, clientIdentifier);
+  }, [instanceId, clientIdentifier, refreshQRCode, clearQRCodeTimer]);
 
   // Function to show QR code dialog and handle QR code generation
   const handleShowQRCode = useCallback(async () => {
@@ -148,7 +180,7 @@ export const useQRCodeGeneration = (instanceId: string, clientIdentifier?: strin
     connectionCheckAttempts,
     handleShowQRCode,
     handleCloseQRCode,
-    handleConnected,
+    handleRefreshQRCode,
     instanceReady,
     isConnected, // Expose connection status
     setIsConnected // Expose method to update connection status

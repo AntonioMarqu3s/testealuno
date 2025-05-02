@@ -43,6 +43,7 @@ export const AgentPanel: React.FC<AgentPanelProps> = ({
     connectionCheckAttempts,
     handleShowQRCode,
     handleCloseQRCode,
+    handleRefreshQRCode,
     isConnected: isQRConnected,
     setIsConnected: setQRConnected
   } = useQRCodeGeneration(agent.instanceId, agent.clientIdentifier);
@@ -185,6 +186,7 @@ export const AgentPanel: React.FC<AgentPanelProps> = ({
         timerCount={timerCount}
         connectionCheckAttempts={connectionCheckAttempts}
         isGeneratingQRCode={isGeneratingQRCode}
+        onRefresh={handleRefreshQRCode}
       />
     </Card>
   );
