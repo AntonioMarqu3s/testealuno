@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import MainLayout from "@/components/layout/MainLayout";
@@ -6,7 +5,7 @@ import { AgentsHeader } from "@/components/agent/AgentsHeader";
 import { AgentsList } from "@/components/agent/AgentsList";
 import { EmptyAgentState } from "@/components/agent/EmptyAgentState";
 import { getCurrentUserEmail } from "@/services/user/userService";
-import { getUserPlan, hasTrialExpired } from "@/services/plan/userPlanService";
+import { getUserPlan } from "@/services/plan/userPlanService";
 import { deleteUserAgent, getUserAgents, updateUserAgent } from "@/services/agent/agentStorageService";
 import { updateAgentConnectionStatus } from "@/services/agent/supabaseAgentService";
 import { UpgradeModal } from "@/components/agent/UpgradeModal";
@@ -25,9 +24,8 @@ const Agents = () => {
   // Get current user email
   const userEmail = getCurrentUserEmail();
   
-  // Get user plan and check trial status
+  // Get user plan
   const userPlan = getUserPlan(userEmail);
-  const isTrialExpired = hasTrialExpired(userEmail);
   
   // Get user agents with state management
   const [userAgents, setUserAgents] = useState<Agent[]>([]);
@@ -56,8 +54,8 @@ const Agents = () => {
     // Check if user can create more agents based on their plan
     const canCreate = canCreateAgent(userEmail);
     
-    // If trial expired or user reached their plan limit, show upgrade modal
-    if (isTrialExpired || !canCreate) {
+    // If user reached their plan limit, show upgrade modal
+    if (!canCreate) {
       toast.warning("Limite de plano atingido", {
         description: "Seu plano atual não permite criar mais agentes. Faça upgrade para um plano maior."
       });
@@ -143,7 +141,7 @@ const Agents = () => {
         <AgentsHeader 
           userPlanType={userPlan.plan} 
           onCreateAgent={handleCreateAgent} 
-          onUpgradeClick={handleUpgradeClick}
+          onUpgradeClick={() => setShowUpgradeModal(true)}
           agentCount={userAgents.length}
         />
         

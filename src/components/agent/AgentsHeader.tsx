@@ -31,13 +31,13 @@ export const AgentsHeader = ({ userPlanType, onCreateAgent, onUpgradeClick, agen
           Plano atual: <span className={userPlanType === PlanType.BASIC ? "text-muted-foreground" : "text-primary"}>
             {planName} ({agentLimit} {agentLimit === 1 ? 'agente' : 'agentes'})
           </span>
-          {needsUpgrade && userPlanType !== PlanType.PREMIUM && (
+          {needsUpgrade && (
             <span className="ml-1 text-amber-500">(limite atingido)</span>
           )}
         </p>
       </div>
       <div className="flex gap-2">
-        {(userPlanType === PlanType.BASIC || needsUpgrade) && userPlanType !== PlanType.PREMIUM && (
+        {(userPlanType !== PlanType.PREMIUM) && (
           <Button 
             variant="outline" 
             className="md:w-auto w-full" 
@@ -49,7 +49,7 @@ export const AgentsHeader = ({ userPlanType, onCreateAgent, onUpgradeClick, agen
         <Button 
           className="md:w-auto w-full" 
           onClick={onCreateAgent}
-          disabled={needsUpgrade && userPlanType !== PlanType.PREMIUM}
+          disabled={needsUpgrade}
         >
           <Plus className="mr-2 h-4 w-4" /> Criar Novo Agente
         </Button>

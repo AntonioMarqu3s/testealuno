@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
@@ -31,7 +30,7 @@ export const useAgentSubmission = (agentType: string) => {
       if (!canCreateAgent(userEmail)) {
         toastHook({
           title: "Limite de plano atingido",
-          description: "Seu plano atual não permite a criação de agentes. Faça upgrade para um plano pago para criar agentes.",
+          description: "Seu plano atual não permite a criação de mais agentes. Faça upgrade para um plano pago para criar mais agentes.",
           variant: "destructive"
         });
         setIsSubmitting(false);
@@ -70,6 +69,9 @@ export const useAgentSubmission = (agentType: string) => {
       });
       
       setIsSubmitting(false);
+      
+      // Navigate to agents page after successful creation
+      navigate('/agents');
     } catch (error) {
       console.error("Error creating agent:", error);
       toast.error("Erro ao criar agente", {
