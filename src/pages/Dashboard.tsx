@@ -15,6 +15,7 @@ import { AgentTypeTabs } from "@/components/dashboard/AgentTypeTabs";
 import { DashboardCards } from "@/components/dashboard/DashboardCards";
 import { useToast } from "@/hooks/use-toast";
 import { useMemo, useCallback } from "react";
+import { canCreateAgent } from "@/services/plan/planLimitService";
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -34,11 +35,13 @@ const Dashboard = () => {
   const isTrialPlan = userPlan.plan === PlanType.FREE_TRIAL;
 
   const handleCreateAgent = useCallback(() => {
-    // If free trial plan, show toast and redirect to plans page
-    if (userPlan.plan === PlanType.FREE_TRIAL) {
+    const canCreate = canCreateAgent(userEmail);
+    
+    // Check if the user can create more agents
+    if (!canCreate) {
       toast({
-        title: "Plano gratuito detectado",
-        description: "Seu plano atual não permite a criação de agentes. Por favor, faça upgrade para um plano pago.",
+        title: "Limite de plano atingido",
+        description: "Seu plano atual não permite a criação de mais agentes. Por favor, faça upgrade para um plano pago.",
         variant: "destructive"
       });
       // Add a small delay before redirecting to prevent loop issues
@@ -47,7 +50,7 @@ const Dashboard = () => {
       // Navigate to agent type selection
       navigate('/create-agent');
     }
-  }, [navigate, toast, userPlan.plan]);
+  }, [navigate, toast, userEmail]);
 
   const handleNavigateToMyAgents = useCallback(() => {
     navigate('/agents');

@@ -92,7 +92,8 @@ export function RegisterForm({
           data: {
             email: values.email,
             plan: planToApply,
-            promoCode: values.promoCode ? values.promoCode.toUpperCase() : null
+            promoCode: values.promoCode ? values.promoCode.toUpperCase() : null,
+            hasPromoCode: promoApplied
           }
         }
       });
@@ -113,6 +114,7 @@ export function RegisterForm({
       updateCurrentUserEmail(values.email);
       
       // Update user plan based on selection or promo code
+      // IMPORTANT: Pass promoApplied flag to updateUserPlan to set trial days properly
       updateUserPlan(values.email, planToApply, undefined, undefined, undefined, promoApplied);
       
       // Success message - different messages based on promo code
