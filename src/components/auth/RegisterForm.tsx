@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -88,6 +89,12 @@ export function RegisterForm({
       
       // Use the selected plan type, but if promo code is applied, use FREE_TRIAL
       const planToApply = hasValidPromoCode ? PlanType.FREE_TRIAL : selectedPlan;
+      
+      if (!hasValidPromoCode && selectedPlan === PlanType.FREE_TRIAL) {
+        toast.error("Você precisa aplicar um código promocional válido para ter acesso ao período de teste.");
+        setIsLoading(false);
+        return;
+      }
       
       const { data, error } = await supabase.auth.signUp({
         email: values.email,
@@ -246,6 +253,7 @@ export function RegisterForm({
             selectedPlan={selectedPlan}
             onSelectPlan={setSelectedPlan}
             showTrialInfo={promoApplied}
+            promoApplied={promoApplied}
           />
         </CardContent>
         <CardFooter className="flex flex-col gap-2">
