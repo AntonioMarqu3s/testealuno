@@ -1,4 +1,3 @@
-
 import { getStorageItem, setStorageItem, ALL_AGENTS_KEY } from '../storage/localStorageService';
 import { Agent } from '@/components/agent/AgentTypes';
 import { toast } from "sonner";
@@ -73,14 +72,13 @@ export const deleteWhatsAppInstance = async (instanceName: string): Promise<bool
     // Try each endpoint until one succeeds
     for (const endpoint of endpoints) {
       try {
-        console.log(`Trying webhook endpoint: ${endpoint}`);
+        console.log(`Trying webhook DELETE to endpoint: ${endpoint}`);
         
-        const response = await fetch(endpoint, {
-          method: 'POST',
+        const response = await fetch(`${endpoint}?instanceName=${encodeURIComponent(instanceName)}`, {
+          method: 'DELETE',
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ instanceName }),
         });
         
         if (response.ok) {
