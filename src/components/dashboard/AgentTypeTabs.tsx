@@ -32,15 +32,20 @@ export function AgentTypeTabs({
     <Tabs defaultValue={currentTab} onValueChange={handleTabChange}>
       <div className="flex justify-between items-center mb-4">
         <TabsList>
+          <TabsTrigger value="discover">Tipos de Agentes</TabsTrigger>
           <TabsTrigger value="agents">Meus Agentes ({userAgents.length})</TabsTrigger>
-          <TabsTrigger value="discover">Conhecer Mais</TabsTrigger>
         </TabsList>
-        
-        <Button onClick={onCreateAgent} disabled={isChecking}>
-          <PlusCircle className="mr-2 h-4 w-4" />
-          {isChecking ? "Verificando..." : "Criar Agente"}
-        </Button>
       </div>
+      
+      <TabsContent value="discover" className="space-y-4">
+        <div>
+          <h3 className="text-lg font-semibold mb-2">Escolha um tipo de agente para começar</h3>
+          <p className="text-muted-foreground mb-4">
+            Selecione o tipo de agente que melhor se adequa às suas necessidades.
+          </p>
+        </div>
+        <AgentGrid onCreateAgent={onCreateAgent} isChecking={isChecking} />
+      </TabsContent>
       
       <TabsContent value="agents" className="space-y-4">
         {userAgents.length > 0 ? (
@@ -49,9 +54,16 @@ export function AgentTypeTabs({
               Gerencie seus agentes existentes ou crie novos para expandir seu atendimento.
             </p>
             
-            <Button variant="outline" onClick={onNavigateToAgents}>
-              Ver todos os meus agentes
-            </Button>
+            <div className="flex flex-col sm:flex-row gap-4">
+              <Button onClick={onCreateAgent} disabled={isChecking}>
+                <PlusCircle className="mr-2 h-4 w-4" />
+                {isChecking ? "Verificando..." : "Criar Novo Agente"}
+              </Button>
+              
+              <Button variant="outline" onClick={onNavigateToAgents}>
+                Ver todos os meus agentes
+              </Button>
+            </div>
           </>
         ) : (
           <div className="text-center py-10">
@@ -64,13 +76,6 @@ export function AgentTypeTabs({
             </Button>
           </div>
         )}
-      </TabsContent>
-      
-      <TabsContent value="discover">
-        <p className="text-muted-foreground mb-4">
-          Conheça nosso catálogo de agentes disponíveis e escolha o melhor para o seu negócio.
-        </p>
-        <AgentGrid onCreateAgent={onCreateAgent} isChecking={isChecking} />
       </TabsContent>
     </Tabs>
   );

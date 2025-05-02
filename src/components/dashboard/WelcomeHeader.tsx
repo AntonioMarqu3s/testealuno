@@ -1,15 +1,11 @@
 
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
-import { useNavigate } from "react-router-dom";
 
 interface WelcomeHeaderProps {
   onCreateAgent: () => void;
 }
 
 export const WelcomeHeader = ({ onCreateAgent }: WelcomeHeaderProps) => {
-  const navigate = useNavigate();
-  
   return (
     <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
       <div>
@@ -19,8 +15,8 @@ export const WelcomeHeader = ({ onCreateAgent }: WelcomeHeaderProps) => {
         </p>
       </div>
       <Button className="md:w-auto w-full" onClick={onCreateAgent}>
-        <Plus className="mr-2 h-4 w-4" /> Criar Novo Agente
+        Criar Novo Agente
       </Button>
     </div>
   );
-};
+}

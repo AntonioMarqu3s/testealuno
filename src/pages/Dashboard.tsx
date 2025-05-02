@@ -13,9 +13,8 @@ import { getUserAgents } from "@/services/agent/agentStorageService";
 import { WelcomeHeader } from "@/components/dashboard/WelcomeHeader";
 import { TrialBanner } from "@/components/dashboard/TrialBanner";
 import { AgentTypeTabs } from "@/components/dashboard/AgentTypeTabs";
-import { DashboardCards } from "@/components/dashboard/DashboardCards";
 import { useToast } from "@/hooks/use-toast";
-import { useMemo, useCallback, useState } from "react";
+import { useCallback, useState } from "react";
 import { canCreateAgent } from "@/services/plan/planLimitService";
 
 const Dashboard = () => {
@@ -23,7 +22,7 @@ const Dashboard = () => {
   const location = useLocation();
   const { toast } = useToast();
   const searchParams = new URLSearchParams(location.search);
-  const currentTab = searchParams.get('tab') || 'agents';
+  const currentTab = searchParams.get('tab') || 'discover'; // Default to discover tab
   const [isChecking, setIsChecking] = useState(false);
   
   // Get user information
@@ -93,9 +92,6 @@ const Dashboard = () => {
     navigate('/plans');
   }, [navigate]);
 
-  const memoizedUserAgentsCount = useMemo(() => userAgents.length, [userAgents]);
-  const memoizedPlanName = useMemo(() => userPlan.name, [userPlan]);
-
   // Determine if we should show a banner
   const shouldShowBanner = isTrialPlan || isSubscriptionExpired;
 
@@ -118,17 +114,6 @@ const Dashboard = () => {
           onCreateAgent={handleCreateAgent}
           onNavigateToAgents={handleNavigateToMyAgents}
           isChecking={isChecking}
-        />
-
-        <DashboardCards 
-          userAgentsCount={memoizedUserAgentsCount}
-          agentLimit={userPlan.agentLimit}
-          planName={memoizedPlanName}
-          isTrialPlan={isTrialPlan}
-          isTrialExpired={isTrialExpired}
-          trialDaysRemaining={trialDaysRemaining}
-          isSubscriptionExpired={isSubscriptionExpired}
-          onUpgrade={handleUpgrade}
         />
       </div>
     </MainLayout>
