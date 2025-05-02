@@ -81,12 +81,12 @@ const Agents = () => {
       deleteUserAgent(userEmail, agentId);
       // Update local state after deletion
       setUserAgents(prevAgents => prevAgents.filter(agent => agent.id !== agentId));
-      toast({
+      toastHook({
         title: "Agente excluído",
         description: "O agente foi excluído com sucesso.",
       });
     } catch (error) {
-      toast({
+      toastHook({
         variant: "destructive",
         title: "Erro",
         description: "Não foi possível excluir o agente.",
@@ -110,14 +110,14 @@ const Agents = () => {
         agent.id === agentId ? { ...agent, isConnected, connectInstancia: isConnected } : agent
       ));
       
-      toast({
+      toastHook({
         title: isConnected ? "Agente conectado" : "Agente desconectado",
         description: isConnected ? 
           "O agente foi conectado com sucesso." : 
           "O agente foi desconectado com sucesso.",
       });
     } catch (error) {
-      toast({
+      toastHook({
         variant: "destructive",
         title: "Erro",
         description: `Não foi possível ${isConnected ? 'conectar' : 'desconectar'} o agente.`,

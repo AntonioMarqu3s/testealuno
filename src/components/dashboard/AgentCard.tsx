@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
 
-export type AgentType = "sales" | "sdr" | "closer" | "support" | "broadcast" | "custom";
+export type AgentType = "sales" | "sdr" | "closer" | "support" | "broadcast" | "secretary" | "custom";
 
 interface AgentCardProps {
   title: string;
@@ -23,6 +23,7 @@ export function AgentCard({ title, description, type, icon, path = "/create-agen
     closer: "from-amber-500 to-amber-700",
     support: "from-emerald-500 to-emerald-700",
     broadcast: "from-rose-500 to-rose-700",
+    secretary: "from-purple-500 to-purple-700", // Added new color for secretary type
     custom: "from-violet-500 to-violet-700"
   };
 

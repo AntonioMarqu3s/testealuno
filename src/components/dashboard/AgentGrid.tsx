@@ -6,7 +6,8 @@ import {
   HeadsetIcon, 
   UserPlus,
   PlusCircle,
-  Send
+  Send,
+  Calendar // Added for secretary agent
 } from "lucide-react";
 import { useMemo } from "react";
 
@@ -41,6 +42,12 @@ export function AgentGrid() {
       description: "Especialista em disparo de mensagens em massa",
       type: "broadcast" as AgentType,
       icon: <Send className="h-5 w-5" />,
+    },
+    {
+      title: "Secretária Pessoal",
+      description: "Gerencia agenda, emails e relatórios",
+      type: "secretary" as AgentType,
+      icon: <Calendar className="h-5 w-5" />,
     },
     {
       title: "Personalizado",
