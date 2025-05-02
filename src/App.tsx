@@ -18,6 +18,7 @@ import AgentAnalytics from "./pages/AgentAnalytics";
 import Checkout from "./pages/Checkout";
 import PlanCheckout from "./pages/PlanCheckout";
 import Plans from "./pages/Plans";
+import Settings from "./pages/Settings";
 import { initializeUserEmail } from "./services/user/userService";
 import { initializeUserPlan } from "./services/plan/userPlanService";
 import WhatsAppFloatingButton from "./components/ui/WhatsAppFloatingButton";
@@ -62,6 +63,7 @@ function App() {
                 <Route path="/checkout" element={<Checkout />} />
                 <Route path="/plan-checkout" element={<PlanCheckout />} />
                 <Route path="/plans" element={<Plans />} />
+                <Route path="/settings" element={<Settings />} />
                 <Route path="/update-email" element={<Dashboard />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
