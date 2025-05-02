@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 import { updateCurrentUserEmail } from "@/services/user/userService";
 import { PlanType, updateUserPlan } from "@/services/plan/userPlanService";
+import { updateUserPlanInSupabase } from "@/services/plan/supabsePlanService";
 import { PlanSelector } from "./PlanSelector";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { z } from "zod";
@@ -121,7 +122,15 @@ export function RegisterForm({
         trialEndDate.setDate(trialEndDate.getDate() + 5);
       }
       
-      // Update user plan based on promo code
+      // Explicitly update user plan in Supabase
+      if (data.user) {
+        await updateUserPlanInSupabase(
+          data.user.id,
+          planToApply
+        );
+      }
+      
+      // Also update in local storage for compatibility
       updateUserPlan(
         values.email,
         planToApply,
