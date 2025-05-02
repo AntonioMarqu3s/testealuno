@@ -6,8 +6,7 @@ import {
   getUserPlan, 
   PlanType, 
   getTrialDaysRemaining, 
-  hasTrialExpired,
-  hasSubscriptionExpired
+  hasTrialExpired 
 } from "@/services/plan/userPlanService";
 import { getUserAgents } from "@/services/agent/agentStorageService";
 import { WelcomeHeader } from "@/components/dashboard/WelcomeHeader";
@@ -34,7 +33,6 @@ const Dashboard = () => {
   // Get trial information
   const trialDaysRemaining = getTrialDaysRemaining(userEmail);
   const isTrialExpired = hasTrialExpired(userEmail);
-  const isSubscriptionExpired = hasSubscriptionExpired(userEmail);
   const isTrialPlan = userPlan.plan === PlanType.FREE_TRIAL;
 
   const handleCreateAgent = useCallback(async () => {
@@ -46,27 +44,11 @@ const Dashboard = () => {
       
       // Check if the user can create more agents
       if (!canCreate) {
-        // Different messages based on plan type
-        if (userPlan.plan >= 1 && isSubscriptionExpired) {
-          toast({
-            title: "Assinatura expirada",
-            description: "Sua assinatura expirou. Por favor, renove seu plano para continuar usando nossos serviços.",
-            variant: "destructive"
-          });
-        } else if (userPlan.plan === PlanType.FREE_TRIAL && isTrialExpired) {
-          toast({
-            title: "Período de teste expirado",
-            description: "Seu período de teste gratuito expirou. Por favor, faça upgrade para um plano pago para continuar.",
-            variant: "destructive"
-          });
-        } else {
-          toast({
-            title: "Limite de plano atingido",
-            description: "Seu plano atual não permite a criação de mais agentes. Por favor, faça upgrade para um plano pago.",
-            variant: "destructive"
-          });
-        }
-        
+        toast({
+          title: "Limite de plano atingido",
+          description: "Seu plano atual não permite a criação de mais agentes. Por favor, faça upgrade para um plano pago.",
+          variant: "destructive"
+        });
         // Add a small delay before redirecting to prevent loop issues
         setTimeout(() => navigate('/plans'), 100);
       } else {
@@ -83,7 +65,7 @@ const Dashboard = () => {
     } finally {
       setIsChecking(false);
     }
-  }, [navigate, toast, userEmail, userPlan, isTrialExpired, isSubscriptionExpired]);
+  }, [navigate, toast, userEmail]);
 
   const handleNavigateToMyAgents = useCallback(() => {
     navigate('/agents');
@@ -107,21 +89,6 @@ const Dashboard = () => {
             trialDaysRemaining={trialDaysRemaining}
             onUpgrade={handleUpgrade}
           />
-        )}
-        
-        {userPlan.plan >= 1 && isSubscriptionExpired && (
-          <div className="p-4 bg-red-50 border border-red-200 rounded-md mb-4">
-            <h3 className="font-medium text-red-800">Sua assinatura expirou</h3>
-            <p className="text-red-700 mt-1">
-              Sua assinatura expirou. Renove agora para continuar usando todos os recursos.
-            </p>
-            <button 
-              onClick={handleUpgrade}
-              className="mt-2 inline-flex items-center px-3 py-1.5 bg-red-600 text-white rounded-md hover:bg-red-700"
-            >
-              Renovar agora
-            </button>
-          </div>
         )}
         
         <AgentTypeTabs 

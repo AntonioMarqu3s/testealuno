@@ -36,7 +36,7 @@ export function AgentGrid({ onCreateAgent, isChecking = false }: AgentGridProps)
           title={agent.title}
           description={agent.description}
           icon={agent.icon}
-          onClick={() => onCreateAgent()}
+          onSelect={() => onCreateAgent()}
           isLoading={isChecking}
         />
       ))}
