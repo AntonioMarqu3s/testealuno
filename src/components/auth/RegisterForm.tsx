@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 import { updateCurrentUserEmail } from "@/services/user/userService";
 import { PlanType, updateUserPlan } from "@/services/plan/userPlanService";
-import { updateUserPlanInSupabase } from "@/services/plan/supabasePlanService";
+import { updateUserPlanInSupabase } from "@/services/plan/supabase/planTypeService";
 import { PlanSelector } from "./PlanSelector";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { z } from "zod";

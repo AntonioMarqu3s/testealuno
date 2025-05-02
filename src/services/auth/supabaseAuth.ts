@@ -5,7 +5,7 @@ import { updateCurrentUserEmail } from '../user/userService';
 import { getUserAgents } from '../agent/agentStorageService';
 import { getUserPlan } from '../plan/userPlanService';
 import { migrateAgentsToSupabase } from '../agent/supabaseAgentService';
-import { migratePlanToSupabase } from '../plan/supabasePlanService';
+import { migratePlanToSupabase } from '../plan/supabase/planMigrationService';
 
 // Get the current authenticated user
 export const getCurrentUser = async (): Promise<User | null> => {

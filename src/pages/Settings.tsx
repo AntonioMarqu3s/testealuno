@@ -9,7 +9,7 @@ import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { updatePlanConnectionStatus } from "@/services/plan/supabasePlanService";
+import { updatePlanConnectionStatus } from "@/services/plan/supabase/planUpdateService";
 
 export default function Settings() {
   const { user } = useAuth();
