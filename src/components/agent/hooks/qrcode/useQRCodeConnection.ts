@@ -1,6 +1,6 @@
 
 import { useState, useRef, useCallback, useEffect } from 'react';
-import { checkConnectionStatus } from '../api/qrCodeApi';
+import { checkConnectionStatus } from '../api/qrcode/checkConnectionStatus';
 import { toast } from 'sonner';
 
 type ConnectionCallbackFunction = () => void;
@@ -8,8 +8,8 @@ type ConnectionCallbackFunction = () => void;
 export const useQRCodeConnection = () => {
   const [connectionCheckAttempts, setConnectionCheckAttempts] = useState(0);
   const connectionCheckIntervalRef = useRef<number | null>(null);
-  const MAX_CONNECTION_CHECKS = 15; // Reduced to 15 attempts
-  const CONNECTION_CHECK_INTERVAL = 10000; // Increased to 10 seconds to reduce request frequency
+  const MAX_CONNECTION_CHECKS = 10;
+  const CONNECTION_CHECK_INTERVAL = 6000;
   const connectionTimeoutRef = useRef<number | null>(null);
 
   // Clean up interval on unmount
@@ -99,7 +99,6 @@ export const useQRCodeConnection = () => {
         setConnectionCheckAttempts(1); // Set to 1 to start the regular interval
       }
     }, 3000); // 3 second initial delay
-    
   }, [clearConnectionCheck, connectionCheckAttempts, MAX_CONNECTION_CHECKS]);
 
   return {

@@ -1,6 +1,7 @@
 
 import { useState } from 'react';
-import { disconnectInstance, checkInstanceStatus } from './api/agentConnectionApi';
+import { disconnectInstance } from './api/agentConnectionApi';
+import { checkConnectionStatus } from './api/qrcode/checkConnectionStatus';
 
 /**
  * Hook to manage agent connection operations
@@ -35,15 +36,15 @@ export const useAgentConnection = () => {
   
   /**
    * Check connection status of an agent instance
+   * Only makes a single verification call to the Evolution API
    */
   const checkConnectionStatus = async (instanceId?: string): Promise<boolean> => {
     if (!instanceId) return false;
     
     setIsCheckingStatus(true);
     try {
-      const result = await checkInstanceStatus(instanceId);
-      // Return the connected status from the response object
-      return result.connected;
+      // Make a direct call to the checkConnectionStatus function
+      return await checkConnectionStatus(instanceId);
     } catch (error) {
       console.error("Error checking connection status:", error);
       return false;

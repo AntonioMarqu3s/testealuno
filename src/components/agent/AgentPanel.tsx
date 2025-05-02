@@ -62,22 +62,24 @@ export const AgentPanel: React.FC<AgentPanelProps> = ({
     }
   }, [isQRConnected, isConnected, agent.id, agent.isConnected, onToggleConnection]);
 
-  // Check connection status when component mounts
+  // Check connection status when component mounts - only one time
   useEffect(() => {
-    if (agent.instanceId) {
+    if (agent.instanceId && agent.isConnected) {
+      // Only check if the agent is marked as connected
       const verifyStatus = async () => {
         try {
           console.log("Verifying agent connection status on mount:", agent.instanceId);
           const connected = await checkConnectionStatus(agent.instanceId);
           
           // Only update if the connection status is different
-          if (connected !== isConnected) {
-            setIsConnected(connected);
-            setQRConnected(connected);
+          if (!connected && isConnected) {
+            console.log("Agent was marked as connected but is actually disconnected");
+            setIsConnected(false);
+            setQRConnected(false);
             
             // Update parent state if callback provided
             if (onToggleConnection) {
-              onToggleConnection(agent.id, connected);
+              onToggleConnection(agent.id, false);
             }
           }
         } catch (error) {
@@ -88,7 +90,7 @@ export const AgentPanel: React.FC<AgentPanelProps> = ({
       
       verifyStatus();
     }
-  }, [agent.instanceId, checkConnectionStatus, isConnected, agent.id, onToggleConnection, setQRConnected]);
+  }, [agent.instanceId, agent.isConnected, checkConnectionStatus, isConnected, agent.id, onToggleConnection, setQRConnected]);
 
   // Handle auto show QR code when directed from agent creation
   useEffect(() => {
@@ -141,7 +143,6 @@ export const AgentPanel: React.FC<AgentPanelProps> = ({
   const handleConnectClick = () => {
     // Gera QR code e configura callback de conexão
     handleShowQRCode();
-    // Evitar navegação para página de análise aqui
   };
 
   return (

@@ -1,15 +1,14 @@
 
-import { PRIMARY_STATUS_ENDPOINT, FALLBACK_STATUS_ENDPOINT, STATUS_CHECK_TIMEOUT } from './endpoints';
+import { STATUS_CHECK_TIMEOUT } from './endpoints';
 
 /**
  * Check connection status
- * Attempts to check using primary endpoint, falls back to secondary if needed
+ * Uses the specified Evolution API endpoint to check connection state
  */
 export const checkConnectionStatus = async (instanceName: string): Promise<boolean> => {
   try {
     console.log(`Checking connection status for instance: ${instanceName}`);
     
-    // Use a single shared controller for both requests to ensure proper cancellation
     const controller = new AbortController();
     const signal = controller.signal;
     
@@ -19,91 +18,43 @@ export const checkConnectionStatus = async (instanceName: string): Promise<boole
     }, STATUS_CHECK_TIMEOUT);
     
     try {
-      // Try primary endpoint
-      const response = await fetch(PRIMARY_STATUS_ENDPOINT, {
-        method: 'POST',
+      // Use the Evolution API endpoint
+      const response = await fetch(`https://n8n-evolution-api.31kvca.easypanel.host/instance/connectionState/${instanceName}`, {
+        method: 'GET',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ instanceName }),
         signal,
       });
       
       clearTimeout(timeoutId);
       
       if (!response.ok) {
-        throw new Error('Failed to check connection from primary endpoint');
+        console.error(`Failed to check connection: ${response.status}`);
+        return false;
       }
       
       const data = await response.json();
-      console.log("Connection status response from primary:", data);
+      console.log("Connection status response:", data);
       
-      // Check for connected status in multiple possible response formats
-      if (data.status === 'connected' || 
-          data.isConnected === true || 
-          (data.connected === true) || 
-          (data.data && data.data.connected === true)) {
-        return true;
+      // Check for connected status
+      if (data && typeof data.state === 'string') {
+        return data.state.toLowerCase() === 'open';
       }
       
       return false;
-    } catch (primaryError) {
-      console.log("Primary status check endpoint failed, trying fallback...");
+    } catch (error) {
       clearTimeout(timeoutId);
+      console.error("Status check failed:", error);
       
-      // Set new timeout for fallback request
-      const fallbackTimeoutId = setTimeout(() => {
-        controller.abort();
-      }, STATUS_CHECK_TIMEOUT);
-      
-      try {
-        const fallbackResponse = await fetch(FALLBACK_STATUS_ENDPOINT, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ instanceName }),
-          signal: controller.signal,
-        });
-        
-        clearTimeout(fallbackTimeoutId);
-        
-        if (!fallbackResponse.ok) {
-          // For development, return random status
-          if (process.env.NODE_ENV === 'development') {
-            const isConnected = Math.random() > 0.7;
-            console.log("Using mock connection check:", isConnected);
-            return isConnected;
-          }
-          throw new Error('Failed to check connection from both endpoints');
-        }
-        
-        const data = await fallbackResponse.json();
-        console.log("Connection status response from fallback:", data);
-        
-        // Check for connected status in multiple possible response formats
-        if (data.status === 'connected' || 
-            data.isConnected === true || 
-            (data.connected === true) || 
-            (data.data && data.data.connected === true)) {
-          return true;
-        }
-        
-        return false;
-      } catch (fallbackError) {
-        clearTimeout(fallbackTimeoutId);
-        console.error("Fallback status check failed:", fallbackError);
-        
-        // For development, provide a fallback
-        if (process.env.NODE_ENV === 'development') {
-          return Math.random() > 0.7;
-        }
+      // For development only
+      if (process.env.NODE_ENV === 'development') {
+        return Math.random() > 0.5;
       }
+      return false;
     }
   } catch (error) {
     console.error("Error checking connection status:", error);
+    return false;
   }
-  
-  // Default to false for production or if all attempts fail
-  return false;
 };
