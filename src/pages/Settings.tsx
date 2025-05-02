@@ -6,23 +6,67 @@ import { getCurrentUserEmail } from "@/services";
 import { getUserPlan, getTrialDaysRemaining, getSubscriptionDaysRemaining, PlanType } from "@/services/plan/userPlanService";
 import { useAuth } from "@/context/AuthContext";
 import { UserEmailForm } from "@/components/auth/UserEmailForm";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 export default function Settings() {
   const { user } = useAuth();
   const [userEmail, setUserEmail] = useState<string>("");
   const [plan, setPlan] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
 
   useEffect(() => {
-    // Get current user email
-    const email = user?.email || getCurrentUserEmail();
-    setUserEmail(email || "");
+    async function loadUserData() {
+      setIsLoading(true);
+      try {
+        // Get current user email
+        const email = user?.email || await getCurrentUserEmail();
+        setUserEmail(email || "");
 
-    // Get user plan details
-    if (email) {
-      const userPlan = getUserPlan(email);
-      setPlan(userPlan);
+        if (email) {
+          // Try to get user plan from Supabase first
+          if (user?.id) {
+            const { data, error } = await supabase
+              .from('user_plans')
+              .select('*')
+              .eq('user_id', user.id)
+              .single();
+
+            if (data) {
+              // Convert Supabase data to match our local format
+              setPlan({
+                plan: data.plan,
+                name: data.name,
+                agentLimit: data.agent_limit,
+                trialEndsAt: data.trial_ends_at,
+                subscriptionEndsAt: data.subscription_ends_at,
+                paymentDate: data.payment_date,
+                paymentStatus: data.payment_status,
+                updatedAt: data.updated_at
+              });
+              console.log("Loaded plan data from Supabase:", data);
+              setIsLoading(false);
+              return;
+            } else if (error && !error.message.includes('No rows found')) {
+              console.error("Error loading user plan from Supabase:", error);
+            }
+          }
+          
+          // Fallback to local storage if no Supabase data
+          const userPlan = getUserPlan(email);
+          setPlan(userPlan);
+          console.log("Loaded plan data from localStorage:", userPlan);
+        }
+      } catch (error) {
+        console.error("Error loading user data:", error);
+        toast.error("Erro ao carregar dados do usuário");
+      } finally {
+        setIsLoading(false);
+      }
     }
-  }, [user?.email]);
+
+    loadUserData();
+  }, [user?.email, user?.id]);
 
   // Format dates for display
   const formatDate = (dateString?: string) => {
@@ -60,10 +104,12 @@ export default function Settings() {
 
     if (plan.paymentDate) {
       return formatDate(plan.paymentDate);
-    } else {
+    } else if (plan.updatedAt) {
       // Use updatedAt as fallback for start date
       return formatDate(plan.updatedAt);
     }
+    
+    return "N/A";
   };
 
   return (
@@ -90,37 +136,43 @@ export default function Settings() {
               <CardTitle>Informações de Assinatura</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <div className="text-sm font-medium text-muted-foreground">Plano Atual</div>
-                  <div className="font-semibold text-lg">{plan?.name || "Carregando..."}</div>
+              {isLoading ? (
+                <div className="flex items-center justify-center p-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
                 </div>
-                
-                <div className="space-y-2">
-                  <div className="text-sm font-medium text-muted-foreground">Limite de Agentes</div>
-                  <div className="font-semibold text-lg">{plan?.agentLimit || "N/A"}</div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <div className="text-sm font-medium text-muted-foreground">Plano Atual</div>
+                    <div className="font-semibold text-lg">{plan?.name || "Não definido"}</div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <div className="text-sm font-medium text-muted-foreground">Limite de Agentes</div>
+                    <div className="font-semibold text-lg">{plan?.agentLimit || "N/A"}</div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <div className="text-sm font-medium text-muted-foreground">Data de Início</div>
+                    <div className="font-semibold">{getPlanStartDate()}</div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <div className="text-sm font-medium text-muted-foreground">Data de Expiração</div>
+                    <div className="font-semibold">{getExpirationDate()}</div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <div className="text-sm font-medium text-muted-foreground">Dias Restantes</div>
+                    <div className="font-semibold">{getDaysRemaining()}</div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <div className="text-sm font-medium text-muted-foreground">Status do Pagamento</div>
+                    <div className="font-semibold">{plan?.paymentStatus ? (plan.paymentStatus === 'completed' ? 'Completo' : 'Pendente') : 'N/A'}</div>
+                  </div>
                 </div>
-                
-                <div className="space-y-2">
-                  <div className="text-sm font-medium text-muted-foreground">Data de Início</div>
-                  <div className="font-semibold">{getPlanStartDate()}</div>
-                </div>
-                
-                <div className="space-y-2">
-                  <div className="text-sm font-medium text-muted-foreground">Data de Expiração</div>
-                  <div className="font-semibold">{getExpirationDate()}</div>
-                </div>
-                
-                <div className="space-y-2">
-                  <div className="text-sm font-medium text-muted-foreground">Dias Restantes</div>
-                  <div className="font-semibold">{getDaysRemaining()}</div>
-                </div>
-                
-                <div className="space-y-2">
-                  <div className="text-sm font-medium text-muted-foreground">Status do Pagamento</div>
-                  <div className="font-semibold">{plan?.paymentStatus ? (plan.paymentStatus === 'completed' ? 'Completo' : 'Pendente') : 'N/A'}</div>
-                </div>
-              </div>
+              )}
             </CardContent>
           </Card>
         </div>
