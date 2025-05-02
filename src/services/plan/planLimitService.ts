@@ -21,7 +21,7 @@ export const canCreateAgent = async (email: string): Promise<boolean> => {
     // Get user plan directly from the database
     const { data: planData, error } = await supabase
       .from('user_plans')
-      .select('plan, trial_ends_at, agent_limit')
+      .select('plan, trial_ends_at, agent_limit, subscription_ends_at')
       .eq('user_id', user.id)
       .single();
     
@@ -45,12 +45,6 @@ export const canCreateAgent = async (email: string): Promise<boolean> => {
       return false;
     }
     
-    // Check plan rules:
-    // 1. If plan is 0 (FREE_TRIAL) and trial_ends_at exists and is in the future, allow creation
-    // 2. If plan is >= 1 (paid plan), allow creation based on agent limit
-    const currentDate = new Date();
-    const trialEndDate = planData.trial_ends_at ? new Date(planData.trial_ends_at) : null;
-    
     // Get user agents count
     const { data: userAgents } = await supabase
       .from('agents')
@@ -59,18 +53,41 @@ export const canCreateAgent = async (email: string): Promise<boolean> => {
     
     const agentCount = userAgents ? userAgents.length : 0;
     
+    // Check if user has reached their agent limit
+    if (agentCount >= planData.agent_limit) {
+      console.log(`Agent count (${agentCount}) has reached or exceeded limit (${planData.agent_limit})`);
+      return false;
+    }
+    
+    const currentDate = new Date();
+    
+    // If plan is >= 1 (paid plan), check subscription expiration
+    if (planData.plan >= 1) {
+      // Check if subscription_ends_at exists and is in the future
+      if (planData.subscription_ends_at) {
+        const subscriptionEnd = new Date(planData.subscription_ends_at);
+        if (currentDate > subscriptionEnd) {
+          console.log('Subscription has expired');
+          return false;
+        }
+      }
+      
+      // Paid plan with valid subscription
+      return true;
+    } 
     // If plan is 0 (FREE_TRIAL), check trial expiration
-    if (planData.plan === 0) {
+    else {
+      const trialEndDate = planData.trial_ends_at ? new Date(planData.trial_ends_at) : null;
+      
       // Only allow if there's a valid trial and it hasn't expired
       if (!trialEndDate || currentDate > trialEndDate) {
         console.log('Trial has expired or no trial end date');
         return false;
       }
+      
+      // Trial is still valid
+      return true;
     }
-    
-    // Check if user has reached their agent limit
-    console.log(`Agent count: ${agentCount}, Agent limit: ${planData.agent_limit}`);
-    return agentCount < planData.agent_limit;
     
   } catch (error) {
     console.error('Error in canCreateAgent:', error);
