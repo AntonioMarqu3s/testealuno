@@ -11,14 +11,12 @@ import { AgentType, AgentCard } from "./AgentCard";
 interface AgentTypeTabsProps {
   currentTab: string;
   onCreateAgent: (type: AgentType) => void;
-  onNavigateToAgents: () => void;
   isChecking?: boolean;
 }
 
 export function AgentTypeTabs({ 
   currentTab, 
-  onCreateAgent, 
-  onNavigateToAgents,
+  onCreateAgent,
   isChecking = false
 }: AgentTypeTabsProps) {
   const navigate = useNavigate();

@@ -13,7 +13,6 @@ import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import NotFound from "./pages/NotFound";
 import CreateAgent from "./pages/CreateAgent";
-import Agents from "./pages/Agents";
 import AgentAnalytics from "./pages/AgentAnalytics";
 import Checkout from "./pages/Checkout";
 import PlanCheckout from "./pages/PlanCheckout";
@@ -57,8 +56,8 @@ function App() {
                 <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/create-agent" element={<CreateAgent />} />
                 <Route path="/edit-agent/:agentId" element={<CreateAgent />} />
-                <Route path="/agents" element={<Agents />} />
-                <Route path="/my-agents" element={<Navigate to="/agents" replace />} />
+                <Route path="/agents" element={<Navigate to="/dashboard?tab=agents" replace />} />
+                <Route path="/my-agents" element={<Navigate to="/dashboard?tab=agents" replace />} />
                 <Route path="/agent-analytics/:agentId" element={<AgentAnalytics />} />
                 <Route path="/checkout" element={<Checkout />} />
                 <Route path="/plan-checkout" element={<PlanCheckout />} />

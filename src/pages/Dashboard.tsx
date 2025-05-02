@@ -27,12 +27,10 @@ const Dashboard = () => {
   // Get user information
   const userEmail = getCurrentUserEmail();
   const userPlan = getUserPlan(userEmail);
-  const userAgents = getUserAgents(userEmail);
   
   // Get trial/subscription information
-  const trialDaysRemaining = getTrialDaysRemaining(userEmail);
-  const isTrialExpired = hasTrialExpired(userEmail);
   const isTrialPlan = userPlan.plan === PlanType.FREE_TRIAL;
+  const isTrialExpired = hasTrialExpired(userEmail);
   const isSubscriptionExpired = hasSubscriptionExpired(userEmail);
 
   const handleCreateAgent = useCallback(async (type) => {
@@ -83,10 +81,6 @@ const Dashboard = () => {
     }
   }, [navigate, toast, userEmail, isTrialPlan, isTrialExpired, isSubscriptionExpired]);
 
-  const handleNavigateToAgents = () => {
-    navigate('/dashboard?tab=agents');
-  };
-
   return (
     <MainLayout title="Dashboard">
       <div className="space-y-8">
@@ -96,7 +90,6 @@ const Dashboard = () => {
           <AgentTypeTabs 
             currentTab={currentTab}
             onCreateAgent={handleCreateAgent}
-            onNavigateToAgents={handleNavigateToAgents}
             isChecking={isChecking}
           />
         </div>
