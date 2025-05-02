@@ -1,3 +1,4 @@
+
 import {
   Sidebar,
   SidebarContent,
@@ -48,7 +49,7 @@ export function AppSidebar() {
     },
     {
       title: "Meus Agentes",
-      path: "/agents",
+      path: "/dashboard?tab=agents",
       icon: Grid2X2,
     },
     {
@@ -61,6 +62,17 @@ export function AppSidebar() {
   const handleLogout = async () => {
     await signOut();
     navigate("/auth");
+  };
+
+  // Helper function to check if a path is active
+  const isPathActive = (path: string) => {
+    if (path === "/dashboard") {
+      return currentPath === "/dashboard" && !location.search.includes("tab=agents");
+    }
+    if (path === "/dashboard?tab=agents") {
+      return currentPath === "/dashboard" && location.search.includes("tab=agents");
+    }
+    return currentPath === path;
   };
 
   return (
@@ -84,8 +96,7 @@ export function AppSidebar() {
                     asChild
                     className={cn(
                       "gap-2",
-                      (currentPath === item.path || 
-                       (currentPath === "/agents" && item.path === "/agents")) && 
+                      isPathActive(item.path) && 
                       "bg-sidebar-accent text-accent-foreground"
                     )}
                   >
