@@ -4,12 +4,12 @@ import { useState, useRef, useCallback, useEffect } from 'react';
 type UpdateQRCodeFunction = (instanceId: string) => Promise<boolean>;
 
 export const useQRCodeTimer = (updateQRCodeFn: UpdateQRCodeFunction) => {
-  const [timerCount, setTimerCount] = useState(60); // Increased to 60 seconds
+  const [timerCount, setTimerCount] = useState(60); // 60 seconds timer
   const timerIntervalRef = useRef<number | null>(null);
   const updateInProgressRef = useRef<boolean>(false);
   const updateTimeoutRef = useRef<number | null>(null);
   const lastUpdateTimeRef = useRef<number>(0);
-  const MIN_UPDATE_INTERVAL = 30000; // Increased to 30 seconds minimum between updates
+  const MIN_UPDATE_INTERVAL = 30000; // 30 seconds minimum between updates
 
   // Clean up on unmount
   useEffect(() => {

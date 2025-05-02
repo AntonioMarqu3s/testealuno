@@ -1,3 +1,4 @@
+
 import {
   Sidebar,
   SidebarContent,
@@ -15,7 +16,6 @@ import { cn } from "@/lib/utils";
 import { 
   Grid2X2, 
   PlusCircle, 
-  Settings, 
   CreditCard, 
   LayoutDashboard, 
   LogOut 
@@ -55,11 +55,7 @@ export function AppSidebar() {
       path: "/plans",
       icon: CreditCard,
     },
-    {
-      title: "Configurações",
-      path: "/settings",
-      icon: Settings,
-    },
+    // Settings menu item removed as requested
   ];
   
   const handleLogout = async () => {
