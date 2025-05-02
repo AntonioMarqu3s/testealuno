@@ -20,6 +20,7 @@ import PlanCheckout from "./pages/PlanCheckout";
 import Plans from "./pages/Plans";
 import { initializeUserEmail } from "./services/user/userService";
 import { initializeUserPlan } from "./services/plan/userPlanService";
+import WhatsAppFloatingButton from "./components/ui/WhatsAppFloatingButton";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -64,6 +65,7 @@ function App() {
                 <Route path="/update-email" element={<Dashboard />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
+              <WhatsAppFloatingButton />
             </BrowserRouter>
           </AuthProvider>
         </TooltipProvider>
