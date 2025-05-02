@@ -7,6 +7,8 @@ interface WelcomeHeaderProps {
 }
 
 export const WelcomeHeader = ({ onCreateAgent }: WelcomeHeaderProps) => {
+  const navigate = useNavigate();
+  
   return (
     <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
       <div>
@@ -15,7 +17,7 @@ export const WelcomeHeader = ({ onCreateAgent }: WelcomeHeaderProps) => {
           Crie e personalize seus agentes de IA para diferentes finalidades.
         </p>
       </div>
-      <Button className="md:w-auto w-full" onClick={onCreateAgent}>
+      <Button className="md:w-auto w-full" onClick={() => navigate('/dashboard?tab=discover')}>
         Criar Novo Agente
       </Button>
     </div>

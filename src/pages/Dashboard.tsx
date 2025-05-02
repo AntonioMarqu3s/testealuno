@@ -115,7 +115,6 @@ const Dashboard = () => {
             <AgentTypeTabs 
               currentTab={currentTab}
               onCreateAgent={(type) => {
-                // Agora navegamos diretamente para criar o agente com o tipo selecionado
                 navigate(`/create-agent?type=${type}`);
               }}
               onNavigateToAgents={handleNavigateToMyAgents}

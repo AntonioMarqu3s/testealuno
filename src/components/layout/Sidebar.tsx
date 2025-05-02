@@ -55,7 +55,7 @@ export function AppSidebar() {
     },
     {
       title: "Criar Agente",
-      path: "/create-agent",
+      path: "/dashboard?tab=discover",
       icon: PlusCircle,
     },
     {
@@ -92,7 +92,8 @@ export function AppSidebar() {
                     className={cn(
                       "gap-2",
                       (currentPath === item.path || 
-                       (currentPath === "/my-agents" && item.path === "/agents")) && 
+                       (currentPath === "/agents" && item.path === "/agents") ||
+                       (item.path.includes("tab=discover") && location.search.includes("tab=discover"))) && 
                       "bg-sidebar-accent text-accent-foreground"
                     )}
                   >
