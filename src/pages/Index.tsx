@@ -1,6 +1,7 @@
+
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { Users, UserPlus, UserCheck, HeadsetIcon, BarChart3, MessageCircle, Target, TrendingUp, Calendar, School } from "lucide-react";
+import { Users, UserPlus, UserCheck, HeadsetIcon, BarChart3, MessageCircle, Target, TrendingUp, Calendar, School, HelpCircle } from "lucide-react";
 
 const Index = () => {
   return (
@@ -79,101 +80,109 @@ const Index = () => {
         </div>
       </section>
     
-    <div className="container py-24">
-      <div className="text-center mb-16">
-        <h2 className="text-3xl font-bold tracking-tight mb-2">Nossos Agentes</h2>
-        <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-          Escolha entre nossos modelos de agentes especializados ou crie um personalizado
-        </p>
-      </div>
-
-      <section className="py-16 bg-gray-50">
-        <div className="container">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl font-bold tracking-tight mb-2">Agentes Especializados para Cada Necessidade</h2>
-            <p className="text-muted-foreground max-w-2xl mx-auto">
-              Temos agentes prontos para cada etapa do seu processo comercial e atendimento
-            </p>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <div className="bg-card p-6 rounded-lg shadow-sm border">
-              <div className="w-12 h-12 bg-indigo-100 text-indigo-600 rounded-lg flex items-center justify-center mb-4">
-                <Users className="h-6 w-6" />
-              </div>
-              <h3 className="text-xl font-medium mb-2">Vendedor</h3>
-              <p className="text-muted-foreground">Especialista em vendas e negociação para aumentar sua receita.</p>
-            </div>
-            
-            <div className="bg-card p-6 rounded-lg shadow-sm border">
-              <div className="w-12 h-12 bg-sky-100 text-sky-600 rounded-lg flex items-center justify-center mb-4">
-                <UserPlus className="h-6 w-6" />
-              </div>
-              <h3 className="text-xl font-medium mb-2">SDR</h3>
-              <p className="text-muted-foreground">Especialista em prospecção e qualificação de leads para o seu negócio.</p>
-            </div>
-            
-            <div className="bg-card p-6 rounded-lg shadow-sm border">
-              <div className="w-12 h-12 bg-amber-100 text-amber-600 rounded-lg flex items-center justify-center mb-4">
-                <UserCheck className="h-6 w-6" />
-              </div>
-              <h3 className="text-xl font-medium mb-2">Closer</h3>
-              <p className="text-muted-foreground">Especialista em fechamento de negócios para garantir o sucesso das suas vendas.</p>
-            </div>
-            
-            <div className="bg-card p-6 rounded-lg shadow-sm border">
-              <div className="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-lg flex items-center justify-center mb-4">
-                <HeadsetIcon className="h-6 w-6" />
-              </div>
-              <h3 className="text-xl font-medium mb-2">Atendimento</h3>
-              <p className="text-muted-foreground">Suporte ao cliente e atendimento personalizado para garantir a satisfação.</p>
-            </div>
-            
-            <div className="bg-card p-6 rounded-lg shadow-sm border">
-              <div className="w-12 h-12 bg-rose-100 text-rose-600 rounded-lg flex items-center justify-center mb-4">
-                <MessageCircle className="h-6 w-6" />
-              </div>
-              <h3 className="text-xl font-medium mb-2">Disparo</h3>
-              <p className="text-muted-foreground">Especialista em disparo de mensagens em massa para alcançar um grande público.</p>
-            </div>
-            
-            <div className="bg-card p-6 rounded-lg shadow-sm border">
-              <div className="w-12 h-12 bg-violet-100 text-violet-600 rounded-lg flex items-center justify-center mb-4">
-                <Target className="h-6 w-6" />
-              </div>
-              <h3 className="text-xl font-medium mb-2">Prospecção</h3>
-              <p className="text-muted-foreground">Especialista em encontrar e qualificar novos leads para o seu negócio.</p>
-            </div>
-
-            <div className="bg-card p-6 rounded-lg shadow-sm border">
-              <div className="w-12 h-12 bg-orange-100 text-orange-600 rounded-lg flex items-center justify-center mb-4">
-                <TrendingUp className="h-6 w-6" />
-              </div>
-              <h3 className="text-xl font-medium mb-2">Marketing</h3>
-              <p className="text-muted-foreground">Especialista em estratégias de marketing para aumentar a visibilidade da sua marca.</p>
-            </div>
-
-            <div className="bg-card p-6 rounded-lg shadow-sm border">
-              <div className="w-12 h-12 bg-purple-100 text-purple-600 rounded-lg flex items-center justify-center mb-4">
-                <Calendar className="h-6 w-6" />
-              </div>
-              <h3 className="text-xl font-medium mb-2">Secretária Pessoal</h3>
-              <p className="text-muted-foreground">Gerencia agenda, emails e relatórios para otimizar seu tempo.</p>
-            </div>
-            
-            {/* New School Helpdesk Card */}
-            <div className="bg-card p-6 rounded-lg shadow-sm border">
-              <div className="w-12 h-12 bg-blue-100 text-blue-600 rounded-lg flex items-center justify-center mb-4">
-                <School className="h-6 w-6" />
-              </div>
-              <h3 className="text-xl font-medium mb-2">Helpdesk Escolar</h3>
-              <p className="text-muted-foreground">Fornece informações sobre alunos, documentação necessária e horários de atividades.</p>
-            </div>
-            
-          </div>
+      <div className="container py-24">
+        <div className="text-center mb-16">
+          <h2 className="text-3xl font-bold tracking-tight mb-2">Nossos Agentes</h2>
+          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+            Escolha entre nossos modelos de agentes especializados ou crie um personalizado
+          </p>
         </div>
-      </section>
-      
+
+        <section className="py-16 bg-gray-50">
+          <div className="container">
+            <div className="text-center mb-16">
+              <h2 className="text-3xl font-bold tracking-tight mb-2">Agentes Especializados para Cada Necessidade</h2>
+              <p className="text-muted-foreground max-w-2xl mx-auto">
+                Temos agentes prontos para cada etapa do seu processo comercial e atendimento
+              </p>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="bg-card p-6 rounded-lg shadow-sm border">
+                <div className="w-12 h-12 bg-indigo-100 text-indigo-600 rounded-lg flex items-center justify-center mb-4">
+                  <Users className="h-6 w-6" />
+                </div>
+                <h3 className="text-xl font-medium mb-2">Vendedor</h3>
+                <p className="text-muted-foreground">Especialista em vendas e negociação para aumentar sua receita.</p>
+              </div>
+              
+              <div className="bg-card p-6 rounded-lg shadow-sm border">
+                <div className="w-12 h-12 bg-sky-100 text-sky-600 rounded-lg flex items-center justify-center mb-4">
+                  <UserPlus className="h-6 w-6" />
+                </div>
+                <h3 className="text-xl font-medium mb-2">SDR</h3>
+                <p className="text-muted-foreground">Especialista em prospecção e qualificação de leads para o seu negócio.</p>
+              </div>
+              
+              <div className="bg-card p-6 rounded-lg shadow-sm border">
+                <div className="w-12 h-12 bg-amber-100 text-amber-600 rounded-lg flex items-center justify-center mb-4">
+                  <UserCheck className="h-6 w-6" />
+                </div>
+                <h3 className="text-xl font-medium mb-2">Closer</h3>
+                <p className="text-muted-foreground">Especialista em fechamento de negócios para garantir o sucesso das suas vendas.</p>
+              </div>
+              
+              <div className="bg-card p-6 rounded-lg shadow-sm border">
+                <div className="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-lg flex items-center justify-center mb-4">
+                  <HeadsetIcon className="h-6 w-6" />
+                </div>
+                <h3 className="text-xl font-medium mb-2">Atendimento</h3>
+                <p className="text-muted-foreground">Suporte ao cliente e atendimento personalizado para garantir a satisfação.</p>
+              </div>
+              
+              <div className="bg-card p-6 rounded-lg shadow-sm border">
+                <div className="w-12 h-12 bg-rose-100 text-rose-600 rounded-lg flex items-center justify-center mb-4">
+                  <MessageCircle className="h-6 w-6" />
+                </div>
+                <h3 className="text-xl font-medium mb-2">Disparo</h3>
+                <p className="text-muted-foreground">Especialista em disparo de mensagens em massa para alcançar um grande público.</p>
+              </div>
+              
+              <div className="bg-card p-6 rounded-lg shadow-sm border">
+                <div className="w-12 h-12 bg-violet-100 text-violet-600 rounded-lg flex items-center justify-center mb-4">
+                  <Target className="h-6 w-6" />
+                </div>
+                <h3 className="text-xl font-medium mb-2">Prospecção</h3>
+                <p className="text-muted-foreground">Especialista em encontrar e qualificar novos leads para o seu negócio.</p>
+              </div>
+
+              <div className="bg-card p-6 rounded-lg shadow-sm border">
+                <div className="w-12 h-12 bg-orange-100 text-orange-600 rounded-lg flex items-center justify-center mb-4">
+                  <TrendingUp className="h-6 w-6" />
+                </div>
+                <h3 className="text-xl font-medium mb-2">Marketing</h3>
+                <p className="text-muted-foreground">Especialista em estratégias de marketing para aumentar a visibilidade da sua marca.</p>
+              </div>
+
+              <div className="bg-card p-6 rounded-lg shadow-sm border">
+                <div className="w-12 h-12 bg-purple-100 text-purple-600 rounded-lg flex items-center justify-center mb-4">
+                  <Calendar className="h-6 w-6" />
+                </div>
+                <h3 className="text-xl font-medium mb-2">Secretária Pessoal</h3>
+                <p className="text-muted-foreground">Gerencia agenda, emails e relatórios para otimizar seu tempo.</p>
+              </div>
+              
+              {/* Helpdesk Card */}
+              <div className="bg-card p-6 rounded-lg shadow-sm border">
+                <div className="w-12 h-12 bg-teal-100 text-teal-600 rounded-lg flex items-center justify-center mb-4">
+                  <HelpCircle className="h-6 w-6" />
+                </div>
+                <h3 className="text-xl font-medium mb-2">Helpdesk</h3>
+                <p className="text-muted-foreground">Suporte técnico e solução de problemas para seus clientes ou equipe.</p>
+              </div>
+              
+              {/* School Agent Card */}
+              <div className="bg-card p-6 rounded-lg shadow-sm border">
+                <div className="w-12 h-12 bg-blue-100 text-blue-600 rounded-lg flex items-center justify-center mb-4">
+                  <School className="h-6 w-6" />
+                </div>
+                <h3 className="text-xl font-medium mb-2">Escolar</h3>
+                <p className="text-muted-foreground">Fornece informações sobre alunos, documentação necessária e horários de atividades.</p>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
     </div>
   );
 };

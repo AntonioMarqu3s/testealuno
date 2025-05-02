@@ -1,5 +1,4 @@
 
-
 export interface Agent {
   id: string;
   name: string;
@@ -19,6 +18,7 @@ export enum AgentTypeEnum {
   SUPPORT = "support",
   BROADCAST = "broadcast",
   SECRETARY = "secretary",
-  SCHOOL = "school", // Added new school agent type
+  HELPDESK = "helpdesk", // Added new helpdesk agent type
+  SCHOOL = "school", // Added school agent type
   CUSTOM = "custom"
 }

@@ -24,8 +24,9 @@ const AgentBasicInfoForm = ({ control, watch }: AgentBasicInfoFormProps) => {
   const searchParams = new URLSearchParams(location.search);
   const agentType = searchParams.get('type');
 
-  // Special personality options for school agent
+  // Special personality options based on agent type
   const isSchoolAgent = agentType === 'school';
+  const isHelpdeskAgent = agentType === 'helpdesk';
   
   const personalityOptions = useMemo(() => {
     if (isSchoolAgent) {
@@ -38,6 +39,16 @@ const AgentBasicInfoForm = ({ control, watch }: AgentBasicInfoFormProps) => {
       ];
     }
     
+    if (isHelpdeskAgent) {
+      return [
+        { value: "tecnico", label: "Técnico e Preciso" },
+        { value: "paciente", label: "Paciente e Didático" },
+        { value: "resolucao", label: "Focado em Resolução" },
+        { value: "proativo", label: "Proativo" },
+        { value: "outro", label: "Outro" },
+      ];
+    }
+    
     // Default personality options for other agents
     return [
       { value: "consultor", label: "Consultor Especialista" },
@@ -46,14 +57,11 @@ const AgentBasicInfoForm = ({ control, watch }: AgentBasicInfoFormProps) => {
       { value: "calmo", label: "Organizador Calmo" },
       { value: "outro", label: "Outro" },
     ];
-  }, [isSchoolAgent]);
+  }, [isSchoolAgent, isHelpdeskAgent]);
 
   useEffect(() => {
-    // Set default personality based on agent type
-    if (isSchoolAgent) {
-      // You can access form methods if needed
-    }
-  }, [isSchoolAgent]);
+    // Set default personality based on agent type if needed
+  }, [isSchoolAgent, isHelpdeskAgent]);
 
   return (
     <Card>
@@ -65,7 +73,14 @@ const AgentBasicInfoForm = ({ control, watch }: AgentBasicInfoFormProps) => {
             <FormItem className="mb-4">
               <FormLabel>Nome do agente</FormLabel>
               <FormControl>
-                <Input placeholder={isSchoolAgent ? "Ex: Assistente Escolar" : "Ex: Assistente de Vendas"} {...field} />
+                <Input 
+                  placeholder={
+                    isSchoolAgent ? "Ex: Assistente Escolar" : 
+                    isHelpdeskAgent ? "Ex: Assistente de Suporte" : 
+                    "Ex: Assistente de Vendas"
+                  } 
+                  {...field} 
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
