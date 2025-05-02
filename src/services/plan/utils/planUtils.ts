@@ -1,6 +1,6 @@
 
 import { UserPlan, PlanType, PLAN_DETAILS } from '../types/planTypes';
-import { getUserPlan } from '../core/planStorage';
+import { getUserPlanFromStorage } from '../core/planStorage';
 
 /**
  * Get the price for a plan based on its type
@@ -123,6 +123,6 @@ export const getSubscriptionDaysRemaining = (email: string): number => {
 // This function should be replaced with the actual implementation
 // based on how user plans are stored in the application
 const getPlanFromSource = (email: string): UserPlan | null => {
-  // Get the user plan directly using imported function to avoid circular dependencies
-  return getUserPlan(email);
+  // Use getUserPlanFromStorage instead of getUserPlan
+  return getUserPlanFromStorage(email);
 };
