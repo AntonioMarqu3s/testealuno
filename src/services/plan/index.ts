@@ -1,4 +1,8 @@
 
 export * from './userPlanService';
 export * from './planLimitService';
-export * from './supabasePlanService';
+// Re-export all from supabasePlanService but avoid duplicate exports
+export { 
+  getUserPlanFromSupabase,
+  getPlanConnectionStatus
+} from './supabasePlanService';
