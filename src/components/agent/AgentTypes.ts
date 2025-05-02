@@ -7,6 +7,7 @@ export interface Agent {
   createdAt: Date;
   instanceId: string;
   clientIdentifier?: string;
+  connectInstancia?: boolean;
 }
 
 // Adding this enum to standardize agent types across the application

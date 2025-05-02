@@ -31,6 +31,7 @@ export const migrateAgentsToSupabase = async (userId: string, email: string, age
     name: agent.name,
     type: agent.type,
     is_connected: agent.isConnected,
+    connect_instancia: agent.connectInstancia || agent.isConnected, // Default to isConnected if not set
     created_at: new Date(agent.createdAt).toISOString(),
     instance_id: agent.instanceId,
     client_identifier: agent.clientIdentifier
@@ -43,5 +44,53 @@ export const migrateAgentsToSupabase = async (userId: string, email: string, age
     
   if (insertError) {
     console.error('Error migrating agents to Supabase:', insertError);
+  }
+};
+
+/**
+ * Update agent connection status in Supabase
+ */
+export const updateAgentConnectionStatus = async (agentId: string, isConnected: boolean): Promise<boolean> => {
+  try {
+    const { error } = await supabase
+      .from('agents')
+      .update({ 
+        is_connected: isConnected,
+        connect_instancia: isConnected // Update both fields to stay in sync
+      })
+      .eq('id', agentId);
+      
+    if (error) {
+      console.error('Error updating agent connection status:', error);
+      return false;
+    }
+    
+    return true;
+  } catch (error) {
+    console.error('Exception updating agent connection status:', error);
+    return false;
+  }
+};
+
+/**
+ * Get agent connection status from Supabase
+ */
+export const getAgentConnectionStatus = async (agentId: string): Promise<boolean> => {
+  try {
+    const { data, error } = await supabase
+      .from('agents')
+      .select('connect_instancia')
+      .eq('id', agentId)
+      .single();
+      
+    if (error || !data) {
+      console.error('Error getting agent connection status:', error);
+      return false;
+    }
+    
+    return data.connect_instancia || false;
+  } catch (error) {
+    console.error('Exception getting agent connection status:', error);
+    return false;
   }
 };

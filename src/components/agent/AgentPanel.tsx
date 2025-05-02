@@ -31,7 +31,7 @@ export const AgentPanel: React.FC<AgentPanelProps> = ({
   const navigate = useNavigate();
   const userEmail = getCurrentUserEmail();
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const [isConnected, setIsConnected] = useState(agent.isConnected);
+  const [isConnected, setIsConnected] = useState(agent.isConnected || agent.connectInstancia || false);
   
   // Custom hooks for QR code and connection
   const { 
@@ -53,7 +53,7 @@ export const AgentPanel: React.FC<AgentPanelProps> = ({
       const verifyStatus = async () => {
         try {
           console.log("Verifying agent connection status on mount:", agent.instanceId);
-          const connected = await checkConnectionStatus(agent.instanceId);
+          const connected = await checkConnectionStatus(agent.instanceId, agent.id);
           
           // Only update if the connection status is different
           if (connected !== isConnected) {
@@ -72,7 +72,7 @@ export const AgentPanel: React.FC<AgentPanelProps> = ({
       
       verifyStatus();
     }
-  }, [agent.instanceId, checkConnectionStatus, isConnected, agent.id, onToggleConnection]);
+  }, [agent.instanceId, agent.id, checkConnectionStatus, isConnected, agent.id, onToggleConnection]);
 
   // Handle auto show QR code when directed from agent creation
   useEffect(() => {
@@ -98,7 +98,7 @@ export const AgentPanel: React.FC<AgentPanelProps> = ({
   
   const handleDisconnectClick = async () => {
     try {
-      const success = await handleDisconnect(agent.instanceId);
+      const success = await handleDisconnect(agent.instanceId, agent.id);
       if (success) {
         setIsConnected(false);
         

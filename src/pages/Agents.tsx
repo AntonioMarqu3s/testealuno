@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import MainLayout from "@/components/layout/MainLayout";
@@ -8,6 +7,7 @@ import { EmptyAgentState } from "@/components/agent/EmptyAgentState";
 import { getCurrentUserEmail } from "@/services/user/userService";
 import { getUserPlan, hasTrialExpired } from "@/services/plan/userPlanService";
 import { deleteUserAgent, getUserAgents, updateUserAgent } from "@/services/agent/agentStorageService";
+import { updateAgentConnectionStatus } from "@/services/agent/supabaseAgentService";
 import { UpgradeModal } from "@/components/agent/UpgradeModal";
 import { useToast } from "@/hooks/use-toast";
 import { Agent } from "@/components/agent/AgentTypes";
@@ -85,16 +85,20 @@ const Agents = () => {
     }
   };
   
-  const handleToggleConnection = (agentId: string, isConnected: boolean) => {
+  const handleToggleConnection = async (agentId: string, isConnected: boolean) => {
     try {
-      // Update agent connection status
+      // Update agent connection status in localStorage
       updateUserAgent(userEmail, agentId, {
-        isConnected: isConnected
+        isConnected: isConnected,
+        connectInstancia: isConnected
       });
+      
+      // Update connection status in Supabase
+      await updateAgentConnectionStatus(agentId, isConnected);
       
       // Update local state
       setUserAgents(prevAgents => prevAgents.map(agent => 
-        agent.id === agentId ? { ...agent, isConnected } : agent
+        agent.id === agentId ? { ...agent, isConnected, connectInstancia: isConnected } : agent
       ));
       
       toast({
