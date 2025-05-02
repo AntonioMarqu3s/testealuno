@@ -79,7 +79,7 @@ export const useAgentSubmission = (agentType: string) => {
     }
   };
 
-  const handleUpdateAgent = (values: AgentFormValues, agentId: string) => {
+  const handleUpdateAgent = (values: AgentFormValues, agentId: string, preserveConnectionStatus: boolean = false) => {
     setIsSubmitting(true);
     
     try {
@@ -92,11 +92,22 @@ export const useAgentSubmission = (agentType: string) => {
       // Create client identifier
       const clientIdentifier = `${userEmail}-${values.agentName}`.replace(/\s+/g, '-').toLowerCase();
       
+      // Get the current agent data to preserve connection status if needed
+      let currentIsConnected = false;
+      if (preserveConnectionStatus) {
+        const storedAgent = sessionStorage.getItem('editingAgent');
+        if (storedAgent) {
+          const agent = JSON.parse(storedAgent);
+          currentIsConnected = agent.isConnected || false;
+        }
+      }
+      
       // Update agent in localStorage
       updateUserAgent(userEmail, agentId, {
         name: values.agentName,
         instanceId,
-        clientIdentifier // Add client identifier
+        clientIdentifier,
+        isConnected: preserveConnectionStatus ? currentIsConnected : false // Preserve connection status if needed
       });
       
       toast.success("Agente atualizado com sucesso", {

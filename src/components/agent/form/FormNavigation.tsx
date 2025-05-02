@@ -36,7 +36,7 @@ const FormNavigation = ({
 
       {isLastStep ? (
         <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? "Enviando..." : isEditing ? "Atualizar Agente" : "Criar Agente"}
+          {isSubmitting ? "Salvando..." : isEditing ? "Salvar Dados" : "Criar Agente"}
         </Button>
       ) : (
         <Button type="button" onClick={onNext}>

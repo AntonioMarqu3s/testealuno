@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
@@ -97,8 +98,14 @@ export const AgentPanel: React.FC<AgentPanelProps> = ({
   }, [autoShowQR, agent.name, showQRCodeDialog, handleShowQRCode]);
 
   const handleEdit = () => {
+    // Store the current connection status in the session storage to preserve it during edit
+    const agentData = {
+      ...agent,
+      isConnected: isConnected // Ensure we pass the current connection state
+    };
+    
     // Prepare agent data for editing and navigate
-    sessionStorage.setItem('editingAgent', JSON.stringify(agent));
+    sessionStorage.setItem('editingAgent', JSON.stringify(agentData));
     navigate(`/edit-agent/${agent.id}?type=${agent.type}`);
   };
 

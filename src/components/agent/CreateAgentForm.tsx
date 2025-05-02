@@ -20,13 +20,15 @@ interface CreateAgentFormProps {
   isEditing?: boolean;
   agentId?: string;
   initialValues?: Partial<AgentFormValues> | null;
+  preserveConnectionStatus?: boolean;
 }
 
 const CreateAgentForm = ({ 
   agentType, 
   isEditing = false,
   agentId,
-  initialValues = null
+  initialValues = null,
+  preserveConnectionStatus = false
 }: CreateAgentFormProps) => {
   const [step, setStep] = useState(1);
   const navigate = useNavigate();
@@ -71,7 +73,8 @@ const CreateAgentForm = ({
     
     // Actually save or update the agent
     if (isEditing && agentId) {
-      handleUpdateAgent(values, agentId);
+      // When updating, preserve the connection status if needed
+      handleUpdateAgent(values, agentId, preserveConnectionStatus);
     } else {
       handleSubmitAgent(values);
     }
