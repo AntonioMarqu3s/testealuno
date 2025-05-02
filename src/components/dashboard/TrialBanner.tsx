@@ -2,6 +2,7 @@
 import { Button } from "@/components/ui/button";
 import { AlertTriangle, Clock } from "lucide-react";
 import { Link } from "react-router-dom";
+import { getTrialDaysRemaining, hasTrialExpired, hasSubscriptionExpired } from "@/services/plan/utils/planUtils";
 
 interface TrialBannerProps {
   userEmail?: string;
@@ -117,6 +118,3 @@ export const TrialBanner = ({
     </div>
   );
 };
-
-// Need to import these functions since we're using them directly in the component
-import { getTrialDaysRemaining, hasTrialExpired, hasSubscriptionExpired } from "@/services/plan/userPlanService";
