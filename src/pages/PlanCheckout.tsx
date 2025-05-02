@@ -3,14 +3,13 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import MainLayout from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/button";
-import { PlanCard } from "@/components/plan/PlanCard";
+import { PlanCard, PAYMENT_LINKS } from "@/components/plan/PlanCard";
 import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { toast } from "sonner";
 import { getCurrentUserEmail } from "@/services/user/userService";
 import { PlanType, PLAN_DETAILS, getTrialDaysRemaining, getUserPlan, hasTrialExpired } from "@/services/plan/userPlanService";
-import { upgradeToPlan } from "@/services/checkout/checkoutService";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, ExternalLink } from "lucide-react";
 
 const PlanCheckout = () => {
   const navigate = useNavigate();
@@ -26,34 +25,14 @@ const PlanCheckout = () => {
     setSelectedPlan(planType);
   };
   
-  const handleProcessPayment = () => {
+  const handleCheckout = () => {
     if (!selectedPlan) {
       toast.error("Selecione um plano para continuar");
       return;
     }
     
-    setIsProcessing(true);
-    
-    // Simulando processamento de pagamento
-    setTimeout(() => {
-      try {
-        // Upgrade user plan
-        upgradeToPlan(userEmail, selectedPlan);
-        
-        toast.success("Pagamento processado com sucesso!", {
-          description: `Seu plano foi atualizado para ${PLAN_DETAILS[selectedPlan].name}.`
-        });
-        
-        // Redirect to agents page
-        navigate('/agents');
-      } catch (error) {
-        toast.error("Erro ao processar pagamento", {
-          description: "Por favor tente novamente mais tarde."
-        });
-      } finally {
-        setIsProcessing(false);
-      }
-    }, 2000);
+    // Redirect to Kiwify payment page
+    window.location.href = PAYMENT_LINKS[selectedPlan];
   };
   
   return (
@@ -88,6 +67,7 @@ const PlanCheckout = () => {
             current={userPlan.plan === PlanType.BASIC}
             selected={selectedPlan === PlanType.BASIC}
             onSelect={() => handleSelectPlan(PlanType.BASIC)}
+            showBuyButton={true}
           />
           
           <PlanCard 
@@ -96,6 +76,7 @@ const PlanCheckout = () => {
             selected={selectedPlan === PlanType.STANDARD}
             onSelect={() => handleSelectPlan(PlanType.STANDARD)}
             recommended
+            showBuyButton={true}
           />
           
           <PlanCard 
@@ -103,6 +84,7 @@ const PlanCheckout = () => {
             current={userPlan.plan === PlanType.PREMIUM}
             selected={selectedPlan === PlanType.PREMIUM}
             onSelect={() => handleSelectPlan(PlanType.PREMIUM)}
+            showBuyButton={true}
           />
         </div>
         
@@ -110,7 +92,7 @@ const PlanCheckout = () => {
           <CardHeader className="px-0 pt-0">
             <CardTitle>Complete sua compra</CardTitle>
             <CardDescription>
-              Você será redirecionado para nossa página de pagamento seguro após confirmar sua escolha.
+              Você será redirecionado para uma página de pagamento seguro após confirmar sua escolha.
             </CardDescription>
           </CardHeader>
           
@@ -138,12 +120,12 @@ const PlanCheckout = () => {
             
             <div className="flex flex-col space-y-2">
               <Button 
-                onClick={handleProcessPayment} 
-                disabled={selectedPlan === null || isProcessing}
+                onClick={handleCheckout} 
+                disabled={selectedPlan === null}
                 size="lg"
-                className="w-full"
+                className="w-full flex items-center justify-center"
               >
-                {isProcessing ? "Processando..." : "Finalizar Compra"}
+                Finalizar Compra <ExternalLink className="ml-2 h-4 w-4" />
               </Button>
               
               <Button 

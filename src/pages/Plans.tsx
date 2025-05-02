@@ -2,26 +2,20 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import MainLayout from "@/components/layout/MainLayout";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { CheckIcon, XIcon } from "lucide-react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { getCurrentUserEmail } from "@/services/user/userService";
 import { PlanType, PLAN_DETAILS, getUserPlan } from "@/services/plan/userPlanService";
-import { upgradeToPlan } from "@/services/checkout/checkoutService";
-import { toast } from "sonner";
-import { PlanCard } from "@/components/plan/PlanCard";
+import { PlanCard, PAYMENT_LINKS } from "@/components/plan/PlanCard";
 
 const Plans = () => {
   const navigate = useNavigate();
   const userEmail = getCurrentUserEmail();
   const userPlan = getUserPlan(userEmail);
   const [selectedPlan, setSelectedPlan] = useState<PlanType | null>(null);
-  const [isProcessing, setIsProcessing] = useState(false);
 
   const handleSelectPlan = (planType: PlanType) => {
     setSelectedPlan(planType);
-    navigate(`/plan-checkout?plan=${planType}`);
+    window.open(PAYMENT_LINKS[planType], '_blank');
   };
 
   // Check if user has a valid promo code
@@ -49,6 +43,7 @@ const Plans = () => {
             selected={selectedPlan === PlanType.BASIC}
             onSelect={() => handleSelectPlan(PlanType.BASIC)}
             showTrialDays={hasPromoCode()}
+            showBuyButton={true}
           />
           
           <PlanCard 
@@ -57,6 +52,7 @@ const Plans = () => {
             selected={selectedPlan === PlanType.STANDARD}
             onSelect={() => handleSelectPlan(PlanType.STANDARD)}
             recommended={true}
+            showBuyButton={true}
           />
           
           <PlanCard 
@@ -64,6 +60,7 @@ const Plans = () => {
             current={userPlan.plan === PlanType.PREMIUM}
             selected={selectedPlan === PlanType.PREMIUM}
             onSelect={() => handleSelectPlan(PlanType.PREMIUM)}
+            showBuyButton={true}
           />
         </div>
 

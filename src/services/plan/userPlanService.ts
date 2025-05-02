@@ -1,3 +1,4 @@
+
 import { getStorageItem, setStorageItem } from '../storage/localStorageService';
 
 // Define plan types
@@ -39,6 +40,9 @@ export interface UserPlan {
   name: string;
   agentLimit: number;
   trialEndsAt?: string; // ISO date string for trial expiration
+  subscriptionEndsAt?: string; // ISO date string for subscription expiration
+  paymentDate?: string; // ISO date string for last payment
+  paymentStatus?: string; // Status of payment: 'pending', 'completed', 'failed'
   updatedAt: string;
 }
 
@@ -86,6 +90,27 @@ export const hasTrialExpired = (email: string): boolean => {
 };
 
 /**
+ * Check if subscription has expired
+ */
+export const hasSubscriptionExpired = (email: string): boolean => {
+  const userPlan = getUserPlan(email);
+  
+  // If free trial, check trial expiration instead
+  if (userPlan.plan === PlanType.FREE_TRIAL) {
+    return hasTrialExpired(email);
+  }
+  
+  // Check if subscription end date exists and has passed
+  if (userPlan.subscriptionEndsAt) {
+    const subscriptionEnd = new Date(userPlan.subscriptionEndsAt);
+    const now = new Date();
+    return now > subscriptionEnd;
+  }
+  
+  return false;
+};
+
+/**
  * Get formatted trial days remaining
  */
 export const getTrialDaysRemaining = (email: string): number => {
@@ -101,6 +126,32 @@ export const getTrialDaysRemaining = (email: string): number => {
   
   // Calculate days difference
   const diffTime = trialEnd.getTime() - now.getTime();
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  
+  return Math.max(0, diffDays);
+};
+
+/**
+ * Get formatted subscription days remaining
+ */
+export const getSubscriptionDaysRemaining = (email: string): number => {
+  const userPlan = getUserPlan(email);
+  
+  // If free trial, return trial days remaining
+  if (userPlan.plan === PlanType.FREE_TRIAL) {
+    return getTrialDaysRemaining(email);
+  }
+  
+  // If subscription end date doesn't exist, return 0
+  if (!userPlan.subscriptionEndsAt) {
+    return 0;
+  }
+  
+  const subscriptionEnd = new Date(userPlan.subscriptionEndsAt);
+  const now = new Date();
+  
+  // Calculate days difference
+  const diffTime = subscriptionEnd.getTime() - now.getTime();
   const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
   
   return Math.max(0, diffDays);
@@ -138,7 +189,13 @@ export const transferUserPlanData = (oldEmail: string, newEmail: string): void =
 /**
  * Update user plan to a specific plan type
  */
-export const updateUserPlan = (email: string, planType: PlanType): void => {
+export const updateUserPlan = (
+  email: string, 
+  planType: PlanType, 
+  paymentDate?: string,
+  subscriptionEndsAt?: string,
+  paymentStatus?: string
+): void => {
   const planData = getStorageItem<Record<string, UserPlan>>('user_plans', {});
   
   // Get current plan or initialize
@@ -152,12 +209,22 @@ export const updateUserPlan = (email: string, planType: PlanType): void => {
     trialEndsAt = trialEnd.toISOString();
   }
   
+  // Calculate subscription end date for paid plans if not provided
+  if (!subscriptionEndsAt && planType !== PlanType.FREE_TRIAL) {
+    const subscriptionEnd = new Date(paymentDate || new Date());
+    subscriptionEnd.setDate(subscriptionEnd.getDate() + 30); // 30-day subscription
+    subscriptionEndsAt = subscriptionEnd.toISOString();
+  }
+  
   // Update plan
   planData[email] = {
     plan: planType,
     name: PLAN_DETAILS[planType].name,
     agentLimit: PLAN_DETAILS[planType].agentLimit,
     trialEndsAt: trialEndsAt,
+    subscriptionEndsAt: subscriptionEndsAt,
+    paymentDate: paymentDate || (planType !== PlanType.FREE_TRIAL ? new Date().toISOString() : undefined),
+    paymentStatus: paymentStatus || (planType !== PlanType.FREE_TRIAL ? 'completed' : 'pending'),
     updatedAt: new Date().toISOString()
   };
   
@@ -165,6 +232,34 @@ export const updateUserPlan = (email: string, planType: PlanType): void => {
   if (currentPlan.plan === PlanType.FREE_TRIAL && planType !== PlanType.FREE_TRIAL) {
     delete planData[email].trialEndsAt;
   }
+  
+  // Save updated plan
+  setStorageItem('user_plans', planData);
+};
+
+/**
+ * Update user plan payment information
+ */
+export const updatePlanPayment = (
+  email: string,
+  paymentDate: string = new Date().toISOString(),
+  paymentStatus: string = 'completed'
+): void => {
+  const planData = getStorageItem<Record<string, UserPlan>>('user_plans', {});
+  const userPlan = planData[email] || getUserPlan(email);
+  
+  // Calculate new subscription end date (30 days from payment)
+  const subscriptionEnd = new Date(paymentDate);
+  subscriptionEnd.setDate(subscriptionEnd.getDate() + 30);
+  
+  // Update payment information
+  planData[email] = {
+    ...userPlan,
+    paymentDate: paymentDate,
+    paymentStatus: paymentStatus,
+    subscriptionEndsAt: subscriptionEnd.toISOString(),
+    updatedAt: new Date().toISOString()
+  };
   
   // Save updated plan
   setStorageItem('user_plans', planData);

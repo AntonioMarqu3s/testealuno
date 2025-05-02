@@ -2,25 +2,35 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import { CheckIcon } from "lucide-react";
+import { CheckIcon, ExternalLinkIcon } from "lucide-react";
 import { PlanType } from "@/services/plan/userPlanService";
 import { Badge } from "../ui/badge";
+import { Button } from "../ui/button";
+import { PAYMENT_LINKS } from "../plan/PlanCard";
 
 interface PlanSelectorProps {
   selectedPlan: PlanType;
   onSelectPlan: (plan: PlanType) => void;
   showTrialInfo?: boolean;
   promoApplied?: boolean;
+  showPaymentButtons?: boolean;
 }
 
 export function PlanSelector({ 
   selectedPlan, 
   onSelectPlan, 
   showTrialInfo = false,
-  promoApplied = false 
+  promoApplied = false,
+  showPaymentButtons = false
 }: PlanSelectorProps) {
   // Don't show the Free Trial option unless promo is applied
   const shouldShowFreeTrial = promoApplied;
+
+  const handlePaymentClick = (planType: PlanType, e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    window.open(PAYMENT_LINKS[planType], '_blank');
+  };
 
   return (
     <div className="space-y-3">
@@ -66,6 +76,16 @@ export function PlanSelector({
             </div>
             <p className="text-sm text-muted-foreground">Até 1 agente</p>
           </div>
+          {showPaymentButtons && (
+            <Button 
+              size="sm" 
+              variant="outline" 
+              className="ml-2"
+              onClick={(e) => handlePaymentClick(PlanType.BASIC, e)}
+            >
+              <ExternalLinkIcon className="h-4 w-4 mr-1" /> Assinar
+            </Button>
+          )}
         </Label>
 
         <Label
@@ -86,6 +106,16 @@ export function PlanSelector({
             <CheckIcon className="h-3 w-3 mr-1" />
             Recomendado
           </Badge>
+          {showPaymentButtons && (
+            <Button 
+              size="sm" 
+              variant="outline" 
+              className="ml-2"
+              onClick={(e) => handlePaymentClick(PlanType.STANDARD, e)}
+            >
+              <ExternalLinkIcon className="h-4 w-4 mr-1" /> Assinar
+            </Button>
+          )}
         </Label>
 
         <Label
@@ -102,6 +132,16 @@ export function PlanSelector({
             </div>
             <p className="text-sm text-muted-foreground">Até 10 agentes</p>
           </div>
+          {showPaymentButtons && (
+            <Button 
+              size="sm" 
+              variant="outline" 
+              className="ml-2"
+              onClick={(e) => handlePaymentClick(PlanType.PREMIUM, e)}
+            >
+              <ExternalLinkIcon className="h-4 w-4 mr-1" /> Assinar
+            </Button>
+          )}
         </Label>
       </RadioGroup>
 

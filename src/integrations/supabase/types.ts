@@ -9,7 +9,45 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      user_plans: {
+        Row: {
+          agent_limit: number
+          id: string
+          name: string
+          payment_date: string | null
+          payment_status: string | null
+          plan: number
+          subscription_ends_at: string | null
+          trial_ends_at: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          agent_limit?: number
+          id?: string
+          name: string
+          payment_date?: string | null
+          payment_status?: string | null
+          plan?: number
+          subscription_ends_at?: string | null
+          trial_ends_at?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          agent_limit?: number
+          id?: string
+          name?: string
+          payment_date?: string | null
+          payment_status?: string | null
+          plan?: number
+          subscription_ends_at?: string | null
+          trial_ends_at?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

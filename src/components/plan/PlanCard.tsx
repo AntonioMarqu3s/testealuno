@@ -1,8 +1,9 @@
 
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { CheckIcon, XIcon, ClockIcon } from "lucide-react";
+import { CheckIcon, XIcon, ClockIcon, ExternalLinkIcon } from "lucide-react";
 import { PLAN_DETAILS, PlanType, getPlanPrice } from "@/services/plan/userPlanService";
+import { Button } from "../ui/button";
 
 interface PlanCardProps {
   planType: PlanType;
@@ -11,6 +12,7 @@ interface PlanCardProps {
   onSelect: () => void;
   recommended?: boolean;
   showTrialDays?: boolean;
+  showBuyButton?: boolean;
 }
 
 const PLAN_FEATURES = {
@@ -37,16 +39,30 @@ const PLAN_FEATURES = {
   ]
 };
 
+// Payment links for each plan
+export const PAYMENT_LINKS = {
+  [PlanType.BASIC]: "https://pay.kiwify.com.br/LK39fRl",
+  [PlanType.STANDARD]: "https://pay.kiwify.com.br/GUuGlZ4",
+  [PlanType.PREMIUM]: "https://pay.kiwify.com.br/DkDchr3",
+};
+
 export function PlanCard({ 
   planType, 
   current, 
   selected, 
   onSelect, 
   recommended,
-  showTrialDays = false
+  showTrialDays = false,
+  showBuyButton = false
 }: PlanCardProps) {
   const planDetails = PLAN_DETAILS[planType];
   const features = PLAN_FEATURES[planType];
+  const paymentLink = PAYMENT_LINKS[planType];
+  
+  const handleBuyNow = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent triggering onSelect
+    window.open(paymentLink, '_blank');
+  };
   
   return (
     <Card 
@@ -105,6 +121,15 @@ export function PlanCard({
             </li>
           ))}
         </ul>
+
+        {showBuyButton && (
+          <Button 
+            className="w-full mt-4 flex items-center justify-center" 
+            onClick={handleBuyNow}
+          >
+            Assinar <ExternalLinkIcon className="ml-2 h-4 w-4" />
+          </Button>
+        )}
       </CardContent>
       <CardFooter>
         <div className={`w-full h-2 rounded-full ${selected ? 'bg-primary' : 'bg-muted'}`}></div>
