@@ -1,10 +1,11 @@
 
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { AgentGrid } from "@/components/dashboard/AgentGrid";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
+import { memo } from "react";
 
 interface AgentTypeTabsProps {
   currentTab: string;
@@ -12,13 +13,13 @@ interface AgentTypeTabsProps {
   onNavigateToAgents: () => void;
 }
 
-export const AgentTypeTabs = ({ 
+export const AgentTypeTabs = memo(({ 
   currentTab, 
   onCreateAgent, 
   onNavigateToAgents 
 }: AgentTypeTabsProps) => {
   return (
-    <Tabs defaultValue={currentTab}>
+    <Tabs defaultValue={currentTab} value={currentTab}>
       <TabsList>
         <TabsTrigger value="agents">Tipos de Agentes</TabsTrigger>
         <TabsTrigger value="my-agents" onClick={onNavigateToAgents}>Meus Agentes</TabsTrigger>
@@ -45,4 +46,6 @@ export const AgentTypeTabs = ({
       </TabsContent>
     </Tabs>
   );
-};
+});
+
+AgentTypeTabs.displayName = "AgentTypeTabs";

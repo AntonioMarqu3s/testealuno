@@ -14,6 +14,7 @@ import { TrialBanner } from "@/components/dashboard/TrialBanner";
 import { AgentTypeTabs } from "@/components/dashboard/AgentTypeTabs";
 import { DashboardCards } from "@/components/dashboard/DashboardCards";
 import { useToast } from "@/hooks/use-toast";
+import { useMemo, useCallback } from "react";
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -32,7 +33,7 @@ const Dashboard = () => {
   const isTrialExpired = hasTrialExpired(userEmail);
   const isTrialPlan = userPlan.plan === PlanType.FREE_TRIAL;
 
-  const handleCreateAgent = () => {
+  const handleCreateAgent = useCallback(() => {
     // If free trial plan, redirect to plans page
     if (userPlan.plan === PlanType.FREE_TRIAL) {
       toast({
@@ -45,15 +46,18 @@ const Dashboard = () => {
       // Navigate to agent type selection
       navigate('/create-agent');
     }
-  };
+  }, [navigate, toast, userPlan.plan]);
 
-  const handleNavigateToMyAgents = () => {
+  const handleNavigateToMyAgents = useCallback(() => {
     navigate('/agents');
-  };
+  }, [navigate]);
   
-  const handleUpgrade = () => {
+  const handleUpgrade = useCallback(() => {
     navigate('/plans');
-  };
+  }, [navigate]);
+
+  const memoizedUserAgentsCount = useMemo(() => userAgents.length, [userAgents]);
+  const memoizedPlanName = useMemo(() => userPlan.name, [userPlan]);
 
   return (
     <MainLayout title="Dashboard">
@@ -75,9 +79,9 @@ const Dashboard = () => {
         />
 
         <DashboardCards 
-          userAgentsCount={userAgents.length}
+          userAgentsCount={memoizedUserAgentsCount}
           agentLimit={userPlan.agentLimit}
-          planName={userPlan.name}
+          planName={memoizedPlanName}
           isTrialPlan={isTrialPlan}
           isTrialExpired={isTrialExpired}
           trialDaysRemaining={trialDaysRemaining}
