@@ -48,21 +48,16 @@ export interface UserPlan {
 export const getUserPlan = (email: string): UserPlan => {
   const planData = getStorageItem<Record<string, UserPlan>>('user_plans', {});
   
-  // If no plan exists for this user, initialize with free trial plan
+  // If no plan exists for this user, initialize with basic plan (not free trial)
   if (!planData[email]) {
-    // Calculate trial end date (5 days from now)
-    const trialEnd = new Date();
-    trialEnd.setDate(trialEnd.getDate() + PLAN_DETAILS[PlanType.FREE_TRIAL].trialDays);
-    
-    const freeTrial: UserPlan = {
-      plan: PlanType.FREE_TRIAL,
-      name: PLAN_DETAILS[PlanType.FREE_TRIAL].name,
-      agentLimit: PLAN_DETAILS[PlanType.FREE_TRIAL].agentLimit,
-      trialEndsAt: trialEnd.toISOString(),
+    const basicPlan: UserPlan = {
+      plan: PlanType.BASIC,
+      name: PLAN_DETAILS[PlanType.BASIC].name,
+      agentLimit: PLAN_DETAILS[PlanType.BASIC].agentLimit,
       updatedAt: new Date().toISOString()
     };
     
-    planData[email] = freeTrial;
+    planData[email] = basicPlan;
     setStorageItem('user_plans', planData);
   }
   

@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -47,7 +46,7 @@ export function RegisterForm({
   handleDemoLogin,
   onSwitchToLogin
 }: RegisterFormProps) {
-  const [selectedPlan, setSelectedPlan] = useState<PlanType>(PlanType.FREE_TRIAL);
+  const [selectedPlan, setSelectedPlan] = useState<PlanType>(PlanType.BASIC);
   const [promoApplied, setPromoApplied] = useState<boolean>(false);
 
   const form = useForm<RegisterFormValues>({
@@ -87,6 +86,9 @@ export function RegisterForm({
       // Determine if promo code is applied
       const hasValidPromoCode = values.promoCode && checkPromoCode(values.promoCode);
       
+      // Use the selected plan type, but if promo code is applied, use FREE_TRIAL
+      const planToApply = hasValidPromoCode ? PlanType.FREE_TRIAL : selectedPlan;
+      
       const { data, error } = await supabase.auth.signUp({
         email: values.email,
         password: values.password,
@@ -94,8 +96,8 @@ export function RegisterForm({
           emailRedirectTo: `${window.location.origin}/auth-callback`,
           data: {
             email: values.email,
-            plan: selectedPlan,
-            trialStartDate: new Date().toISOString(),
+            plan: planToApply,
+            trialStartDate: hasValidPromoCode ? new Date().toISOString() : null,
             promoCode: hasValidPromoCode ? values.promoCode.toUpperCase() : null
           }
         }
@@ -116,14 +118,14 @@ export function RegisterForm({
       // Update user email
       updateCurrentUserEmail(values.email);
       
-      // Update user plan based on selection
-      updateUserPlan(values.email, selectedPlan);
+      // Update user plan based on selection or promo code
+      updateUserPlan(values.email, planToApply);
       
       // Success message
       toast.success("Conta criada com sucesso!", { 
-        description: selectedPlan === PlanType.FREE_TRIAL 
-          ? "Seu período de teste gratuito" + (hasValidPromoCode ? " estendido" : "") + " foi iniciado."
-          : "Obrigado por escolher nosso plano premium."
+        description: hasValidPromoCode 
+          ? "Seu período de teste gratuito de 5 dias foi iniciado."
+          : "Obrigado por escolher nosso plano."
       });
       
       onSuccessfulAuth();
@@ -243,7 +245,7 @@ export function RegisterForm({
           <PlanSelector 
             selectedPlan={selectedPlan}
             onSelectPlan={setSelectedPlan}
-            showTrialInfo={true}
+            showTrialInfo={promoApplied}
           />
         </CardContent>
         <CardFooter className="flex flex-col gap-2">

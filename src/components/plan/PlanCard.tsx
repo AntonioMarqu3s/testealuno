@@ -1,7 +1,7 @@
 
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { CheckIcon, XIcon } from "lucide-react";
+import { CheckIcon, XIcon, ClockIcon } from "lucide-react";
 import { PLAN_DETAILS, PlanType, getPlanPrice } from "@/services/plan/userPlanService";
 
 interface PlanCardProps {
@@ -10,6 +10,7 @@ interface PlanCardProps {
   selected: boolean;
   onSelect: () => void;
   recommended?: boolean;
+  showTrialDays?: boolean;
 }
 
 const PLAN_FEATURES = {
@@ -36,7 +37,14 @@ const PLAN_FEATURES = {
   ]
 };
 
-export function PlanCard({ planType, current, selected, onSelect, recommended }: PlanCardProps) {
+export function PlanCard({ 
+  planType, 
+  current, 
+  selected, 
+  onSelect, 
+  recommended,
+  showTrialDays = false
+}: PlanCardProps) {
   const planDetails = PLAN_DETAILS[planType];
   const features = PLAN_FEATURES[planType];
   
@@ -72,6 +80,16 @@ export function PlanCard({ planType, current, selected, onSelect, recommended }:
           {getPlanPrice(planType)}
           <span className="text-sm font-normal text-muted-foreground">/mês</span>
         </div>
+        
+        {/* Show trial days badge only for BASIC plan if showTrialDays is true */}
+        {planType === PlanType.BASIC && showTrialDays && (
+          <div className="mb-3">
+            <Badge variant="outline" className="flex items-center gap-1 bg-amber-50 text-amber-700 border-amber-200">
+              <ClockIcon className="h-3 w-3" />
+              <span>5 dias de teste com código promocional</span>
+            </Badge>
+          </div>
+        )}
         
         <ul className="space-y-2 text-sm">
           {features.map((feature, index) => (
