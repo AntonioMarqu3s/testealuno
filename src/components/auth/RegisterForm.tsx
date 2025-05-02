@@ -2,7 +2,6 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { CardContent, CardFooter } from "@/components/ui/card";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
@@ -21,7 +20,6 @@ interface RegisterFormProps {
   setIsLoading: (isLoading: boolean) => void;
   onSuccessfulAuth: () => void;
   onShowConnectionError: (errorDetails: string) => void;
-  handleDemoLogin: () => void;
   onSwitchToLogin: () => void;
 }
 
@@ -44,7 +42,6 @@ export function RegisterForm({
   setIsLoading,
   onSuccessfulAuth,
   onShowConnectionError,
-  handleDemoLogin,
   onSwitchToLogin
 }: RegisterFormProps) {
   const [selectedPlan, setSelectedPlan] = useState<PlanType>(PlanType.FREE_TRIAL);
@@ -249,21 +246,13 @@ export function RegisterForm({
             promoApplied={promoApplied}
           />
         </CardContent>
-        <CardFooter className="flex flex-col gap-2">
+        <CardFooter>
           <Button 
             type="submit" 
             className="w-full"
             disabled={isLoading}
           >
             {isLoading ? "Criando conta..." : "Criar conta"}
-          </Button>
-          <Button 
-            type="button" 
-            variant="outline"
-            className="w-full mt-2"
-            onClick={handleDemoLogin}
-          >
-            Modo de Demonstração
           </Button>
         </CardFooter>
       </form>

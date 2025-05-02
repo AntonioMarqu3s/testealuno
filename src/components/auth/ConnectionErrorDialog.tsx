@@ -1,61 +1,44 @@
 
+import { Button } from "@/components/ui/button";
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 interface ConnectionErrorDialogProps {
   open: boolean;
   onClose: () => void;
-  onDemoLogin: () => void;
+  onDemoLogin: () => void; // Mantemos para evitar erros de tipagem em arquivos read-only, mas não usamos
   errorDetails: string;
 }
 
 export function ConnectionErrorDialog({
   open,
   onClose,
-  onDemoLogin,
   errorDetails,
 }: ConnectionErrorDialogProps) {
   return (
-    <AlertDialog open={open} onOpenChange={onClose}>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>Modo de Demonstração</AlertDialogTitle>
-          <AlertDialogDescription>
-            <div className="space-y-4">
-              <p>
-                O aplicativo está operando em modo de demonstração com credenciais que permitem visualizar a interface, mas não fornecem autenticação real.
-              </p>
-              
-              <div className="bg-amber-50 dark:bg-amber-950 p-4 rounded-md border border-amber-200 dark:border-amber-800">
-                <p className="font-medium text-amber-800 dark:text-amber-300 mb-2">
-                  Para usar a autenticação completa:
-                </p>
-                <ol className="list-decimal pl-5 space-y-1 text-amber-700 dark:text-amber-300 text-sm">
-                  <li>Use o botão "Modo de Demonstração" para explorar o aplicativo sem autenticação real</li>
-                </ol>
-              </div>
-              
-              <p className="text-sm text-gray-600 dark:text-gray-400">
-                {errorDetails ? `Detalhes técnicos: ${errorDetails}` : ''}
-              </p>
-            </div>
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel onClick={onClose}>Cancelar</AlertDialogCancel>
-          <AlertDialogAction onClick={onDemoLogin}>
-            Usar Modo de Demonstração
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
+    <Dialog open={open} onOpenChange={onClose}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Erro de Conexão</DialogTitle>
+          <DialogDescription>
+            Não foi possível conectar ao servidor de autenticação. Por favor, verifique sua conexão com a internet e tente novamente.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="bg-gray-100 dark:bg-gray-800 p-3 rounded-md text-sm font-mono overflow-auto max-h-[100px]">
+          {errorDetails}
+        </div>
+        <DialogFooter className="flex flex-col sm:flex-row gap-2">
+          <Button variant="outline" onClick={onClose} className="sm:flex-1">
+            Tentar Novamente
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }

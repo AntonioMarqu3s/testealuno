@@ -21,16 +21,6 @@ export function AuthForm() {
     navigate("/dashboard");
   };
 
-  const handleDemoLogin = () => {
-    // For demonstration purposes only
-    const demoEmail = "demo@example.com";
-    updateCurrentUserEmail(demoEmail);
-    toast.success("Login de demonstração realizado!", {
-      description: "Você está usando o aplicativo em modo de demonstração."
-    });
-    navigate("/dashboard");
-  };
-
   const showConnectionErrorDialog = (errorDetails: string) => {
     setConnectionErrorDetails(errorDetails);
     setShowConnectionError(true);
@@ -68,7 +58,6 @@ export function AuthForm() {
               setIsLoading={setIsLoading}
               onSuccessfulAuth={handleSuccessfulAuth}
               onShowConnectionError={showConnectionErrorDialog}
-              handleDemoLogin={handleDemoLogin}
             />
           </TabsContent>
           <TabsContent value="register">
@@ -79,7 +68,6 @@ export function AuthForm() {
               setIsLoading={setIsLoading}
               onSuccessfulAuth={handleSuccessfulAuth}
               onShowConnectionError={showConnectionErrorDialog}
-              handleDemoLogin={handleDemoLogin}
               onSwitchToLogin={handleSwitchToLogin}
             />
           </TabsContent>
@@ -89,7 +77,7 @@ export function AuthForm() {
       <ConnectionErrorDialog
         open={showConnectionError}
         onClose={closeConnectionErrorDialog}
-        onDemoLogin={handleDemoLogin}
+        onDemoLogin={() => {}}
         errorDetails={connectionErrorDetails}
       />
     </>

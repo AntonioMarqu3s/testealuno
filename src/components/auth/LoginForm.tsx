@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,7 +16,6 @@ interface LoginFormProps {
   setIsLoading: (isLoading: boolean) => void;
   onSuccessfulAuth: () => void;
   onShowConnectionError: (errorDetails: string) => void;
-  handleDemoLogin: () => void;
 }
 
 export function LoginForm({
@@ -25,7 +25,6 @@ export function LoginForm({
   setIsLoading,
   onSuccessfulAuth,
   onShowConnectionError,
-  handleDemoLogin
 }: LoginFormProps) {
   const [password, setPassword] = useState<string>("");
 
@@ -159,21 +158,13 @@ export function LoginForm({
           />
         </div>
       </CardContent>
-      <CardFooter className="flex flex-col gap-2">
+      <CardFooter>
         <Button 
           type="submit" 
           className="w-full"
           disabled={isLoading}
         >
           {isLoading ? "Entrando..." : "Entrar"}
-        </Button>
-        <Button 
-          type="button" 
-          variant="outline"
-          className="w-full mt-2"
-          onClick={handleDemoLogin}
-        >
-          Modo de Demonstração
         </Button>
       </CardFooter>
     </form>
