@@ -74,7 +74,7 @@ export function AgentTypeTabs({
                 disabled={isChecking}
               >
                 <PlusCircle className="mr-2 h-4 w-4" />
-                {isChecking ? "Verificando..." : "Criar Novo Agente"}
+                Criar Novo Agente
               </Button>
             </div>
           </>
@@ -88,7 +88,7 @@ export function AgentTypeTabs({
               onClick={() => navigate('/dashboard?tab=discover')} 
               disabled={isChecking}
             >
-              {isChecking ? "Verificando..." : "Criar meu primeiro agente"}
+              Criar meu primeiro agente
             </Button>
           </div>
         )}

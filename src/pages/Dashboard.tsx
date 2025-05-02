@@ -35,7 +35,7 @@ const Dashboard = () => {
   const isTrialPlan = userPlan.plan === PlanType.FREE_TRIAL;
   const isSubscriptionExpired = hasSubscriptionExpired(userEmail);
 
-  const handleCreateAgent = useCallback(async () => {
+  const handleCreateAgent = useCallback(async (type) => {
     setIsChecking(true);
     
     try {
@@ -68,8 +68,8 @@ const Dashboard = () => {
         // Add a small delay before redirecting to prevent loop issues
         setTimeout(() => navigate('/plans'), 100);
       } else {
-        // Navigate to agent type selection - redirect to discover tab
-        navigate('/dashboard?tab=discover');
+        // Navigate to create agent page with selected type
+        navigate(`/create-agent?type=${type}`);
       }
     } catch (error) {
       console.error("Error checking agent creation permissions:", error);
@@ -83,18 +83,20 @@ const Dashboard = () => {
     }
   }, [navigate, toast, userEmail, isTrialPlan, isTrialExpired, isSubscriptionExpired]);
 
+  const handleNavigateToAgents = () => {
+    navigate('/dashboard?tab=agents');
+  };
+
   return (
     <MainLayout title="Dashboard">
       <div className="space-y-8">
-        <WelcomeHeader onCreateAgent={handleCreateAgent} />
+        <WelcomeHeader onCreateAgent={() => navigate('/dashboard?tab=discover')} />
         
         <div className="w-full">
           <AgentTypeTabs 
             currentTab={currentTab}
-            onCreateAgent={(type) => {
-              navigate(`/create-agent?type=${type}`);
-            }}
-            onNavigateToAgents={() => {}}
+            onCreateAgent={handleCreateAgent}
+            onNavigateToAgents={handleNavigateToAgents}
             isChecking={isChecking}
           />
         </div>
