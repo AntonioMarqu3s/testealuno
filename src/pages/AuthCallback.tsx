@@ -30,7 +30,7 @@ const AuthCallback = () => {
             const userEmail = getCurrentUserEmail();
             const userPlan = getUserPlan(userEmail);
             
-            // If user doesn't have a paid plan, redirect to checkout
+            // Always redirect to plan checkout for FREE_TRIAL users
             if (userPlan.plan === PlanType.FREE_TRIAL) {
               setTimeout(() => navigate('/plan-checkout'), 1000);
             } else {

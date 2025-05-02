@@ -52,16 +52,16 @@ export interface UserPlan {
 export const getUserPlan = (email: string): UserPlan => {
   const planData = getStorageItem<Record<string, UserPlan>>('user_plans', {});
   
-  // If no plan exists for this user, initialize with basic plan (not free trial)
+  // If no plan exists for this user, initialize with FREE_TRIAL plan (without trial days)
   if (!planData[email]) {
-    const basicPlan: UserPlan = {
-      plan: PlanType.BASIC,
-      name: PLAN_DETAILS[PlanType.BASIC].name,
-      agentLimit: PLAN_DETAILS[PlanType.BASIC].agentLimit,
+    const freeTrial: UserPlan = {
+      plan: PlanType.FREE_TRIAL,
+      name: PLAN_DETAILS[PlanType.FREE_TRIAL].name,
+      agentLimit: PLAN_DETAILS[PlanType.FREE_TRIAL].agentLimit,
       updatedAt: new Date().toISOString()
     };
     
-    planData[email] = basicPlan;
+    planData[email] = freeTrial;
     setStorageItem('user_plans', planData);
   }
   
@@ -194,16 +194,17 @@ export const updateUserPlan = (
   planType: PlanType, 
   paymentDate?: string,
   subscriptionEndsAt?: string,
-  paymentStatus?: string
+  paymentStatus?: string,
+  hasPromoCode?: boolean
 ): void => {
   const planData = getStorageItem<Record<string, UserPlan>>('user_plans', {});
   
   // Get current plan or initialize
   const currentPlan = planData[email] || getUserPlan(email);
   
-  // Calculate trial end date if it's a free trial
+  // Calculate trial end date if it's a free trial with promo code
   let trialEndsAt = undefined;
-  if (planType === PlanType.FREE_TRIAL) {
+  if (planType === PlanType.FREE_TRIAL && hasPromoCode) {
     const trialEnd = new Date();
     trialEnd.setDate(trialEnd.getDate() + PLAN_DETAILS[PlanType.FREE_TRIAL].trialDays);
     trialEndsAt = trialEnd.toISOString();

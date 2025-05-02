@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -83,7 +84,7 @@ export function RegisterForm({
     try {
       console.log(`Attempting to register with email: ${values.email}`);
       
-      // Always use FREE_TRIAL plan for new registrations without valid promo code
+      // Users without valid promo code always get FREE_TRIAL plan without trial days
       const planToApply = PlanType.FREE_TRIAL;
       
       const { data, error } = await supabase.auth.signUp({
@@ -94,7 +95,6 @@ export function RegisterForm({
           data: {
             email: values.email,
             plan: planToApply,
-            trialStartDate: new Date().toISOString(),
             promoCode: values.promoCode ? values.promoCode.toUpperCase() : null
           }
         }
@@ -118,7 +118,7 @@ export function RegisterForm({
       // Update user plan based on selection or promo code
       updateUserPlan(values.email, planToApply);
       
-      // Success message
+      // Success message - different messages based on promo code
       toast.success("Conta criada com sucesso!", { 
         description: promoApplied 
           ? "Seu período de teste gratuito de 5 dias foi iniciado."

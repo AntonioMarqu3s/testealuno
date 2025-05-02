@@ -23,6 +23,11 @@ export const TrialBanner = ({
   const daysRemaining = propDaysRemaining !== undefined ? propDaysRemaining : 
     userEmail ? getTrialDaysRemaining(userEmail) : 0;
   
+  // If there's no trial (daysRemaining is 0 and not expired), don't show banner
+  if (!daysRemaining && !isExpired) {
+    return null;
+  }
+  
   if (isExpired) {
     return (
       <div className="w-full bg-destructive/15 dark:bg-destructive/20 p-4 rounded-lg flex flex-col sm:flex-row items-center justify-between gap-4">
