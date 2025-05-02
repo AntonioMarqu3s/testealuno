@@ -113,8 +113,6 @@ export function RegisterForm({
       updateCurrentUserEmail(values.email);
       
       // Update user plan based on selection or promo code
-      // CHANGE: Set the trial end date to 5 days from now if promo is applied
-      const trialEndDate = promoApplied ? new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString() : undefined;
       updateUserPlan(values.email, planToApply, undefined, undefined, undefined, promoApplied);
       
       // Success message - different messages based on promo code

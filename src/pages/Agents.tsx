@@ -6,7 +6,7 @@ import { AgentsHeader } from "@/components/agent/AgentsHeader";
 import { AgentsList } from "@/components/agent/AgentsList";
 import { EmptyAgentState } from "@/components/agent/EmptyAgentState";
 import { getCurrentUserEmail } from "@/services/user/userService";
-import { getUserPlan } from "@/services/plan/userPlanService";
+import { getUserPlan, hasTrialExpired } from "@/services/plan/userPlanService";
 import { deleteUserAgent, getUserAgents, updateUserAgent } from "@/services/agent/agentStorageService";
 import { updateAgentConnectionStatus } from "@/services/agent/supabaseAgentService";
 import { UpgradeModal } from "@/components/agent/UpgradeModal";
@@ -25,8 +25,9 @@ const Agents = () => {
   // Get current user email
   const userEmail = getCurrentUserEmail();
   
-  // Get user plan
+  // Get user plan and check trial status
   const userPlan = getUserPlan(userEmail);
+  const isTrialExpired = hasTrialExpired(userEmail);
   
   // Get user agents with state management
   const [userAgents, setUserAgents] = useState<Agent[]>([]);
@@ -55,8 +56,8 @@ const Agents = () => {
     // Check if user can create more agents based on their plan
     const canCreate = canCreateAgent(userEmail);
     
-    // If user reached their plan limit, show upgrade modal
-    if (!canCreate) {
+    // If trial expired or user reached their plan limit, show upgrade modal
+    if (isTrialExpired || !canCreate) {
       toast.warning("Limite de plano atingido", {
         description: "Seu plano atual não permite criar mais agentes. Faça upgrade para um plano maior."
       });
@@ -75,31 +76,20 @@ const Agents = () => {
     navigate('/plan-checkout');
   };
 
-  const handleDeleteAgent = async (agentId: string) => {
-    console.log("Starting deletion process for agent:", agentId);
+  const handleDeleteAgent = (agentId: string) => {
     try {
-      const agent = userAgents.find(a => a.id === agentId);
-      if (agent) {
-        console.log(`Attempting to delete agent ${agent.name} with instance ${agent.instanceId}`);
-      }
-      
-      // Delete agent from localStorage and call webhook
-      const deletedSuccessfully = await deleteUserAgent(userEmail, agentId);
-      
-      if (deletedSuccessfully) {
-        // Update local state after deletion
-        setUserAgents(prevAgents => prevAgents.filter(agent => agent.id !== agentId));
-        
-        toast.success("Agente excluído", {
-          description: "O agente e sua instância no WhatsApp foram removidos com sucesso.",
-        });
-      } else {
-        throw new Error("Falha ao excluir o agente");
-      }
+      deleteUserAgent(userEmail, agentId);
+      // Update local state after deletion
+      setUserAgents(prevAgents => prevAgents.filter(agent => agent.id !== agentId));
+      toastHook({
+        title: "Agente excluído",
+        description: "O agente foi excluído com sucesso.",
+      });
     } catch (error) {
-      console.error("Error deleting agent:", error);
-      toast.error("Erro ao excluir agente", {
-        description: "Não foi possível excluir completamente o agente. Tente novamente.",
+      toastHook({
+        variant: "destructive",
+        title: "Erro",
+        description: "Não foi possível excluir o agente.",
       });
     }
   };
@@ -120,13 +110,16 @@ const Agents = () => {
         agent.id === agentId ? { ...agent, isConnected, connectInstancia: isConnected } : agent
       ));
       
-      toast.success(isConnected ? "Agente conectado" : "Agente desconectado", {
+      toastHook({
+        title: isConnected ? "Agente conectado" : "Agente desconectado",
         description: isConnected ? 
           "O agente foi conectado com sucesso." : 
           "O agente foi desconectado com sucesso.",
       });
     } catch (error) {
-      toast.error("Erro de conexão", {
+      toastHook({
+        variant: "destructive",
+        title: "Erro",
         description: `Não foi possível ${isConnected ? 'conectar' : 'desconectar'} o agente.`,
       });
     }
@@ -150,7 +143,7 @@ const Agents = () => {
         <AgentsHeader 
           userPlanType={userPlan.plan} 
           onCreateAgent={handleCreateAgent} 
-          onUpgradeClick={() => setShowUpgradeModal(true)}
+          onUpgradeClick={handleUpgradeClick}
           agentCount={userAgents.length}
         />
         

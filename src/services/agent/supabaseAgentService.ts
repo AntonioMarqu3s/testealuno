@@ -1,3 +1,4 @@
+
 import { supabase } from '@/lib/supabase';
 import { Agent } from '@/components/agent/AgentTypes';
 
@@ -90,30 +91,6 @@ export const getAgentConnectionStatus = async (agentId: string): Promise<boolean
     return data.connect_instancia || false;
   } catch (error) {
     console.error('Exception getting agent connection status:', error);
-    return false;
-  }
-};
-
-/**
- * Delete agent from Supabase database
- */
-export const deleteAgentFromSupabase = async (agentId: string): Promise<boolean> => {
-  try {
-    console.log('Deleting agent from Supabase:', agentId);
-    
-    const { error } = await supabase
-      .from('agents')
-      .delete()
-      .eq('id', agentId);
-      
-    if (error) {
-      console.error('Error deleting agent from Supabase:', error);
-      return false;
-    }
-    
-    return true;
-  } catch (error) {
-    console.error('Exception deleting agent from Supabase:', error);
     return false;
   }
 };

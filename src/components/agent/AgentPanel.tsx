@@ -32,7 +32,6 @@ export const AgentPanel: React.FC<AgentPanelProps> = ({
   const userEmail = getCurrentUserEmail();
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [isConnected, setIsConnected] = useState(agent.isConnected || agent.connectInstancia || false);
-  const [isDeleting, setIsDeleting] = useState(false);
   
   // Custom hooks for QR code and connection
   const { 
@@ -73,7 +72,7 @@ export const AgentPanel: React.FC<AgentPanelProps> = ({
       
       verifyStatus();
     }
-  }, [agent.instanceId, agent.id, checkConnectionStatus, isConnected, onToggleConnection]);
+  }, [agent.instanceId, agent.id, checkConnectionStatus, isConnected, agent.id, onToggleConnection]);
 
   // Handle auto show QR code when directed from agent creation
   useEffect(() => {
@@ -89,25 +88,11 @@ export const AgentPanel: React.FC<AgentPanelProps> = ({
     navigate(`/edit-agent/${agent.id}?type=${agent.type}`);
   };
 
-  const handleDelete = async () => {
-    if (onDelete && !isDeleting) {
-      setIsDeleting(true);
-      
-      try {
-        console.log(`Deleting agent: ${agent.id} with instance: ${agent.instanceId}`);
-        await onDelete(agent.id);
-        toast.success("Agente removido com sucesso!", {
-          description: "O agente e sua instância no WhatsApp foram excluídos."
-        });
-      } catch (error) {
-        console.error("Error deleting agent:", error);
-        toast.error("Ocorreu um erro ao excluir o agente.", {
-          description: "A instância pode não ter sido completamente removida."
-        });
-      } finally {
-        setIsDeleting(false);
-        setShowDeleteDialog(false);
-      }
+  const handleDelete = () => {
+    if (onDelete) {
+      onDelete(agent.id);
+      toast.success("Agente removido com sucesso!");
+      setShowDeleteDialog(false);
     }
   };
   
@@ -174,7 +159,6 @@ export const AgentPanel: React.FC<AgentPanelProps> = ({
         <DeleteAgentDialog 
           agentName={agent.name}
           onDelete={handleDelete}
-          isDeleting={isDeleting}
         />
       </AlertDialog>
       

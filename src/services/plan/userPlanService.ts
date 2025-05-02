@@ -1,3 +1,4 @@
+
 import { getStorageItem, setStorageItem } from '../storage/localStorageService';
 
 // Define plan types
@@ -50,30 +51,19 @@ export interface UserPlan {
  * Get user plan information
  */
 export const getUserPlan = (email: string): UserPlan => {
-  if (!email) {
-    console.warn('Attempted to get user plan with empty email');
-    return createDefaultPlan();
-  }
-  
   const planData = getStorageItem<Record<string, UserPlan>>('user_plans', {});
   
-  // If no plan exists for this user, initialize with FREE_TRIAL plan
+  // If no plan exists for this user, initialize with FREE_TRIAL plan (without trial days)
   if (!planData[email]) {
-    // Create a default plan for this user
-    const trialEnd = new Date();
-    trialEnd.setDate(trialEnd.getDate() + PLAN_DETAILS[PlanType.FREE_TRIAL].trialDays);
-    
     const freeTrial: UserPlan = {
       plan: PlanType.FREE_TRIAL,
       name: PLAN_DETAILS[PlanType.FREE_TRIAL].name,
       agentLimit: PLAN_DETAILS[PlanType.FREE_TRIAL].agentLimit,
-      trialEndsAt: trialEnd.toISOString(),
       updatedAt: new Date().toISOString()
     };
     
     planData[email] = freeTrial;
     setStorageItem('user_plans', planData);
-    console.log(`Created new trial plan for user ${email} ending at ${trialEnd.toISOString()}`);
   }
   
   return planData[email];
@@ -83,10 +73,6 @@ export const getUserPlan = (email: string): UserPlan => {
  * Check if user trial has expired
  */
 export const hasTrialExpired = (email: string): boolean => {
-  if (!email) {
-    return false;
-  }
-  
   const userPlan = getUserPlan(email);
   
   // If not a trial plan, return false
@@ -108,10 +94,6 @@ export const hasTrialExpired = (email: string): boolean => {
  * Check if subscription has expired
  */
 export const hasSubscriptionExpired = (email: string): boolean => {
-  if (!email) {
-    return false;
-  }
-  
   const userPlan = getUserPlan(email);
   
   // If free trial, check trial expiration instead
@@ -133,10 +115,6 @@ export const hasSubscriptionExpired = (email: string): boolean => {
  * Get formatted trial days remaining
  */
 export const getTrialDaysRemaining = (email: string): number => {
-  if (!email) {
-    return 0;
-  }
-  
   const userPlan = getUserPlan(email);
   
   // If not a trial plan, return 0
@@ -295,21 +273,4 @@ export const updatePlanPayment = (
 export const getPlanPrice = (planType: PlanType): string => {
   const price = PLAN_DETAILS[planType].price;
   return price.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-};
-
-/**
- * Create a default plan object
- */
-const createDefaultPlan = (): UserPlan => {
-  // Create a default trial plan that expires in 5 days
-  const trialEnd = new Date();
-  trialEnd.setDate(trialEnd.getDate() + PLAN_DETAILS[PlanType.FREE_TRIAL].trialDays);
-  
-  return {
-    plan: PlanType.FREE_TRIAL,
-    name: PLAN_DETAILS[PlanType.FREE_TRIAL].name,
-    agentLimit: PLAN_DETAILS[PlanType.FREE_TRIAL].agentLimit,
-    trialEndsAt: trialEnd.toISOString(),
-    updatedAt: new Date().toISOString()
-  };
 };

@@ -7,7 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import { toast } from "sonner";
 import { AgentFormValues } from "@/components/agent/form/agentSchema";
 import { getCurrentUserEmail } from "@/services/user/userService";
-import { getUserPlan, hasTrialExpired } from "@/services/plan/userPlanService";
+import { getUserPlan, PlanType } from "@/services/plan/userPlanService";
 import { canCreateAgent } from "@/services/plan/planLimitService";
 
 const CreateAgent = () => {
@@ -42,8 +42,8 @@ const CreateAgent = () => {
       return;
     }
     
-    // If user cannot create more agents, redirect to plans page
-    if (!canCreate) {
+    // If user is on FREE_TRIAL or cannot create more agents, redirect to plans page
+    if (userPlan.plan === PlanType.FREE_TRIAL || !canCreate) {
       toast.warning("Limite de plano atingido", {
         description: "Seu plano atual não permite a criação de mais agentes. Por favor, faça upgrade para um plano maior."
       });

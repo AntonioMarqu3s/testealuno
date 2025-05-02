@@ -7,9 +7,7 @@ import {
   UserPlus,
   PlusCircle,
   Send,
-  Calendar,
-  School, // For school agent
-  HelpCircle // For helpdesk agent
+  Calendar // Added for secretary agent
 } from "lucide-react";
 import { useMemo } from "react";
 
@@ -50,18 +48,6 @@ export function AgentGrid() {
       description: "Gerencia agenda, emails e relatórios",
       type: "secretary" as AgentType,
       icon: <Calendar className="h-5 w-5" />,
-    },
-    {
-      title: "Helpdesk",
-      description: "Suporte técnico e solução de problemas",
-      type: "helpdesk" as AgentType,
-      icon: <HelpCircle className="h-5 w-5" />,
-    },
-    {
-      title: "Escolar",
-      description: "Informações sobre alunos, documentos e horários",
-      type: "school" as AgentType,
-      icon: <School className="h-5 w-5" />,
     },
     {
       title: "Personalizado",
