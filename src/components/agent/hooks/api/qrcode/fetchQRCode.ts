@@ -18,6 +18,7 @@ export const fetchQRCode = async (instanceName: string): Promise<string | null> 
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ instanceName }),
+        signal: AbortSignal.timeout(QR_CODE_REQUEST_TIMEOUT), // 15 second timeout
       });
       
       if (!response.ok) {
@@ -26,7 +27,13 @@ export const fetchQRCode = async (instanceName: string): Promise<string | null> 
       }
       
       const qrCode = await parseQRCodeResponse(response);
-      if (qrCode) return qrCode;
+      if (qrCode) {
+        console.log("Successfully retrieved QR code from primary endpoint");
+        return qrCode;
+      } else {
+        console.error("Primary endpoint returned invalid QR code");
+        throw new Error("Invalid QR code data from primary endpoint");
+      }
       
     } catch (primaryError) {
       console.error("Primary endpoint error:", primaryError);
@@ -55,15 +62,23 @@ export const fetchQRCode = async (instanceName: string): Promise<string | null> 
         }
         
         const qrCode = await parseQRCodeResponse(fallbackResponse);
-        if (qrCode) return qrCode;
+        if (qrCode) {
+          console.log("Successfully retrieved QR code from fallback endpoint");
+          return qrCode;
+        } else {
+          console.error("Fallback endpoint returned invalid QR code");
+          throw new Error("Invalid QR code data from fallback endpoint");
+        }
       } catch (fallbackError) {
         console.error("Fallback endpoint error:", fallbackError);
+        throw fallbackError;
       }
     }
   } catch (error) {
     console.error("Error fetching QR code:", error);
   }
   
+  console.log("All QR code fetching attempts failed, using placeholder");
   // For development purposes or as last resort, return a placeholder QR code
   return getPlaceholderQRCode();
 };
