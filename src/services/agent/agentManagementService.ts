@@ -1,101 +1,119 @@
 
-import { getStorageItem, setStorageItem, ALL_AGENTS_KEY } from '../storage/localStorageService';
+import { getStorageItem, setStorageItem } from '../storage/localStorageService';
 import { Agent } from '@/components/agent/AgentTypes';
-import { toast } from "sonner";
 import { deleteWhatsAppInstance } from './webhookService';
+import { deleteAgentFromSupabase } from './supabaseAgentService';
+import { getUserAgents, saveAgent } from './agentStorageOperations';
 
 /**
- * Delete an agent for the user
+ * Delete a user agent
+ * @param userEmail User email
+ * @param agentId Agent ID to delete
+ * @returns True if deletion was successful
  */
-export const deleteUserAgent = async (email: string, agentId: string): Promise<boolean> => {
-  const allAgentsData = getStorageItem<Record<string, Agent[]>>(ALL_AGENTS_KEY, {});
-  
-  if (allAgentsData[email]) {
-    // Find the agent to get the instance name before deletion
-    const agent = allAgentsData[email].find(a => a.id === agentId);
+export const deleteUserAgent = async (userEmail: string, agentId: string): Promise<boolean> => {
+  try {
+    console.log(`Deleting agent ${agentId} for user ${userEmail}`);
     
-    if (agent && agent.instanceId) {
-      // Call webhook to delete the instance from WhatsApp server
+    // Get the agent to be deleted
+    const allAgents = getUserAgents(userEmail);
+    const agentToDelete = allAgents.find(agent => agent.id === agentId);
+    
+    if (!agentToDelete) {
+      console.error(`Agent ${agentId} not found for user ${userEmail}`);
+      return false;
+    }
+    
+    // Delete WhatsApp instance using webhook
+    if (agentToDelete.instanceId) {
       try {
-        console.log("Attempting to delete WhatsApp instance:", agent.instanceId);
-        const webhookSuccess = await deleteWhatsAppInstance(agent.instanceId);
-        
-        if (webhookSuccess) {
-          console.log("Successfully deleted WhatsApp instance:", agent.instanceId);
-          toast.success("Instância do WhatsApp removida com sucesso");
-        } else {
-          console.warn("Could not delete WhatsApp instance, but will proceed with local deletion");
-          toast.warning("A instância do WhatsApp pode não ter sido completamente removida");
-        }
-      } catch (error) {
-        console.error("Error calling delete webhook:", error);
-        toast.warning("A instância do WhatsApp pode não ter sido completamente removida");
+        console.log(`Deleting WhatsApp instance: ${agentToDelete.instanceId}`);
+        await deleteWhatsAppInstance(agentToDelete.instanceId);
+      } catch (e) {
+        console.error(`Error deleting WhatsApp instance: ${e}`);
         // Continue with deletion even if webhook fails
       }
     }
     
-    // Filter out deleted agent
-    allAgentsData[email] = allAgentsData[email].filter(agent => agent.id !== agentId);
-    
-    // Save back to storage
-    setStorageItem(ALL_AGENTS_KEY, allAgentsData);
-    
-    // Decrement the agent count in the user's plan
-    const decrementAgentCount = require('../plan/planLimitService').decrementAgentCount;
-    decrementAgentCount(email);
-    
-    return true;
-  }
-  
-  return false;
-};
-
-/**
- * Update an agent for the user
- */
-export const updateUserAgent = (email: string, agentId: string, updates: Partial<Agent>): void => {
-  const allAgentsData = getStorageItem<Record<string, Agent[]>>(ALL_AGENTS_KEY, {});
-  
-  if (allAgentsData[email]) {
-    // Find and update the agent
-    allAgentsData[email] = allAgentsData[email].map(agent => {
-      if (agent.id === agentId) {
-        return { ...agent, ...updates };
-      }
-      return agent;
-    });
-    
-    // Save back to storage
-    setStorageItem(ALL_AGENTS_KEY, allAgentsData);
-  }
-};
-
-/**
- * Transfer user agent data from old email to new email
- */
-export const transferUserAgentData = (oldEmail: string, newEmail: string): void => {
-  const allAgentsData = getStorageItem<Record<string, Agent[]>>(ALL_AGENTS_KEY, {});
-  
-  // If the old email has agent data, copy it to the new email
-  if (allAgentsData[oldEmail] && allAgentsData[oldEmail].length > 0) {
-    // Copy the agents to the new email
-    allAgentsData[newEmail] = [...(allAgentsData[oldEmail] || [])];
-    
-    // Update client identifiers for each agent
-    if (allAgentsData[newEmail]) {
-      allAgentsData[newEmail] = allAgentsData[newEmail].map(agent => {
-        const clientIdentifier = `${newEmail}-${agent.name}`.replace(/\s+/g, '-').toLowerCase();
-        return { ...agent, clientIdentifier };
-      });
+    // Delete agent from Supabase (if applicable)
+    try {
+      await deleteAgentFromSupabase(agentId);
+    } catch (e) {
+      console.error(`Error deleting agent from Supabase: ${e}`);
+      // Continue with deletion even if Supabase deletion fails
     }
     
-    // Optionally, delete the old email data
-    delete allAgentsData[oldEmail];
+    // Delete agent from local storage
+    const updatedAgents = allAgents.filter(agent => agent.id !== agentId);
+    const agentsData = getStorageItem<Record<string, Agent[]>>('user_agents', {});
+    agentsData[userEmail] = updatedAgents;
+    setStorageItem('user_agents', agentsData);
     
-    // Save the updated agents
-    setStorageItem(ALL_AGENTS_KEY, allAgentsData);
+    return true;
+  } catch (error) {
+    console.error('Error deleting user agent:', error);
+    return false;
+  }
+};
+
+/**
+ * Update a user agent with partial data
+ * @param userEmail User email
+ * @param agentId Agent ID to update
+ * @param partialData Partial agent data to update
+ * @returns True if update was successful
+ */
+export const updateUserAgent = (
+  userEmail: string, 
+  agentId: string, 
+  partialData: Partial<Agent>
+): boolean => {
+  try {
+    const agentsData = getStorageItem<Record<string, Agent[]>>('user_agents', {});
+    const userAgents = agentsData[userEmail] || [];
+    
+    const agentIndex = userAgents.findIndex(agent => agent.id === agentId);
+    if (agentIndex === -1) {
+      console.error(`Agent ${agentId} not found for user ${userEmail}`);
+      return false;
+    }
+    
+    // Update agent with partial data
+    userAgents[agentIndex] = {
+      ...userAgents[agentIndex],
+      ...partialData
+    };
+    
+    agentsData[userEmail] = userAgents;
+    setStorageItem('user_agents', agentsData);
+    
+    return true;
+  } catch (error) {
+    console.error('Error updating user agent:', error);
+    return false;
+  }
+};
+
+/**
+ * Transfer user agent data from an old email to a new email
+ * @param oldEmail Old user email
+ * @param newEmail New user email
+ */
+export const transferUserAgentData = (oldEmail: string, newEmail: string): void => {
+  const agentsData = getStorageItem<Record<string, Agent[]>>('user_agents', {});
+  
+  // If the old email has agent data, copy it to the new email
+  if (agentsData[oldEmail]) {
+    console.log(`Transferring agent data from ${oldEmail} to ${newEmail}`);
+    agentsData[newEmail] = [...agentsData[oldEmail]];
+    
+    // Optionally, remove the old email entry
+    delete agentsData[oldEmail];
+    
+    // Save the updated agent data
+    setStorageItem('user_agents', agentsData);
   } else {
-    // If no old agents exist, initialize an empty array for the new email
-    initializeUserAgents(newEmail);
+    // If no data for old email, initialize for new email
+    saveAgent(newEmail, []);
   }
 };
