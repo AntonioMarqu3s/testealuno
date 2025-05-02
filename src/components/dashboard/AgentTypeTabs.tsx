@@ -68,7 +68,7 @@ export function AgentTypeTabs({
               ))}
             </div>
             
-            <div className="flex flex-col sm:flex-row gap-4 mt-6">
+            <div className="flex justify-center mt-6">
               <Button 
                 onClick={() => navigate('/dashboard?tab=discover')} 
                 disabled={isChecking}
