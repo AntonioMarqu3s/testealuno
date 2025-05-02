@@ -81,8 +81,23 @@ export const parseQRCodeResponse = async (response: Response): Promise<string | 
   
   // Handle JSON responses
   if (contentType && contentType.includes('application/json')) {
-    const data = await response.json();
-    return extractQRCodeFromJSON(data);
+    try {
+      const data = await response.json();
+      return extractQRCodeFromJSON(data);
+    } catch (jsonError) {
+      console.error("Failed to parse JSON response:", jsonError);
+      
+      // Try to use raw text as fallback
+      try {
+        // Need to get the text again since we already tried to parse as JSON
+        const rawResponse = await response.clone().text();
+        console.log("Attempting to use raw response as text after JSON parse failure");
+        return extractQRCodeFromText(rawResponse);
+      } catch (textError) {
+        console.error("Also failed to get raw text after JSON parse failure:", textError);
+        return null;
+      }
+    }
   }
   
   // Try to parse as text anyway as last resort

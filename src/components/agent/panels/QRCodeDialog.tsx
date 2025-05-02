@@ -1,3 +1,4 @@
+
 import React, { useEffect } from "react";
 import {
   Dialog,
@@ -8,7 +9,7 @@ import {
   DialogClose,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { AlertCircle, X } from "lucide-react";
+import { AlertCircle, RefreshCw, X } from "lucide-react";
 
 interface QRCodeDialogProps {
   open: boolean;
@@ -130,6 +131,7 @@ export const QRCodeDialog: React.FC<QRCodeDialogProps> = ({
             }}
             disabled={isGeneratingQRCode}
           >
+            <RefreshCw className="mr-2 h-4 w-4" /> 
             Atualizar QR
           </Button>
           <DialogClose asChild>

@@ -45,8 +45,12 @@ export const fetchQRCode = async (instanceName: string): Promise<string | null> 
         
         if (!fallbackResponse.ok) {
           console.error("Fallback response not OK:", fallbackResponse.status);
-          const errorText = await fallbackResponse.text();
-          console.error("Fallback error text:", errorText);
+          try {
+            const errorText = await fallbackResponse.text();
+            console.error("Fallback error text:", errorText);
+          } catch (e) {
+            console.error("Could not read fallback error text");
+          }
           throw new Error(`Failed to fetch QR code from fallback endpoint: ${fallbackResponse.status}`);
         }
         
