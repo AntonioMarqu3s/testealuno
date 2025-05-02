@@ -12,7 +12,7 @@ export const canCreateAgent = (email: string): boolean => {
   const userAgents = getUserAgents(email);
   
   // If user is on FREE_TRIAL plan or trial has expired, they cannot create agents
-  if (userPlan.plan === PlanType.FREE_TRIAL || hasTrialExpired(email)) {
+  if (userPlan.plan === PlanType.FREE_TRIAL && hasTrialExpired(email)) {
     return false;
   }
   

@@ -15,6 +15,7 @@ import { QRCodeDialog } from "./panels/QRCodeDialog";
 import { useQRCodeGeneration } from "./hooks/useQRCodeGeneration";
 import { useAgentConnection } from "./hooks/useAgentConnection";
 import { deleteUserAgent } from "@/services/agent/agentStorageService";
+import { deleteAgentFromSupabase } from "@/services/agent/supabaseAgentService";
 
 interface AgentPanelProps {
   agent: Agent;
@@ -96,6 +97,9 @@ export const AgentPanel: React.FC<AgentPanelProps> = ({
     setIsDeleting(true);
     try {
       console.log("Deleting agent:", agent.id);
+      
+      // Delete from Supabase first
+      await deleteAgentFromSupabase(agent.id);
       
       // Call the updated deleteUserAgent function that includes the webhook
       const result = await deleteUserAgent(userEmail, agent.id);

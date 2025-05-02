@@ -114,7 +114,7 @@ export const deleteUserAgent = async (email: string, agentId: string): Promise<{
     setStorageItem(ALL_AGENTS_KEY, allAgentsData);
     
     // Decrement the agent count in the user's plan
-    const decrementAgentCount = require('../plan/userPlanService').decrementAgentCount;
+    const { decrementAgentCount } = require('../plan/planLimitService');
     decrementAgentCount(email);
     
     return { success: true };
