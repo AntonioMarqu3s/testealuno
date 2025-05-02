@@ -11,14 +11,17 @@ import {
 } from "@/services/plan/userPlanService";
 import { getUserAgents } from "@/services/agent/agentStorageService";
 import { WelcomeHeader } from "@/components/dashboard/WelcomeHeader";
-import { ResourcesCard } from "@/components/dashboard/ResourcesCard";
+import { AgentTypeTabs } from "@/components/dashboard/AgentTypeTabs";
 import { useToast } from "@/hooks/use-toast";
 import { useCallback, useState } from "react";
 import { canCreateAgent } from "@/services/plan/planLimitService";
 
 const Dashboard = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
+  const searchParams = new URLSearchParams(location.search);
+  const currentTab = searchParams.get('tab') || 'discover'; // Default to discover tab
   const [isChecking, setIsChecking] = useState(false);
   
   // Get user information
@@ -65,7 +68,7 @@ const Dashboard = () => {
         // Add a small delay before redirecting to prevent loop issues
         setTimeout(() => navigate('/plans'), 100);
       } else {
-        // Navigate to agent type selection
+        // Navigate to agent type selection - redirect to discover tab
         navigate('/dashboard?tab=discover');
       }
     } catch (error) {
@@ -80,8 +83,8 @@ const Dashboard = () => {
     }
   }, [navigate, toast, userEmail, isTrialPlan, isTrialExpired, isSubscriptionExpired]);
 
-  const handleUpgrade = useCallback(() => {
-    navigate('/plans');
+  const handleNavigateToMyAgents = useCallback(() => {
+    navigate('/agents');
   }, [navigate]);
 
   return (
@@ -89,16 +92,14 @@ const Dashboard = () => {
       <div className="space-y-8">
         <WelcomeHeader onCreateAgent={handleCreateAgent} />
         
-        <div className="max-w-md mx-auto">
-          <ResourcesCard 
-            userAgentsCount={userAgents.length}
-            agentLimit={userPlan.agentLimit}
-            planName={userPlan.name}
-            isTrialPlan={isTrialPlan}
-            isTrialExpired={isTrialExpired}
-            isSubscriptionExpired={isSubscriptionExpired}
-            trialDaysRemaining={trialDaysRemaining}
-            onUpgrade={handleUpgrade}
+        <div className="w-full">
+          <AgentTypeTabs 
+            currentTab={currentTab}
+            onCreateAgent={(type) => {
+              navigate(`/create-agent?type=${type}`);
+            }}
+            onNavigateToAgents={handleNavigateToMyAgents}
+            isChecking={isChecking}
           />
         </div>
       </div>
