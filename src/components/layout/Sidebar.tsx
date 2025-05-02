@@ -108,34 +108,46 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
       <SidebarFooter className="p-4 border-t">
-        <div className="flex items-center justify-between">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <div className="flex items-center gap-3 cursor-pointer hover:bg-accent hover:text-accent-foreground rounded-md p-2 transition-colors">
-                <Avatar>
-                  <AvatarImage src="" />
-                  <AvatarFallback>{userEmail ? userEmail[0].toUpperCase() : "U"}</AvatarFallback>
-                </Avatar>
-                <div className="flex flex-col">
-                  <span className="text-sm font-medium">Minha Conta</span>
-                  <span className="text-xs text-muted-foreground truncate max-w-[120px]">{userEmail}</span>
+        <div className="flex flex-col space-y-3">
+          <div className="flex items-center justify-between">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <div className="flex items-center gap-3 cursor-pointer hover:bg-accent hover:text-accent-foreground rounded-md p-2 transition-colors">
+                  <Avatar>
+                    <AvatarImage src="" />
+                    <AvatarFallback>{userEmail ? userEmail[0].toUpperCase() : "U"}</AvatarFallback>
+                  </Avatar>
+                  <div className="flex flex-col">
+                    <span className="text-sm font-medium">Minha Conta</span>
+                    <span className="text-xs text-muted-foreground truncate max-w-[120px]">{userEmail}</span>
+                  </div>
                 </div>
-              </div>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuItem asChild>
-                <Link to="/settings" className="flex items-center cursor-pointer">
-                  <Settings className="mr-2 h-4 w-4" />
-                  <span>Configurações</span>
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={handleLogout} className="text-destructive focus:text-destructive cursor-pointer">
-                <LogOut className="mr-2 h-4 w-4" />
-                <span>Sair</span>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuItem asChild>
+                  <Link to="/settings" className="flex items-center cursor-pointer">
+                    <Settings className="mr-2 h-4 w-4" />
+                    <span>Configurações</span>
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleLogout} className="text-destructive focus:text-destructive cursor-pointer">
+                  <LogOut className="mr-2 h-4 w-4" />
+                  <span>Sair</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+          
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={handleLogout}
+            className="w-full flex items-center justify-center gap-2 text-destructive hover:text-destructive hover:bg-destructive/10"
+          >
+            <LogOut className="h-4 w-4" />
+            <span>Sair</span>
+          </Button>
         </div>
       </SidebarFooter>
     </Sidebar>
