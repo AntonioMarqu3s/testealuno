@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import MainLayout from "@/components/layout/MainLayout";
@@ -23,6 +24,13 @@ const Plans = () => {
     navigate(`/plan-checkout?plan=${planType}`);
   };
 
+  // Check if user has a valid promo code
+  const hasPromoCode = () => {
+    // This could be expanded in the future to check from user metadata/profile
+    // For now, just assumes the promo is applied through registration
+    return false;
+  };
+
   return (
     <MainLayout title="Planos de Assinatura">
       <div className="space-y-8">
@@ -34,13 +42,13 @@ const Plans = () => {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {/* Use the PlanCard component for each plan */}
+          {/* Use the PlanCard component for each plan - only show trial days if promo applied */}
           <PlanCard 
             planType={PlanType.BASIC} 
             current={userPlan.plan === PlanType.BASIC}
             selected={selectedPlan === PlanType.BASIC}
             onSelect={() => handleSelectPlan(PlanType.BASIC)}
-            showTrialDays={true}
+            showTrialDays={hasPromoCode()}
           />
           
           <PlanCard 
@@ -81,7 +89,7 @@ const Plans = () => {
             <div className="space-y-2">
               <h3 className="font-semibold">Como funciona o período de teste?</h3>
               <p className="text-sm text-muted-foreground">
-                Novos usuários recebem automaticamente um período de teste gratuito de 3 dias 
+                Novos usuários que se registram com código promocional recebem um período de teste gratuito de 5 dias 
                 com acesso às funcionalidades do plano básico.
               </p>
             </div>
