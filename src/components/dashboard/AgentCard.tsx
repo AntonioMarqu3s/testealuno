@@ -12,8 +12,8 @@ interface AgentCardProps {
   type: AgentType;
   icon: React.ReactNode;
   path?: string;
-  onSelect?: () => void;  // Added onSelect property
-  isLoading?: boolean;    // Added isLoading property
+  onSelect?: () => void;
+  isLoading?: boolean;
 }
 
 export function AgentCard({ 

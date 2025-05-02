@@ -1,5 +1,5 @@
 
-import { AgentCard } from "./AgentCard";
+import { AgentCard, AgentType } from "./AgentCard";
 
 interface AgentGridProps {
   onCreateAgent: () => void;
@@ -9,19 +9,19 @@ interface AgentGridProps {
 export function AgentGrid({ onCreateAgent, isChecking = false }: AgentGridProps) {
   const agentTypes = [
     {
-      type: "whatsapp",
+      type: "sales" as AgentType,
       title: "Agente WhatsApp",
       description: "Um agente para receber e responder mensagens no WhatsApp automaticamente.",
       icon: "💬"
     },
     {
-      type: "instagram",
+      type: "sdr" as AgentType, 
       title: "Agente Instagram",
       description: "Um agente para gerenciar interações do Instagram.",
       icon: "📸"
     },
     {
-      type: "facebook",
+      type: "support" as AgentType,
       title: "Agente Facebook",
       description: "Um agente para automação de mensagens no Facebook.",
       icon: "👍"
@@ -36,6 +36,7 @@ export function AgentGrid({ onCreateAgent, isChecking = false }: AgentGridProps)
           title={agent.title}
           description={agent.description}
           icon={agent.icon}
+          type={agent.type}
           onSelect={() => onCreateAgent()}
           isLoading={isChecking}
         />
