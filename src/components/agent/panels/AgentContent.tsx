@@ -2,7 +2,7 @@
 import React from "react";
 import { CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Mail, Timer } from "lucide-react";
+import { Mail, Clock } from "lucide-react";
 import { Agent } from "../AgentTypes";
 import { getTrialDaysRemaining, hasTrialExpired } from "@/services/plan/userPlanService";
 
@@ -61,7 +61,7 @@ export const AgentContent: React.FC<AgentContentProps> = ({
       {isInTrialPeriod && (
         <div className="mt-3 flex items-center gap-2">
           <Badge variant="outline" className="flex items-center gap-1 bg-amber-50 text-amber-700 border-amber-200">
-            <Timer className="h-3 w-3" />
+            <Clock className="h-3 w-3" />
             <span>Período de teste: {trialDaysRemaining} {trialDaysRemaining === 1 ? 'dia' : 'dias'}</span>
           </Badge>
         </div>

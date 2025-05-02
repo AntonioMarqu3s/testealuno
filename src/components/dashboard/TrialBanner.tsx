@@ -1,6 +1,6 @@
 
 import { Button } from "@/components/ui/button";
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, Clock } from "lucide-react";
 import { Link } from "react-router-dom";
 
 interface TrialBannerProps {
@@ -57,7 +57,8 @@ export const TrialBanner = ({
   return (
     <div className="w-full bg-amber-50 dark:bg-amber-950/30 p-4 rounded-lg flex flex-col sm:flex-row items-center justify-between gap-4">
       <div>
-        <p className="text-sm font-medium text-amber-800 dark:text-amber-300">
+        <p className="text-sm font-medium text-amber-800 dark:text-amber-300 flex items-center">
+          <Clock className="mr-2 h-4 w-4" />
           {daysRemaining === 1
             ? "Seu período de teste gratuito expira hoje!"
             : `${daysRemaining} dias restantes no seu teste gratuito`}

@@ -81,7 +81,7 @@ export function RegisterForm({
     try {
       console.log(`Attempting to register with email: ${values.email}`);
       
-      // Users without valid promo code always get FREE_TRIAL plan without trial days
+      // Always apply FREE_TRIAL plan
       const planToApply = PlanType.FREE_TRIAL;
       
       const { data, error } = await supabase.auth.signUp({
@@ -118,7 +118,7 @@ export function RegisterForm({
       // Success message - different messages based on promo code
       toast.success("Conta criada com sucesso!", { 
         description: promoApplied 
-          ? "Seu período de teste gratuito de 5 dias foi iniciado."
+          ? "Seu período de teste gratuito de 5 dias foi iniciado." 
           : "Sua conta foi criada. Por favor, verifique seu email para confirmar seu cadastro." 
       });
       
