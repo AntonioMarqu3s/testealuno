@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
 
-export type AgentType = "sales" | "sdr" | "closer" | "support" | "custom";
+export type AgentType = "sales" | "sdr" | "closer" | "support" | "broadcast" | "custom";
 
 interface AgentCardProps {
   title: string;
@@ -22,6 +22,7 @@ export function AgentCard({ title, description, type, icon, path = "/create-agen
     sdr: "from-sky-500 to-sky-700",
     closer: "from-amber-500 to-amber-700",
     support: "from-emerald-500 to-emerald-700",
+    broadcast: "from-rose-500 to-rose-700",
     custom: "from-violet-500 to-violet-700"
   };
 

@@ -5,7 +5,8 @@ import {
   UserCheck, 
   HeadsetIcon, 
   UserPlus,
-  PlusCircle
+  PlusCircle,
+  Send
 } from "lucide-react";
 
 export function AgentGrid() {
@@ -33,6 +34,12 @@ export function AgentGrid() {
       description: "Suporte ao cliente e atendimento",
       type: "support" as AgentType,
       icon: <HeadsetIcon className="h-5 w-5" />,
+    },
+    {
+      title: "Disparo",
+      description: "Especialista em disparo de mensagens em massa",
+      type: "broadcast" as AgentType,
+      icon: <Send className="h-5 w-5" />,
     },
     {
       title: "Personalizado",
