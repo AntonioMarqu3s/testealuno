@@ -116,16 +116,19 @@ export function RegisterForm({
       updateCurrentUserEmail(values.email);
       
       // Update user plan based on selection or promo code
-      updateUserPlan(values.email, planToApply);
+      updateUserPlan(values.email, planToApply, undefined, undefined, undefined, promoApplied);
       
       // Success message - different messages based on promo code
       toast.success("Conta criada com sucesso!", { 
         description: promoApplied 
           ? "Seu período de teste gratuito de 5 dias foi iniciado."
-          : "Sua conta foi criada. Por favor, faça upgrade para um plano pago para começar a usar."
+          : "Sua conta foi criada. Por favor, verifique seu email para confirmar seu cadastro." 
       });
       
-      onSuccessfulAuth();
+      // Short delay to show the toast before navigation
+      setTimeout(() => {
+        onSuccessfulAuth();
+      }, 1500);
     } catch (error: any) {
       if (error.message?.includes('User already registered')) {
         toast.error("Este email já está registrado");

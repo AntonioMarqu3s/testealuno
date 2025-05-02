@@ -26,15 +26,15 @@ const AuthCallback = () => {
           if (data.session) {
             toast.success("Email confirmado com sucesso!");
             
-            // Check user plan status
-            const userEmail = getCurrentUserEmail();
-            const userPlan = getUserPlan(userEmail);
+            // Remove hash from URL to prevent issues when refreshing
+            if (window.history && window.history.replaceState) {
+              window.history.replaceState({}, document.title, window.location.pathname);
+            }
             
-            // Instead of immediately redirecting, use setTimeout to prevent potential loop
+            // Use a simple timeout to navigate
             setTimeout(() => {
-              // Always navigate to dashboard after authentication
-              navigate('/dashboard');
-            }, 500);
+              navigate('/dashboard', { replace: true });
+            }, 1500);
           } else {
             throw new Error("Falha ao confirmar email.");
           }
@@ -44,11 +44,11 @@ const AuthCallback = () => {
           toast.error("Erro de autenticação", {
             description: error.message || "Falha na verificação do email"
           });
-          setTimeout(() => navigate('/auth'), 3000);
+          setTimeout(() => navigate('/auth', { replace: true }), 3000);
         }
       } else {
         // No hash parameters, redirect to auth
-        navigate('/auth');
+        navigate('/auth', { replace: true });
       }
     };
 

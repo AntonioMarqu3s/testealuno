@@ -4,7 +4,6 @@ import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
 import { getCurrentUser, initializeUserDataAfterLogin } from '@/services/auth/supabaseAuth';
 import { toast } from 'sonner';
-import { useNavigate } from 'react-router-dom';
 import { PlanType, getUserPlan } from '@/services/plan/userPlanService';
 
 interface AuthContextType {
@@ -25,6 +24,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [redirectInProgress, setRedirectInProgress] = useState<boolean>(false);
 
   useEffect(() => {
     // Set up auth state listener first
@@ -37,31 +37,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(currentSession?.user ?? null);
         
         // Handle different auth events
-        if (event === 'SIGNED_IN' && currentSession?.user) {
+        if (event === 'SIGNED_IN' && currentSession?.user && !redirectInProgress) {
           console.log('User signed in:', currentSession.user.email);
           toast.success(`Bem-vindo, ${currentSession.user.email}`);
           
+          setRedirectInProgress(true);
+          
           // Initialize user data after login
+          // Use setTimeout to avoid blocking the UI thread
           setTimeout(() => {
-            initializeUserDataAfterLogin();
-            
-            // Check user plan status and redirect if needed
-            // We do this in a setTimeout to avoid issues with the auth state
-            // and to ensure user data is initialized first
-            setTimeout(() => {
-              const userEmail = currentSession.user?.email;
-              if (userEmail) {
-                const userPlan = getUserPlan(userEmail);
-                
-                // If user doesn't have a paid plan, redirect to checkout
-                if (userPlan.plan === PlanType.FREE_TRIAL) {
-                  // We can't use useNavigate here because this is outside of a component
-                  // So we use window.location instead
-                  window.location.href = '/plan-checkout';
-                }
-              }
-            }, 500);
-          }, 0);
+            initializeUserDataAfterLogin().then(() => {
+              // Additional logic can go here
+              setRedirectInProgress(false);
+            });
+          }, 100);
         } else if (event === 'SIGNED_OUT') {
           console.log('User signed out');
           toast.info('Você saiu do sistema');
