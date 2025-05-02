@@ -13,10 +13,12 @@ import { WelcomeHeader } from "@/components/dashboard/WelcomeHeader";
 import { TrialBanner } from "@/components/dashboard/TrialBanner";
 import { AgentTypeTabs } from "@/components/dashboard/AgentTypeTabs";
 import { DashboardCards } from "@/components/dashboard/DashboardCards";
+import { useToast } from "@/hooks/use-toast";
 
 const Dashboard = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { toast } = useToast();
   const searchParams = new URLSearchParams(location.search);
   const currentTab = searchParams.get('tab') || 'agents';
   
@@ -33,6 +35,11 @@ const Dashboard = () => {
   const handleCreateAgent = () => {
     // If free trial plan, redirect to plans page
     if (userPlan.plan === PlanType.FREE_TRIAL) {
+      toast({
+        title: "Plano gratuito detectado",
+        description: "Seu plano atual não permite a criação de agentes. Por favor, faça upgrade para um plano pago.",
+        variant: "destructive"
+      });
       navigate('/plans');
     } else {
       // Navigate to agent type selection

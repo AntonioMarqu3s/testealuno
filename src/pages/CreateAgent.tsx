@@ -5,6 +5,8 @@ import MainLayout from "@/components/layout/MainLayout";
 import CreateAgentForm from "@/components/agent/CreateAgentForm";
 import { useToast } from "@/hooks/use-toast";
 import { AgentFormValues } from "@/components/agent/form/agentSchema";
+import { getCurrentUserEmail } from "@/services/user/userService";
+import { getUserPlan, PlanType } from "@/services/plan/userPlanService";
 
 const CreateAgent = () => {
   const location = useLocation();
@@ -17,6 +19,21 @@ const CreateAgent = () => {
   const [isEdit, setIsEdit] = useState(false);
 
   useEffect(() => {
+    // Check user plan status first
+    const userEmail = getCurrentUserEmail();
+    const userPlan = getUserPlan(userEmail);
+    
+    // If user is on FREE_TRIAL, redirect to plans page
+    if (userPlan.plan === PlanType.FREE_TRIAL) {
+      toast({
+        title: "Plano gratuito detectado",
+        description: "Seu plano atual não permite a criação de agentes. Por favor, faça upgrade para um plano pago para começar a criar agentes.",
+        variant: "destructive"
+      });
+      navigate('/plans');
+      return;
+    }
+    
     // Check if we're in edit mode
     if (agentId) {
       const storedAgent = sessionStorage.getItem('editingAgent');
@@ -33,18 +50,18 @@ const CreateAgent = () => {
       }
     }
     
-    // Check if type is valid, if not redirect (moved to useEffect)
-    if (!type) {
+    // Check if type is valid, if not redirect
+    if (!type && !isEdit) {
       toast({
         title: "Selecione um tipo de agente",
         description: "Por favor, escolha um tipo de agente antes de prosseguir com a criação.",
       });
       navigate('/dashboard?tab=agents');
     }
-  }, [agentId, type, toast, navigate]);
+  }, [agentId, type, toast, navigate, isEdit]);
 
   // Return early if no type, but only after the useEffect has run
-  if (!type) {
+  if (!type && !isEdit) {
     return null;
   }
 

@@ -31,7 +31,7 @@ export const useAgentSubmission = (agentType: string) => {
       if (!canCreateAgent(userEmail)) {
         toastHook({
           title: "Limite de plano atingido",
-          description: "Seu plano atual permite apenas 1 agente. Faça upgrade para o plano Premium para criar mais agentes.",
+          description: "Seu plano atual não permite a criação de agentes. Faça upgrade para um plano pago para criar agentes.",
           variant: "destructive"
         });
         setIsSubmitting(false);
