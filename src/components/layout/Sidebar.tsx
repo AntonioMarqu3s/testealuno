@@ -1,4 +1,3 @@
-
 import {
   Sidebar,
   SidebarContent,
@@ -15,7 +14,6 @@ import {
 import { cn } from "@/lib/utils";
 import { 
   Grid2X2, 
-  PlusCircle, 
   CreditCard, 
   LayoutDashboard, 
   LogOut,
@@ -54,11 +52,6 @@ export function AppSidebar() {
       icon: Grid2X2,
     },
     {
-      title: "Criar Agente",
-      path: "/dashboard?tab=discover",
-      icon: PlusCircle,
-    },
-    {
       title: "Planos",
       path: "/plans",
       icon: CreditCard,
@@ -92,8 +85,7 @@ export function AppSidebar() {
                     className={cn(
                       "gap-2",
                       (currentPath === item.path || 
-                       (currentPath === "/agents" && item.path === "/agents") ||
-                       (item.path.includes("tab=discover") && location.search.includes("tab=discover"))) && 
+                       (currentPath === "/agents" && item.path === "/agents")) && 
                       "bg-sidebar-accent text-accent-foreground"
                     )}
                   >
