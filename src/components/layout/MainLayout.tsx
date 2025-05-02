@@ -10,7 +10,7 @@ interface MainLayoutProps {
   className?: string;
 }
 
-const MainLayout = ({ children, title, className }: MainLayoutProps) => {
+export default function MainLayout({ children, title, className }: MainLayoutProps) {
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full">
@@ -24,6 +24,4 @@ const MainLayout = ({ children, title, className }: MainLayoutProps) => {
       </div>
     </SidebarProvider>
   );
-};
-
-export default MainLayout;
+}

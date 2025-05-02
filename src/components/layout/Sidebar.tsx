@@ -19,7 +19,6 @@ import {
   CreditCard, 
   LayoutDashboard, 
   LogOut,
-  Settings 
 } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -55,11 +54,6 @@ export function AppSidebar() {
       title: "Planos",
       path: "/plans",
       icon: CreditCard,
-    },
-    {
-      title: "Configurações",
-      path: "/settings",
-      icon: Settings,
     },
   ];
   
