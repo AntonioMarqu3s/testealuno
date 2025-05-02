@@ -14,6 +14,7 @@ import { DeleteAgentDialog } from "./panels/DeleteAgentDialog";
 import { QRCodeDialog } from "./panels/QRCodeDialog";
 import { useQRCodeGeneration } from "./hooks/useQRCodeGeneration";
 import { useAgentConnection } from "./hooks/useAgentConnection";
+import { deleteUserAgent } from "@/services/agent/agentStorageService";
 
 interface AgentPanelProps {
   agent: Agent;
@@ -32,6 +33,7 @@ export const AgentPanel: React.FC<AgentPanelProps> = ({
   const userEmail = getCurrentUserEmail();
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [isConnected, setIsConnected] = useState(agent.isConnected || agent.connectInstancia || false);
+  const [isDeleting, setIsDeleting] = useState(false);
   
   // Custom hooks for QR code and connection
   const { 
@@ -72,7 +74,7 @@ export const AgentPanel: React.FC<AgentPanelProps> = ({
       
       verifyStatus();
     }
-  }, [agent.instanceId, agent.id, checkConnectionStatus, isConnected, agent.id, onToggleConnection]);
+  }, [agent.instanceId, agent.id, checkConnectionStatus, isConnected, onToggleConnection]);
 
   // Handle auto show QR code when directed from agent creation
   useEffect(() => {
@@ -88,10 +90,35 @@ export const AgentPanel: React.FC<AgentPanelProps> = ({
     navigate(`/edit-agent/${agent.id}?type=${agent.type}`);
   };
 
-  const handleDelete = () => {
-    if (onDelete) {
-      onDelete(agent.id);
-      toast.success("Agente removido com sucesso!");
+  const handleDelete = async () => {
+    if (!userEmail) return;
+    
+    setIsDeleting(true);
+    try {
+      console.log("Deleting agent:", agent.id);
+      
+      // Call the updated deleteUserAgent function that includes the webhook
+      const result = await deleteUserAgent(userEmail, agent.id);
+      
+      if (result.success) {
+        toast.success("Agente removido com sucesso!");
+        
+        // Also call the parent onDelete if provided
+        if (onDelete) {
+          onDelete(agent.id);
+        }
+      } else {
+        toast.error("Erro ao remover agente", { 
+          description: result.error || "Ocorreu um erro ao excluir o agente."
+        });
+      }
+    } catch (error) {
+      console.error("Error deleting agent:", error);
+      toast.error("Erro ao remover agente", {
+        description: "Não foi possível excluir o agente. Tente novamente."
+      });
+    } finally {
+      setIsDeleting(false);
       setShowDeleteDialog(false);
     }
   };

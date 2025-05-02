@@ -76,15 +76,26 @@ const Agents = () => {
     navigate('/plan-checkout');
   };
 
-  const handleDeleteAgent = (agentId: string) => {
+  const handleDeleteAgent = async (agentId: string) => {
     try {
-      deleteUserAgent(userEmail, agentId);
-      // Update local state after deletion
-      setUserAgents(prevAgents => prevAgents.filter(agent => agent.id !== agentId));
-      toastHook({
-        title: "Agente excluído",
-        description: "O agente foi excluído com sucesso.",
-      });
+      if (!userEmail) return;
+      
+      const result = await deleteUserAgent(userEmail, agentId);
+      
+      if (result.success) {
+        // Update local state after deletion
+        setUserAgents(prevAgents => prevAgents.filter(agent => agent.id !== agentId));
+        toastHook({
+          title: "Agente excluído",
+          description: "O agente foi excluído com sucesso.",
+        });
+      } else {
+        toastHook({
+          variant: "destructive",
+          title: "Erro",
+          description: result.error || "Não foi possível excluir o agente.",
+        });
+      }
     } catch (error) {
       toastHook({
         variant: "destructive",
