@@ -42,7 +42,7 @@ export function AppSidebar() {
     },
     {
       title: "Meus Agentes",
-      path: "/agents", // Always use /agents instead of /my-agents
+      path: "/agents",
       icon: Grid2X2,
     },
     {
@@ -67,7 +67,7 @@ export function AppSidebar() {
       <SidebarHeader className="h-16 flex items-center px-6">
         <Link to="/dashboard" className="flex items-center">
           <img 
-            src="/lovable-uploads/138b7b5c-ce7a-42d1-bdf1-c2608f169d9c.png" 
+            src="/lovable-uploads/ae7fc171-78fa-4833-b4b7-66e45c9191ab.png" 
             alt="Agente Conecta A.I." 
             className="h-8"
           />

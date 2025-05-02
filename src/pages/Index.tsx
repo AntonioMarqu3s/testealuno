@@ -11,7 +11,7 @@ const Index = () => {
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-2">
             <img 
-              src="/lovable-uploads/138b7b5c-ce7a-42d1-bdf1-c2608f169d9c.png" 
+              src="/lovable-uploads/ae7fc171-78fa-4833-b4b7-66e45c9191ab.png" 
               alt="Agente Conecta A.I." 
               className="h-10"
             />
@@ -141,7 +141,7 @@ const Index = () => {
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
             <img 
-              src="/lovable-uploads/138b7b5c-ce7a-42d1-bdf1-c2608f169d9c.png" 
+              src="/lovable-uploads/ae7fc171-78fa-4833-b4b7-66e45c9191ab.png" 
               alt="Agente Conecta A.I." 
               className="h-8"
             />
