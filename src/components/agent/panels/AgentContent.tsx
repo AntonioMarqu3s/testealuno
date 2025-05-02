@@ -21,6 +21,9 @@ export const AgentContent: React.FC<AgentContentProps> = ({
     "sdr": "SDR",
     "closer": "Closer",
     "support": "Atendimento",
+    "broadcast": "Disparo",
+    "secretary": "Secretária Pessoal",
+    "school": "Helpdesk Escolar",
     "custom": "Personalizado",
   };
 

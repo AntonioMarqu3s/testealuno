@@ -1,176 +1,179 @@
-
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { Users, UserPlus, UserCheck, HeadsetIcon, BarChart3, MessageCircle, Target, TrendingUp, Calendar } from "lucide-react";
+import { Users, UserPlus, UserCheck, HeadsetIcon, BarChart3, MessageCircle, Target, TrendingUp, Calendar, School } from "lucide-react";
 
 const Index = () => {
   return (
-    <div className="min-h-screen flex flex-col">
-      {/* Header/Nav */}
-      <header className="px-4 md:px-6 py-3 border-b">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <img 
-              src="/lovable-uploads/ae7fc171-78fa-4833-b4b7-66e45c9191ab.png" 
-              alt="Agente Conecta A.I." 
-              className="h-10"
-            />
-          </div>
-          <div className="flex items-center gap-4">
-            <Link to="/auth">
-              <Button variant="outline">Login</Button>
-            </Link>
-            <Link to="/auth?tab=register">
-              <Button>Registrar</Button>
-            </Link>
-          </div>
-        </div>
-      </header>
-
-      {/* Hero Section */}
-      <section className="flex-1 flex flex-col items-center justify-center px-4 md:px-6 py-12 bg-gradient-radial from-primary/5 to-background">
-        <div className="max-w-4xl mx-auto text-center relative">
-          <div className="absolute right-0 -top-32 w-48 h-48 md:w-64 md:h-64">
-            <img
-              src="/lovable-uploads/acab647a-5eb7-4930-ae7d-923dc70090c8.png"
-              alt="WhatsApp Bot"
-              className="w-full h-full object-contain"
-            />
-          </div>
-          <h1 className="text-4xl md:text-6xl font-bold tracking-tight">
-            Crie agentes de IA <span className="text-primary">personalizados</span> para seu negócio
-          </h1>
-          <p className="mt-6 text-xl text-muted-foreground">
-            Automatize vendas, prospecção e atendimento com agentes inteligentes adaptados às suas necessidades
-          </p>
-          <p className="mt-4 text-2xl text-primary font-medium">
-            Conecte seu Whatsapp direto com o Agente e se surpreenda!
-          </p>
-          <div className="mt-10 flex justify-center">
-            <Link to="/auth?tab=register">
-              <Button size="lg">
-                Começar agora
-              </Button>
-            </Link>
-          </div>
+    <div className="container py-24">
+      <section className="hero text-center mb-20">
+        <h1 className="text-5xl font-bold tracking-tight mb-4">
+          Inteligência Artificial para escalar suas vendas e atendimento
+        </h1>
+        <p className="text-xl text-muted-foreground max-w-2xl mx-auto mb-8">
+          Crie agentes de IA personalizados para sua empresa e automatize tarefas de vendas, prospecção e atendimento.
+        </p>
+        <div className="space-x-4">
+          <Link to="/auth">
+            <Button size="lg">Começar</Button>
+          </Link>
+          <Button variant="outline" size="lg">
+            <a href="https://wa.me/5511999999999" target="_blank" rel="noopener noreferrer">
+              Fale com um especialista
+            </a>
+          </Button>
         </div>
       </section>
 
-      {/* Benefits Section */}
-      <section className="px-4 md:px-6 py-16 bg-gradient-to-b from-background to-muted/30">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div className="p-6 rounded-lg bg-card border transition-all hover:shadow-lg">
-              <div className="w-12 h-12 bg-primary/10 text-primary rounded-lg flex items-center justify-center mb-4">
-                <BarChart3 className="h-6 w-6" />
-              </div>
-              <h3 className="text-xl font-semibold mb-2">Aumente seu faturamento com nossos robôs de atendimento e vendedores especialistas</h3>
-              <p className="text-muted-foreground">Maximize suas vendas com atendimento automatizado 24/7 e vendedores virtuais treinados para converter.</p>
-            </div>
-
-            <div className="p-6 rounded-lg bg-card border transition-all hover:shadow-lg">
-              <div className="w-12 h-12 bg-primary/10 text-primary rounded-lg flex items-center justify-center mb-4">
-                <MessageCircle className="h-6 w-6" />
-              </div>
-              <h3 className="text-xl font-semibold mb-2">Melhore a experiência do seu cliente com os atendimentos Humanizados</h3>
-              <p className="text-muted-foreground">Ofereça um atendimento personalizado e natural, fazendo seus clientes se sentirem verdadeiramente compreendidos.</p>
-            </div>
-
-            <div className="p-6 rounded-lg bg-card border transition-all hover:shadow-lg">
-              <div className="w-12 h-12 bg-primary/10 text-primary rounded-lg flex items-center justify-center mb-4">
-                <Target className="h-6 w-6" />
-              </div>
-              <h3 className="text-xl font-semibold mb-2">Aumente seu ROI levando todo o tráfego de leads para o WhatsApp</h3>
-              <p className="text-muted-foreground">Centralize seus leads no WhatsApp e ofereça um atendimento exclusivo e personalizado para cada cliente.</p>
-            </div>
-
-            <div className="p-6 rounded-lg bg-card border transition-all hover:shadow-lg">
-              <div className="w-12 h-12 bg-primary/10 text-primary rounded-lg flex items-center justify-center mb-4">
-                <TrendingUp className="h-6 w-6" />
-              </div>
-              <h3 className="text-xl font-semibold mb-2">Aumente a eficiência da sua equipe de vendas com nosso SDR especialista</h3>
-              <p className="text-muted-foreground">Automatize a prospecção e qualificação de leads, permitindo que sua equipe foque nas negociações mais importantes.</p>
-            </div>
+      <section className="testimonials py-16 bg-gray-50">
+        <div className="container">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl font-bold tracking-tight mb-2">O que nossos clientes estão dizendo</h2>
+            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+              Veja como a IA está transformando negócios e impulsionando resultados
+            </p>
           </div>
-        </div>
-      </section>
-
-      {/* Feature Cards */}
-      <section className="px-4 md:px-6 py-16 bg-muted/50">
-        <div className="max-w-7xl mx-auto">
-          <h2 className="text-3xl font-bold text-center mb-12">Tipos de agentes disponíveis</h2>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             <div className="bg-card p-6 rounded-lg shadow-sm border">
-              <div className="w-12 h-12 bg-agent-sales/10 text-agent-sales rounded-lg flex items-center justify-center mb-4">
+              <p className="text-muted-foreground italic mb-4">
+                "A IA da [Nome da Empresa] revolucionou nossa abordagem de vendas. Conseguimos aumentar a taxa de conversão em 30%!"
+              </p>
+              <div className="flex items-center">
+                <div className="w-12 h-12 rounded-full bg-primary/10 mr-4 flex items-center justify-center">
+                  <Users className="h-6 w-6 text-primary" />
+                </div>
+                <div>
+                  <h4 className="font-medium">João Silva</h4>
+                  <p className="text-sm text-muted-foreground">CEO da Empresa X</p>
+                </div>
+              </div>
+            </div>
+            <div className="bg-card p-6 rounded-lg shadow-sm border">
+              <p className="text-muted-foreground italic mb-4">
+                "O suporte ao cliente com IA nos permitiu reduzir o tempo de resposta e aumentar a satisfação dos clientes. Incrível!"
+              </p>
+              <div className="flex items-center">
+                <div className="w-12 h-12 rounded-full bg-primary/10 mr-4 flex items-center justify-center">
+                  <HeadsetIcon className="h-6 w-6 text-primary" />
+                </div>
+                <div>
+                  <h4 className="font-medium">Maria Oliveira</h4>
+                  <p className="text-sm text-muted-foreground">Gerente de Atendimento da Empresa Y</p>
+                </div>
+              </div>
+            </div>
+            <div className="bg-card p-6 rounded-lg shadow-sm border">
+              <p className="text-muted-foreground italic mb-4">
+                "A análise de dados com IA nos forneceu insights valiosos para tomadas de decisão estratégicas. Estamos mais eficientes!"
+              </p>
+              <div className="flex items-center">
+                <div className="w-12 h-12 rounded-full bg-primary/10 mr-4 flex items-center justify-center">
+                  <BarChart3 className="h-6 w-6 text-primary" />
+                </div>
+                <div>
+                  <h4 className="font-medium">Carlos Souza</h4>
+                  <p className="text-sm text-muted-foreground">Diretor de Marketing da Empresa Z</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    
+    <div className="container py-24">
+      <div className="text-center mb-16">
+        <h2 className="text-3xl font-bold tracking-tight mb-2">Nossos Agentes</h2>
+        <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+          Escolha entre nossos modelos de agentes especializados ou crie um personalizado
+        </p>
+      </div>
+
+      <section className="py-16 bg-gray-50">
+        <div className="container">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl font-bold tracking-tight mb-2">Agentes Especializados para Cada Necessidade</h2>
+            <p className="text-muted-foreground max-w-2xl mx-auto">
+              Temos agentes prontos para cada etapa do seu processo comercial e atendimento
+            </p>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="bg-card p-6 rounded-lg shadow-sm border">
+              <div className="w-12 h-12 bg-indigo-100 text-indigo-600 rounded-lg flex items-center justify-center mb-4">
                 <Users className="h-6 w-6" />
               </div>
               <h3 className="text-xl font-medium mb-2">Vendedor</h3>
-              <p className="text-muted-foreground">Agente especializado em conduzir conversas de vendas e negociação.</p>
+              <p className="text-muted-foreground">Especialista em vendas e negociação para aumentar sua receita.</p>
             </div>
             
             <div className="bg-card p-6 rounded-lg shadow-sm border">
-              <div className="w-12 h-12 bg-agent-sdr/10 text-agent-sdr rounded-lg flex items-center justify-center mb-4">
+              <div className="w-12 h-12 bg-sky-100 text-sky-600 rounded-lg flex items-center justify-center mb-4">
                 <UserPlus className="h-6 w-6" />
               </div>
               <h3 className="text-xl font-medium mb-2">SDR</h3>
-              <p className="text-muted-foreground">Especialista em prospecção e qualificação de leads para seu pipeline.</p>
+              <p className="text-muted-foreground">Especialista em prospecção e qualificação de leads para o seu negócio.</p>
             </div>
             
             <div className="bg-card p-6 rounded-lg shadow-sm border">
-              <div className="w-12 h-12 bg-agent-closer/10 text-agent-closer rounded-lg flex items-center justify-center mb-4">
+              <div className="w-12 h-12 bg-amber-100 text-amber-600 rounded-lg flex items-center justify-center mb-4">
                 <UserCheck className="h-6 w-6" />
               </div>
               <h3 className="text-xl font-medium mb-2">Closer</h3>
-              <p className="text-muted-foreground">Especializado em fechamento de negócios e superação de objeções.</p>
+              <p className="text-muted-foreground">Especialista em fechamento de negócios para garantir o sucesso das suas vendas.</p>
             </div>
             
             <div className="bg-card p-6 rounded-lg shadow-sm border">
-              <div className="w-12 h-12 bg-agent-support/10 text-agent-support rounded-lg flex items-center justify-center mb-4">
+              <div className="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-lg flex items-center justify-center mb-4">
                 <HeadsetIcon className="h-6 w-6" />
               </div>
               <h3 className="text-xl font-medium mb-2">Atendimento</h3>
-              <p className="text-muted-foreground">Suporte ao cliente 24/7 respondendo dúvidas e resolvendo problemas.</p>
+              <p className="text-muted-foreground">Suporte ao cliente e atendimento personalizado para garantir a satisfação.</p>
             </div>
             
-            {/* New Secretary Card */}
+            <div className="bg-card p-6 rounded-lg shadow-sm border">
+              <div className="w-12 h-12 bg-rose-100 text-rose-600 rounded-lg flex items-center justify-center mb-4">
+                <MessageCircle className="h-6 w-6" />
+              </div>
+              <h3 className="text-xl font-medium mb-2">Disparo</h3>
+              <p className="text-muted-foreground">Especialista em disparo de mensagens em massa para alcançar um grande público.</p>
+            </div>
+            
+            <div className="bg-card p-6 rounded-lg shadow-sm border">
+              <div className="w-12 h-12 bg-violet-100 text-violet-600 rounded-lg flex items-center justify-center mb-4">
+                <Target className="h-6 w-6" />
+              </div>
+              <h3 className="text-xl font-medium mb-2">Prospecção</h3>
+              <p className="text-muted-foreground">Especialista em encontrar e qualificar novos leads para o seu negócio.</p>
+            </div>
+
+            <div className="bg-card p-6 rounded-lg shadow-sm border">
+              <div className="w-12 h-12 bg-orange-100 text-orange-600 rounded-lg flex items-center justify-center mb-4">
+                <TrendingUp className="h-6 w-6" />
+              </div>
+              <h3 className="text-xl font-medium mb-2">Marketing</h3>
+              <p className="text-muted-foreground">Especialista em estratégias de marketing para aumentar a visibilidade da sua marca.</p>
+            </div>
+
             <div className="bg-card p-6 rounded-lg shadow-sm border">
               <div className="w-12 h-12 bg-purple-100 text-purple-600 rounded-lg flex items-center justify-center mb-4">
                 <Calendar className="h-6 w-6" />
               </div>
               <h3 className="text-xl font-medium mb-2">Secretária Pessoal</h3>
-              <p className="text-muted-foreground">Gerencia agenda, emails e cria relatórios para otimizar sua produtividade.</p>
+              <p className="text-muted-foreground">Gerencia agenda, emails e relatórios para otimizar seu tempo.</p>
             </div>
+            
+            {/* New School Helpdesk Card */}
+            <div className="bg-card p-6 rounded-lg shadow-sm border">
+              <div className="w-12 h-12 bg-blue-100 text-blue-600 rounded-lg flex items-center justify-center mb-4">
+                <School className="h-6 w-6" />
+              </div>
+              <h3 className="text-xl font-medium mb-2">Helpdesk Escolar</h3>
+              <p className="text-muted-foreground">Fornece informações sobre alunos, documentação necessária e horários de atividades.</p>
+            </div>
+            
           </div>
         </div>
       </section>
-
-      {/* Footer */}
-      <footer className="px-4 md:px-6 py-8 border-t">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
-            <img 
-              src="/lovable-uploads/ae7fc171-78fa-4833-b4b7-66e45c9191ab.png" 
-              alt="Agente Conecta A.I." 
-              className="h-8"
-            />
-          </div>
-          <p className="text-sm text-muted-foreground">
-            © 2025 Agente Conecta A.I. Todos os direitos reservados.
-          </p>
-          <div className="flex items-center gap-4">
-            <a href="#" className="text-sm text-muted-foreground hover:text-foreground">
-              Termos
-            </a>
-            <a href="#" className="text-sm text-muted-foreground hover:text-foreground">
-              Privacidade
-            </a>
-            <a href="#" className="text-sm text-muted-foreground hover:text-foreground">
-              Contato
-            </a>
-          </div>
-        </div>
-      </footer>
+      
     </div>
   );
 };

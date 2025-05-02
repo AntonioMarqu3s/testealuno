@@ -11,6 +11,8 @@ import { Input } from "@/components/ui/input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
+import { useLocation } from "react-router-dom";
+import { useEffect, useMemo } from "react";
 
 interface AgentBasicInfoFormProps {
   control: Control<any>;
@@ -18,6 +20,41 @@ interface AgentBasicInfoFormProps {
 }
 
 const AgentBasicInfoForm = ({ control, watch }: AgentBasicInfoFormProps) => {
+  const location = useLocation();
+  const searchParams = new URLSearchParams(location.search);
+  const agentType = searchParams.get('type');
+
+  // Special personality options for school agent
+  const isSchoolAgent = agentType === 'school';
+  
+  const personalityOptions = useMemo(() => {
+    if (isSchoolAgent) {
+      return [
+        { value: "prestativo", label: "Prestativo e Atencioso" },
+        { value: "informativo", label: "Informativo e Detalhista" },
+        { value: "profissional", label: "Profissional e Objetivo" },
+        { value: "calmo", label: "Organizador Calmo" },
+        { value: "outro", label: "Outro" },
+      ];
+    }
+    
+    // Default personality options for other agents
+    return [
+      { value: "consultor", label: "Consultor Especialista" },
+      { value: "amigavel", label: "Vendedor Amigável" },
+      { value: "urgente", label: "Urgente com Elegância" },
+      { value: "calmo", label: "Organizador Calmo" },
+      { value: "outro", label: "Outro" },
+    ];
+  }, [isSchoolAgent]);
+
+  useEffect(() => {
+    // Set default personality based on agent type
+    if (isSchoolAgent) {
+      // You can access form methods if needed
+    }
+  }, [isSchoolAgent]);
+
   return (
     <Card>
       <CardContent className="pt-6">
@@ -28,7 +65,7 @@ const AgentBasicInfoForm = ({ control, watch }: AgentBasicInfoFormProps) => {
             <FormItem className="mb-4">
               <FormLabel>Nome do agente</FormLabel>
               <FormControl>
-                <Input placeholder="Ex: Assistente de Vendas" {...field} />
+                <Input placeholder={isSchoolAgent ? "Ex: Assistente Escolar" : "Ex: Assistente de Vendas"} {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -47,46 +84,16 @@ const AgentBasicInfoForm = ({ control, watch }: AgentBasicInfoFormProps) => {
                   defaultValue={field.value}
                   className="space-y-3"
                 >
-                  <FormItem className="flex items-center space-x-3 space-y-0">
-                    <FormControl>
-                      <RadioGroupItem value="consultor" />
-                    </FormControl>
-                    <FormLabel className="font-normal">
-                      Consultor Especialista
-                    </FormLabel>
-                  </FormItem>
-                  <FormItem className="flex items-center space-x-3 space-y-0">
-                    <FormControl>
-                      <RadioGroupItem value="amigavel" />
-                    </FormControl>
-                    <FormLabel className="font-normal">
-                      Vendedor Amigável
-                    </FormLabel>
-                  </FormItem>
-                  <FormItem className="flex items-center space-x-3 space-y-0">
-                    <FormControl>
-                      <RadioGroupItem value="urgente" />
-                    </FormControl>
-                    <FormLabel className="font-normal">
-                      Urgente com Elegância
-                    </FormLabel>
-                  </FormItem>
-                  <FormItem className="flex items-center space-x-3 space-y-0">
-                    <FormControl>
-                      <RadioGroupItem value="calmo" />
-                    </FormControl>
-                    <FormLabel className="font-normal">
-                      Organizador Calmo
-                    </FormLabel>
-                  </FormItem>
-                  <FormItem className="flex items-center space-x-3 space-y-0">
-                    <FormControl>
-                      <RadioGroupItem value="outro" />
-                    </FormControl>
-                    <FormLabel className="font-normal">
-                      Outro
-                    </FormLabel>
-                  </FormItem>
+                  {personalityOptions.map((option) => (
+                    <FormItem key={option.value} className="flex items-center space-x-3 space-y-0">
+                      <FormControl>
+                        <RadioGroupItem value={option.value} />
+                      </FormControl>
+                      <FormLabel className="font-normal">
+                        {option.label}
+                      </FormLabel>
+                    </FormItem>
+                  ))}
                 </RadioGroup>
               </FormControl>
             </FormItem>
