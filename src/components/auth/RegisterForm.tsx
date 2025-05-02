@@ -122,12 +122,25 @@ export function RegisterForm({
         trialEndDate.setDate(trialEndDate.getDate() + 5);
       }
       
-      // Explicitly update user plan in Supabase
+      // Explicitly update user plan in Supabase with a retry mechanism
       if (data.user) {
-        await updateUserPlanInSupabase(
-          data.user.id,
-          planToApply
-        );
+        try {
+          // First attempt
+          await updateUserPlanInSupabase(data.user.id, planToApply);
+          console.log('Plan updated in Supabase successfully');
+        } catch (planError) {
+          console.error('First attempt to update plan failed:', planError);
+          
+          // Wait a moment and retry once more
+          setTimeout(async () => {
+            try {
+              await updateUserPlanInSupabase(data.user.id, planToApply);
+              console.log('Plan updated in Supabase after retry');
+            } catch (retryError) {
+              console.error('Retry to update plan also failed:', retryError);
+            }
+          }, 2000);
+        }
       }
       
       // Also update in local storage for compatibility
