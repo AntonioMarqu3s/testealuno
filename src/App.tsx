@@ -1,3 +1,4 @@
+
 import { useEffect } from "react";
 import { Toaster as ShadcnToaster } from "@/components/ui/toaster";
 import { Toaster as SonnerToaster } from "@/components/ui/sonner";
@@ -20,7 +21,14 @@ import Plans from "./pages/Plans";
 import { initializeUserEmail } from "./services/user/userService";
 import { initializeUserPlan } from "./services/plan/userPlanService";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      staleTime: 30000, // 30 seconds
+    },
+  },
+});
 
 function App() {
   // Initialize user email and plan on app load

@@ -30,12 +30,11 @@ const AuthCallback = () => {
             const userEmail = getCurrentUserEmail();
             const userPlan = getUserPlan(userEmail);
             
-            // Always redirect to plan checkout for FREE_TRIAL users
-            if (userPlan.plan === PlanType.FREE_TRIAL) {
-              setTimeout(() => navigate('/plan-checkout'), 1000);
-            } else {
-              setTimeout(() => navigate('/dashboard'), 1000);
-            }
+            // Instead of immediately redirecting, use setTimeout to prevent potential loop
+            setTimeout(() => {
+              // Always navigate to dashboard after authentication
+              navigate('/dashboard');
+            }, 500);
           } else {
             throw new Error("Falha ao confirmar email.");
           }

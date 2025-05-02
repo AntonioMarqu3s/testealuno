@@ -34,14 +34,15 @@ const Dashboard = () => {
   const isTrialPlan = userPlan.plan === PlanType.FREE_TRIAL;
 
   const handleCreateAgent = useCallback(() => {
-    // If free trial plan, redirect to plans page
+    // If free trial plan, show toast and redirect to plans page
     if (userPlan.plan === PlanType.FREE_TRIAL) {
       toast({
         title: "Plano gratuito detectado",
         description: "Seu plano atual não permite a criação de agentes. Por favor, faça upgrade para um plano pago.",
         variant: "destructive"
       });
-      navigate('/plans');
+      // Add a small delay before redirecting to prevent loop issues
+      setTimeout(() => navigate('/plans'), 100);
     } else {
       // Navigate to agent type selection
       navigate('/create-agent');

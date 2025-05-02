@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import MainLayout from "@/components/layout/MainLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { getCurrentUserEmail } from "@/services/user/userService";
@@ -9,9 +9,13 @@ import { PlanCard, PAYMENT_LINKS } from "@/components/plan/PlanCard";
 
 const Plans = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const userEmail = getCurrentUserEmail();
   const userPlan = getUserPlan(userEmail);
   const [selectedPlan, setSelectedPlan] = useState<PlanType | null>(null);
+
+  // Prevent infinite redirects by checking if we're coming from a specific path
+  const fromPath = location.state?.from;
 
   const handleSelectPlan = (planType: PlanType) => {
     setSelectedPlan(planType);
@@ -92,6 +96,16 @@ const Plans = () => {
             </div>
           </CardContent>
         </Card>
+        
+        {/* Add button to return to dashboard */}
+        <div className="flex justify-center">
+          <button 
+            onClick={() => navigate('/dashboard')} 
+            className="text-sm text-muted-foreground hover:text-primary transition-colors"
+          >
+            Voltar para o dashboard
+          </button>
+        </div>
       </div>
     </MainLayout>
   );
