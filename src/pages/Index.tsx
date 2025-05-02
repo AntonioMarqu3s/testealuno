@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { Users, UserPlus, UserCheck, HeadsetIcon, BarChart3, MessageCircle, Target, TrendingUp } from "lucide-react";
@@ -9,10 +10,11 @@ const Index = () => {
       <header className="px-4 md:px-6 py-3 border-b">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
-              <span className="text-primary-foreground font-bold">AH</span>
-            </div>
-            <span className="font-bold text-lg">Agent Hub</span>
+            <img 
+              src="/lovable-uploads/138b7b5c-ce7a-42d1-bdf1-c2608f169d9c.png" 
+              alt="Agente Conecta A.I." 
+              className="h-10"
+            />
           </div>
           <div className="flex items-center gap-4">
             <Link to="/auth">
@@ -138,13 +140,14 @@ const Index = () => {
       <footer className="px-4 md:px-6 py-8 border-t">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
-              <span className="text-primary-foreground font-bold">AH</span>
-            </div>
-            <span className="font-bold">Agent Hub</span>
+            <img 
+              src="/lovable-uploads/138b7b5c-ce7a-42d1-bdf1-c2608f169d9c.png" 
+              alt="Agente Conecta A.I." 
+              className="h-8"
+            />
           </div>
           <p className="text-sm text-muted-foreground">
-            © 2025 Agent Hub. Todos os direitos reservados.
+            © 2025 Agente Conecta A.I. Todos os direitos reservados.
           </p>
           <div className="flex items-center gap-4">
             <a href="#" className="text-sm text-muted-foreground hover:text-foreground">

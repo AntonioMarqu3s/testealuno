@@ -55,7 +55,6 @@ export function AppSidebar() {
       path: "/plans",
       icon: CreditCard,
     },
-    // Settings menu item removed as requested
   ];
   
   const handleLogout = async () => {
@@ -66,11 +65,12 @@ export function AppSidebar() {
   return (
     <Sidebar className="border-r">
       <SidebarHeader className="h-16 flex items-center px-6">
-        <Link to="/dashboard" className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
-            <span className="text-primary-foreground font-bold">AH</span>
-          </div>
-          <span className="font-bold text-lg">Agent Hub</span>
+        <Link to="/dashboard" className="flex items-center">
+          <img 
+            src="/lovable-uploads/138b7b5c-ce7a-42d1-bdf1-c2608f169d9c.png" 
+            alt="Agente Conecta A.I." 
+            className="h-8"
+          />
         </Link>
       </SidebarHeader>
       <SidebarContent>
