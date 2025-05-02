@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { Card, CardDescription, CardHeader } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
@@ -8,6 +8,8 @@ import { updateCurrentUserEmail } from "@/services/user/userService";
 import { LoginForm } from "./LoginForm";
 import { RegisterForm } from "./RegisterForm";
 import { ConnectionErrorDialog } from "./ConnectionErrorDialog";
+import { Button } from "@/components/ui/button";
+import { ArrowLeft } from "lucide-react";
 
 export function AuthForm() {
   const navigate = useNavigate();
@@ -36,6 +38,15 @@ export function AuthForm() {
 
   return (
     <>
+      <div className="w-full mb-4">
+        <Link to="/">
+          <Button variant="ghost" className="flex items-center gap-2">
+            <ArrowLeft className="h-4 w-4" />
+            Voltar para a página inicial
+          </Button>
+        </Link>
+      </div>
+      
       <Card className="w-full max-w-md mx-auto shadow-lg">
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <CardHeader>
