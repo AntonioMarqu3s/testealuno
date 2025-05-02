@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { Users, UserPlus, UserCheck, HeadsetIcon, BarChart3, MessageCircle, Target, TrendingUp, Calendar, School, HelpCircle } from "lucide-react";
@@ -13,15 +12,10 @@ const Index = () => {
         <p className="text-xl text-muted-foreground max-w-2xl mx-auto mb-8">
           Crie agentes de IA personalizados para sua empresa e automatize tarefas de vendas, prospecção e atendimento.
         </p>
-        <div className="space-x-4">
+        <div>
           <Link to="/auth">
             <Button size="lg">Começar</Button>
           </Link>
-          <Button variant="outline" size="lg">
-            <a href="https://wa.me/5511999999999" target="_blank" rel="noopener noreferrer">
-              Fale com um especialista
-            </a>
-          </Button>
         </div>
       </section>
 

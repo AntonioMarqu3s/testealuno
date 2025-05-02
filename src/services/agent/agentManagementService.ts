@@ -1,4 +1,3 @@
-
 import { getStorageItem, setStorageItem } from '../storage/localStorageService';
 import { Agent } from '@/components/agent/AgentTypes';
 import { deleteWhatsAppInstance } from './webhookService';
@@ -113,7 +112,8 @@ export const transferUserAgentData = (oldEmail: string, newEmail: string): void 
     // Save the updated agent data
     setStorageItem('user_agents', agentsData);
   } else {
-    // If no data for old email, initialize for new email
-    saveAgent(newEmail, []);
+    // If no data for old email, initialize empty array for new email
+    agentsData[newEmail] = [];
+    setStorageItem('user_agents', agentsData);
   }
 };

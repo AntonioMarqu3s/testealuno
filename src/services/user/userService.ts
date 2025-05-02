@@ -20,9 +20,9 @@ export const getCurrentUserEmail = (): string => {
   if (!email) {
     try {
       // Try to get email from Supabase session
-      const session = supabase?.auth?.session?.();
-      if (session?.user?.email) {
-        return session.user.email;
+      const { data } = supabase.auth.getSession();
+      if (data?.session?.user?.email) {
+        return data.session.user.email;
       }
     } catch (e) {
       console.log('No active Supabase session found');
