@@ -1,6 +1,7 @@
 
 import { PlanType, UserPlan, PLAN_DETAILS } from '../types/planTypes';
 import { getUserPlanFromStorage, saveUserPlanToStorage } from './planStorage';
+import { getStorageItem, setStorageItem } from '../../storage/localStorageService';
 
 /**
  * Initialize user plan if it doesn't exist
