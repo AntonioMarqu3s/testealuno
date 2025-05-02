@@ -44,15 +44,12 @@ const Index = () => {
           <p className="mt-4 text-2xl text-primary font-medium">
             Conecte seu Whatsapp direto com o Agente e se surpreenda!
           </p>
-          <div className="mt-10 flex flex-col sm:flex-row gap-4 justify-center">
+          <div className="mt-10 flex justify-center">
             <Link to="/auth?tab=register">
-              <Button size="lg" className="w-full sm:w-auto">
+              <Button size="lg">
                 Começar agora
               </Button>
             </Link>
-            <Button variant="outline" size="lg" className="w-full sm:w-auto">
-              Ver demonstração
-            </Button>
           </div>
         </div>
       </section>
