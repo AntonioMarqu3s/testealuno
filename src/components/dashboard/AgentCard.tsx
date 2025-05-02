@@ -12,9 +12,19 @@ interface AgentCardProps {
   type: AgentType;
   icon: React.ReactNode;
   path?: string;
+  onSelect?: () => void;  // Added onSelect property
+  isLoading?: boolean;    // Added isLoading property
 }
 
-export function AgentCard({ title, description, type, icon, path = "/create-agent" }: AgentCardProps) {
+export function AgentCard({ 
+  title, 
+  description, 
+  type, 
+  icon, 
+  path = "/create-agent", 
+  onSelect,
+  isLoading = false 
+}: AgentCardProps) {
   const navigate = useNavigate();
   
   const colorMap: Record<AgentType, string> = {
@@ -28,12 +38,19 @@ export function AgentCard({ title, description, type, icon, path = "/create-agen
   };
 
   const handleClick = () => {
-    navigate(`${path}?type=${type}`);
+    if (onSelect) {
+      onSelect();
+    } else {
+      navigate(`${path}?type=${type}`);
+    }
   };
 
   return (
     <Card 
-      className="h-full overflow-hidden transition-all hover:shadow-md hover:-translate-y-1 cursor-pointer"
+      className={cn(
+        "h-full overflow-hidden transition-all hover:shadow-md hover:-translate-y-1 cursor-pointer",
+        isLoading && "opacity-70 pointer-events-none"
+      )}
       onClick={handleClick}
     >
       <div className={cn(
@@ -76,8 +93,9 @@ export function AgentCard({ title, description, type, icon, path = "/create-agen
             colorMap[type]
           )}
           onClick={handleClick}
+          disabled={isLoading}
         >
-          Criar Agente
+          {isLoading ? "Carregando..." : "Criar Agente"}
         </Button>
       </CardFooter>
     </Card>
