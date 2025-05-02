@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import MainLayout from "@/components/layout/MainLayout";
@@ -10,14 +11,16 @@ import { deleteUserAgent, getUserAgents, updateUserAgent } from "@/services/agen
 import { updateAgentConnectionStatus } from "@/services/agent/supabaseAgentService";
 import { UpgradeModal } from "@/components/agent/UpgradeModal";
 import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { Agent } from "@/components/agent/AgentTypes";
 import { AgentPanel } from "@/components/agent/AgentPanel";
+import { canCreateAgent } from "@/services/plan/planLimitService";
 
 const Agents = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
-  const { toast } = useToast();
+  const { toast: toastHook } = useToast();
   
   // Get current user email
   const userEmail = getCurrentUserEmail();
@@ -50,8 +53,14 @@ const Agents = () => {
   }, [userEmail]);
   
   const handleCreateAgent = () => {
-    // If trial expired, show upgrade modal
-    if (isTrialExpired) {
+    // Check if user can create more agents based on their plan
+    const canCreate = canCreateAgent(userEmail);
+    
+    // If trial expired or user reached their plan limit, show upgrade modal
+    if (isTrialExpired || !canCreate) {
+      toast.warning("Limite de plano atingido", {
+        description: "Seu plano atual não permite criar mais agentes. Faça upgrade para um plano maior."
+      });
       setShowUpgradeModal(true);
     } else {
       navigate('/create-agent'); // Navigate to create agent page directly
@@ -135,6 +144,7 @@ const Agents = () => {
           userPlanType={userPlan.plan} 
           onCreateAgent={handleCreateAgent} 
           onUpgradeClick={handleUpgradeClick}
+          agentCount={userAgents.length}
         />
         
         {userAgents.length > 0 ? (

@@ -4,15 +4,17 @@ import { useLocation, useNavigate, useParams } from "react-router-dom";
 import MainLayout from "@/components/layout/MainLayout";
 import CreateAgentForm from "@/components/agent/CreateAgentForm";
 import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { AgentFormValues } from "@/components/agent/form/agentSchema";
 import { getCurrentUserEmail } from "@/services/user/userService";
 import { getUserPlan, PlanType } from "@/services/plan/userPlanService";
+import { canCreateAgent } from "@/services/plan/planLimitService";
 
 const CreateAgent = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { agentId } = useParams();
-  const { toast } = useToast();
+  const { toast: toastHook } = useToast();
   const searchParams = new URLSearchParams(location.search);
   const type = searchParams.get('type');
   const [initialValues, setInitialValues] = useState<Partial<AgentFormValues> | null>(null);
@@ -23,42 +25,40 @@ const CreateAgent = () => {
     const userEmail = getCurrentUserEmail();
     const userPlan = getUserPlan(userEmail);
     
-    // If user is on FREE_TRIAL, redirect to plans page
-    if (userPlan.plan === PlanType.FREE_TRIAL) {
-      toast({
-        title: "Plano gratuito detectado",
-        description: "Seu plano atual não permite a criação de agentes. Por favor, faça upgrade para um plano pago para começar a criar agentes.",
-        variant: "destructive"
+    // Check if the user can create more agents
+    const canCreate = canCreateAgent(userEmail);
+    
+    // If editing, we don't need to check plan limits
+    if (agentId) {
+      const storedAgent = sessionStorage.getItem('editingAgent');
+      if (storedAgent) {
+        setIsEdit(true);
+        const agent = JSON.parse(storedAgent);
+        setInitialValues({
+          agentName: agent.name,
+          // Add other fields as needed
+        });
+      }
+      return;
+    }
+    
+    // If user is on FREE_TRIAL or cannot create more agents, redirect to plans page
+    if (userPlan.plan === PlanType.FREE_TRIAL || !canCreate) {
+      toast.warning("Limite de plano atingido", {
+        description: "Seu plano atual não permite a criação de mais agentes. Por favor, faça upgrade para um plano maior."
       });
       navigate('/plans');
       return;
     }
     
-    // Check if we're in edit mode
-    if (agentId) {
-      const storedAgent = sessionStorage.getItem('editingAgent');
-      if (storedAgent) {
-        const agent = JSON.parse(storedAgent);
-        setIsEdit(true);
-        
-        // Map agent data to form values
-        setInitialValues({
-          agentName: agent.name,
-          // Add other fields as needed - in a real app you'd fetch complete data from API
-          // This is just a starting point
-        });
-      }
-    }
-    
     // Check if type is valid, if not redirect
     if (!type && !isEdit) {
-      toast({
-        title: "Selecione um tipo de agente",
-        description: "Por favor, escolha um tipo de agente antes de prosseguir com a criação.",
+      toast.info("Selecione um tipo de agente", {
+        description: "Por favor, escolha um tipo de agente antes de prosseguir com a criação."
       });
       navigate('/dashboard?tab=agents');
     }
-  }, [agentId, type, toast, navigate, isEdit]);
+  }, [agentId, type, toastHook, navigate, isEdit]);
 
   // Return early if no type, but only after the useEffect has run
   if (!type && !isEdit) {
