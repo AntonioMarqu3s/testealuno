@@ -4,6 +4,8 @@ import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
 import { getCurrentUser, initializeUserDataAfterLogin } from '@/services/auth/supabaseAuth';
 import { toast } from 'sonner';
+import { useNavigate } from 'react-router-dom';
+import { PlanType, getUserPlan } from '@/services/plan/userPlanService';
 
 interface AuthContextType {
   user: User | null;
@@ -42,6 +44,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           // Initialize user data after login
           setTimeout(() => {
             initializeUserDataAfterLogin();
+            
+            // Check user plan status and redirect if needed
+            // We do this in a setTimeout to avoid issues with the auth state
+            // and to ensure user data is initialized first
+            setTimeout(() => {
+              const userEmail = currentSession.user?.email;
+              if (userEmail) {
+                const userPlan = getUserPlan(userEmail);
+                
+                // If user doesn't have a paid plan, redirect to checkout
+                if (userPlan.plan === PlanType.FREE_TRIAL) {
+                  // We can't use useNavigate here because this is outside of a component
+                  // So we use window.location instead
+                  window.location.href = '/plan-checkout';
+                }
+              }
+            }, 500);
           }, 0);
         } else if (event === 'SIGNED_OUT') {
           console.log('User signed out');

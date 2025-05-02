@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,6 +6,7 @@ import { CardContent, CardFooter } from "@/components/ui/card";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 import { updateCurrentUserEmail } from "@/services/user/userService";
+import { getUserPlan, PlanType } from "@/services/plan/userPlanService";
 
 interface LoginFormProps {
   email: string;
@@ -62,8 +62,16 @@ export function LoginForm({
         // Clear form fields
         setPassword("");
         
-        // Redirect to dashboard
-        onSuccessfulAuth();
+        // Check if user needs to select a plan first
+        const userPlan = getUserPlan(email);
+        
+        if (userPlan.plan === PlanType.FREE_TRIAL) {
+          // Redirect to plan checkout if user doesn't have a paid plan
+          window.location.href = '/plan-checkout';
+        } else {
+          // Redirect to dashboard
+          onSuccessfulAuth();
+        }
       } else {
         throw new Error("Falha na autenticação.");
       }

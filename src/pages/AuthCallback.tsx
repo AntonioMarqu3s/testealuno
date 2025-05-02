@@ -3,6 +3,8 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
+import { getCurrentUserEmail } from "@/services/user/userService";
+import { getUserPlan, PlanType } from "@/services/plan/userPlanService";
 
 const AuthCallback = () => {
   const navigate = useNavigate();
@@ -23,7 +25,17 @@ const AuthCallback = () => {
           
           if (data.session) {
             toast.success("Email confirmado com sucesso!");
-            setTimeout(() => navigate('/dashboard'), 1000);
+            
+            // Check user plan status
+            const userEmail = getCurrentUserEmail();
+            const userPlan = getUserPlan(userEmail);
+            
+            // If user doesn't have a paid plan, redirect to checkout
+            if (userPlan.plan === PlanType.FREE_TRIAL || userPlan.plan === 0) {
+              setTimeout(() => navigate('/plan-checkout'), 1000);
+            } else {
+              setTimeout(() => navigate('/dashboard'), 1000);
+            }
           } else {
             throw new Error("Falha ao confirmar email.");
           }
