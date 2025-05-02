@@ -1,100 +1,129 @@
 
-import { PlanType, PLAN_DETAILS } from '../types/planTypes';
-import { getUserPlan } from '../userPlanService';
+import { UserPlan, PlanType, PLAN_DETAILS } from '../types/planTypes';
 
 /**
- * Get formatted plan price
+ * Get the price for a plan based on its type
  */
-export const getPlanPrice = (planType: PlanType): string => {
-  const price = PLAN_DETAILS[planType].price;
-  return price.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+export const getPlanPrice = (planType: PlanType): number => {
+  return PLAN_DETAILS[planType]?.price || 0;
 };
 
 /**
- * Check if user trial has expired
+ * Check if a trial has expired based on user's plan
  */
 export const hasTrialExpired = (email: string): boolean => {
-  const userPlan = getUserPlan(email);
+  // Get user plan from local storage or another source
+  const userPlan = getPlanFromSource(email);
   
-  // If not a trial plan, return false
+  if (!userPlan) return false;
+  
+  // If it's not a trial plan, trial hasn't expired
   if (userPlan.plan !== PlanType.FREE_TRIAL) {
     return false;
   }
   
-  // Check if trial end date exists and has passed
-  if (userPlan.trialEndsAt) {
-    const trialEnd = new Date(userPlan.trialEndsAt);
-    const now = new Date();
-    return now > trialEnd;
+  // If there's no trial end date, assume it hasn't expired
+  if (!userPlan.trialEndsAt) {
+    return false;
   }
   
-  return false;
+  // Check if the trial end date has passed
+  return new Date(userPlan.trialEndsAt) < new Date();
 };
 
 /**
- * Check if subscription has expired
+ * Check if a user's subscription has expired
  */
 export const hasSubscriptionExpired = (email: string): boolean => {
-  const userPlan = getUserPlan(email);
+  // Get user plan from local storage or another source
+  const userPlan = getPlanFromSource(email);
   
-  // If free trial, check trial expiration instead
-  if (userPlan.plan === PlanType.FREE_TRIAL) {
-    return hasTrialExpired(email);
+  // If no plan or it's a trial, subscription hasn't expired
+  if (!userPlan || userPlan.plan === PlanType.FREE_TRIAL) {
+    return false;
   }
   
-  // Check if subscription end date exists and has passed
-  if (userPlan.subscriptionEndsAt) {
-    const subscriptionEnd = new Date(userPlan.subscriptionEndsAt);
-    const now = new Date();
-    return now > subscriptionEnd;
+  // If there's no subscription end date, assume it hasn't expired
+  if (!userPlan.subscriptionEndsAt) {
+    return false;
   }
   
-  return false;
+  // Check if the subscription end date has passed
+  return new Date(userPlan.subscriptionEndsAt) < new Date();
 };
 
 /**
- * Get formatted trial days remaining
+ * Get the number of days remaining in a trial
  */
 export const getTrialDaysRemaining = (email: string): number => {
-  const userPlan = getUserPlan(email);
+  // Get user plan from local storage or another source
+  const userPlan = getPlanFromSource(email);
   
-  // If not a trial plan, return 0
-  if (userPlan.plan !== PlanType.FREE_TRIAL || !userPlan.trialEndsAt) {
+  // If no plan or not a trial, no days remaining
+  if (!userPlan || userPlan.plan !== PlanType.FREE_TRIAL) {
     return 0;
   }
   
-  const trialEnd = new Date(userPlan.trialEndsAt);
-  const now = new Date();
+  // If no trial end date, default to trial days from plan details
+  if (!userPlan.trialEndsAt) {
+    return PLAN_DETAILS[PlanType.FREE_TRIAL].trialDays || 5;
+  }
+  
+  // Calculate days remaining
+  const trialEndDate = new Date(userPlan.trialEndsAt);
+  const today = new Date();
+  
+  // If trial has expired, return 0
+  if (trialEndDate < today) {
+    return 0;
+  }
   
   // Calculate days difference
-  const diffTime = trialEnd.getTime() - now.getTime();
+  const diffTime = trialEndDate.getTime() - today.getTime();
   const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
   
-  return Math.max(0, diffDays);
+  return diffDays;
 };
 
 /**
- * Get formatted subscription days remaining
+ * Get the number of days remaining in a subscription
  */
 export const getSubscriptionDaysRemaining = (email: string): number => {
-  const userPlan = getUserPlan(email);
+  // Get user plan from local storage or another source
+  const userPlan = getPlanFromSource(email);
   
-  // If free trial, return trial days remaining
-  if (userPlan.plan === PlanType.FREE_TRIAL) {
-    return getTrialDaysRemaining(email);
-  }
-  
-  // If subscription end date doesn't exist, return 0
-  if (!userPlan.subscriptionEndsAt) {
+  // If no plan or it's a trial, no subscription days
+  if (!userPlan || userPlan.plan === PlanType.FREE_TRIAL) {
     return 0;
   }
   
-  const subscriptionEnd = new Date(userPlan.subscriptionEndsAt);
-  const now = new Date();
+  // If no subscription end date, assume ongoing subscription
+  if (!userPlan.subscriptionEndsAt) {
+    return 30;
+  }
+  
+  // Calculate days remaining
+  const subscriptionEndDate = new Date(userPlan.subscriptionEndsAt);
+  const today = new Date();
+  
+  // If subscription has expired, return 0
+  if (subscriptionEndDate < today) {
+    return 0;
+  }
   
   // Calculate days difference
-  const diffTime = subscriptionEnd.getTime() - now.getTime();
+  const diffTime = subscriptionEndDate.getTime() - today.getTime();
   const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
   
-  return Math.max(0, diffDays);
+  return diffDays;
+};
+
+// Helper function to get user plan from local storage or other source
+// This function should be replaced with the actual implementation
+// based on how user plans are stored in the application
+const getPlanFromSource = (email: string): UserPlan | null => {
+  // Import the function here to avoid circular dependency
+  // Use dynamic import to avoid circular reference
+  const { getUserPlan } = require('../userPlanService');
+  return getUserPlan(email);
 };
