@@ -8,14 +8,18 @@ type ConnectionCallbackFunction = () => void;
 export const useQRCodeConnection = () => {
   const [connectionCheckAttempts, setConnectionCheckAttempts] = useState(0);
   const connectionCheckIntervalRef = useRef<number | null>(null);
-  const MAX_CONNECTION_CHECKS = 20; // Reduced from 50 to 20
-  const CONNECTION_CHECK_INTERVAL = 8000; // Increased from 6s to 8s to reduce request frequency
+  const MAX_CONNECTION_CHECKS = 15; // Reduced to 15 attempts
+  const CONNECTION_CHECK_INTERVAL = 10000; // Increased to 10 seconds to reduce request frequency
+  const connectionTimeoutRef = useRef<number | null>(null);
 
   // Clean up interval on unmount
   useEffect(() => {
     return () => {
       if (connectionCheckIntervalRef.current !== null) {
         window.clearInterval(connectionCheckIntervalRef.current);
+      }
+      if (connectionTimeoutRef.current !== null) {
+        window.clearTimeout(connectionTimeoutRef.current);
       }
     };
   }, []);
@@ -25,6 +29,12 @@ export const useQRCodeConnection = () => {
       window.clearInterval(connectionCheckIntervalRef.current);
       connectionCheckIntervalRef.current = null;
     }
+    
+    if (connectionTimeoutRef.current !== null) {
+      window.clearTimeout(connectionTimeoutRef.current);
+      connectionTimeoutRef.current = null;
+    }
+    
     setConnectionCheckAttempts(0);
   }, []);
 
@@ -35,46 +45,62 @@ export const useQRCodeConnection = () => {
     // Reset attempt counter
     setConnectionCheckAttempts(1);
     
-    // Start checking connection status at regular intervals
-    connectionCheckIntervalRef.current = window.setInterval(async () => {
+    // Initial delay before first check
+    connectionTimeoutRef.current = window.setTimeout(async () => {
       try {
-        console.log(`Checking connection status (attempt ${connectionCheckAttempts + 1}/${MAX_CONNECTION_CHECKS})...`);
-        
+        console.log(`Initial connection check for ${instanceId}...`);
         const isConnected = await checkConnectionStatus(instanceId);
         
         if (isConnected) {
-          console.log("Connection successful! Agent is connected.");
+          console.log("Connection successful on first try!");
           clearConnectionCheck();
           onConnected();
           toast.success("Agente conectado com sucesso!");
-        } else {
-          setConnectionCheckAttempts(prev => {
-            const newCount = prev + 1;
-            console.log(`Connection check failed (attempt ${newCount}). Will retry...`);
-            
-            // If we've reached the maximum number of attempts, stop checking
-            if (newCount >= MAX_CONNECTION_CHECKS) {
-              console.log("Maximum connection check attempts reached. Stopping checks.");
+          return;
+        }
+        
+        console.log("First connection check failed, starting interval checks...");
+        
+        // Start interval checks if first attempt failed
+        connectionCheckIntervalRef.current = window.setInterval(async () => {
+          try {
+            // Only make API call if not at the limit
+            if (connectionCheckAttempts >= MAX_CONNECTION_CHECKS) {
               clearConnectionCheck();
               toast.error("Não foi possível estabelecer conexão após várias tentativas.");
+              return;
             }
-            return newCount;
-          });
-        }
-      } catch (error) {
-        console.error("Error checking connection status:", error);
-        setConnectionCheckAttempts(prev => {
-          const newCount = prev + 1;
-          if (newCount >= MAX_CONNECTION_CHECKS) {
-            clearConnectionCheck();
-            toast.error("Não foi possível verificar a conexão. Tente novamente mais tarde.");
+            
+            console.log(`Checking connection status (attempt ${connectionCheckAttempts + 1}/${MAX_CONNECTION_CHECKS})...`);
+            const isConnected = await checkConnectionStatus(instanceId);
+            
+            if (isConnected) {
+              console.log("Connection successful! Agent is connected.");
+              clearConnectionCheck();
+              onConnected();
+              toast.success("Agente conectado com sucesso!");
+            } else {
+              setConnectionCheckAttempts(prevCount => prevCount + 1);
+            }
+          } catch (error) {
+            console.error("Error checking connection status:", error);
+            setConnectionCheckAttempts(prevCount => {
+              const newCount = prevCount + 1;
+              if (newCount >= MAX_CONNECTION_CHECKS) {
+                clearConnectionCheck();
+                toast.error("Não foi possível verificar a conexão. Tente novamente mais tarde.");
+              }
+              return newCount;
+            });
           }
-          return newCount;
-        });
+        }, CONNECTION_CHECK_INTERVAL);
+      } catch (error) {
+        console.error("Error on initial connection check:", error);
+        setConnectionCheckAttempts(1); // Set to 1 to start the regular interval
       }
-    }, CONNECTION_CHECK_INTERVAL);
+    }, 3000); // 3 second initial delay
     
-  }, [clearConnectionCheck, MAX_CONNECTION_CHECKS]);
+  }, [clearConnectionCheck, connectionCheckAttempts, MAX_CONNECTION_CHECKS]);
 
   return {
     connectionCheckAttempts,

@@ -4,12 +4,12 @@ import { useState, useRef, useCallback, useEffect } from 'react';
 type UpdateQRCodeFunction = (instanceId: string) => Promise<boolean>;
 
 export const useQRCodeTimer = (updateQRCodeFn: UpdateQRCodeFunction) => {
-  const [timerCount, setTimerCount] = useState(60); // Changed from 30 to 60 seconds
+  const [timerCount, setTimerCount] = useState(60); // Increased to 60 seconds
   const timerIntervalRef = useRef<number | null>(null);
   const updateInProgressRef = useRef<boolean>(false);
   const updateTimeoutRef = useRef<number | null>(null);
   const lastUpdateTimeRef = useRef<number>(0);
-  const MIN_UPDATE_INTERVAL = 25000; // Increased from 15s to 25s
+  const MIN_UPDATE_INTERVAL = 30000; // Increased to 30 seconds minimum between updates
 
   // Clean up on unmount
   useEffect(() => {
@@ -71,23 +71,17 @@ export const useQRCodeTimer = (updateQRCodeFn: UpdateQRCodeFunction) => {
             updateTimeoutRef.current = window.setTimeout(async () => {
               try {
                 console.log("Attempting to refresh QR code after timer expiration");
-                const success = await updateQRCodeFn(instanceId);
-                if (!success) {
-                  console.error("Failed to update QR code on timer expiration");
-                } else {
-                  console.log("Successfully refreshed QR code after timer expiration");
-                }
+                await updateQRCodeFn(instanceId);
               } catch (error) {
                 console.error("Error updating QR code on timer expiration:", error);
               } finally {
                 updateInProgressRef.current = false;
-                setTimerCount(60); // Reset to 60 seconds after update attempt
                 updateTimeoutRef.current = null;
               }
             }, 500);
           }
           
-          return 0; // Show 0 while updating
+          return 60; // Reset to 60 seconds
         }
         return prevCount - 1;
       });

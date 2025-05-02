@@ -9,16 +9,27 @@ export const checkConnectionStatus = async (instanceName: string): Promise<boole
   try {
     console.log(`Checking connection status for instance: ${instanceName}`);
     
-    // Try primary endpoint
+    // Use a single shared controller for both requests to ensure proper cancellation
+    const controller = new AbortController();
+    const signal = controller.signal;
+    
+    // Set timeout
+    const timeoutId = setTimeout(() => {
+      controller.abort();
+    }, STATUS_CHECK_TIMEOUT);
+    
     try {
+      // Try primary endpoint
       const response = await fetch(PRIMARY_STATUS_ENDPOINT, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ instanceName }),
-        signal: AbortSignal.timeout(STATUS_CHECK_TIMEOUT), // 8 second timeout
+        signal,
       });
+      
+      clearTimeout(timeoutId);
       
       if (!response.ok) {
         throw new Error('Failed to check connection from primary endpoint');
@@ -27,10 +38,24 @@ export const checkConnectionStatus = async (instanceName: string): Promise<boole
       const data = await response.json();
       console.log("Connection status response from primary:", data);
       
-      return data.status === 'connected' || data.isConnected === true;
+      // Check for connected status in multiple possible response formats
+      if (data.status === 'connected' || 
+          data.isConnected === true || 
+          (data.connected === true) || 
+          (data.data && data.data.connected === true)) {
+        return true;
+      }
+      
+      return false;
     } catch (primaryError) {
       console.log("Primary status check endpoint failed, trying fallback...");
-      // Try fallback endpoint
+      clearTimeout(timeoutId);
+      
+      // Set new timeout for fallback request
+      const fallbackTimeoutId = setTimeout(() => {
+        controller.abort();
+      }, STATUS_CHECK_TIMEOUT);
+      
       try {
         const fallbackResponse = await fetch(FALLBACK_STATUS_ENDPOINT, {
           method: 'POST',
@@ -38,8 +63,10 @@ export const checkConnectionStatus = async (instanceName: string): Promise<boole
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({ instanceName }),
-          signal: AbortSignal.timeout(STATUS_CHECK_TIMEOUT), // 8 second timeout
+          signal: controller.signal,
         });
+        
+        clearTimeout(fallbackTimeoutId);
         
         if (!fallbackResponse.ok) {
           // For development, return random status
@@ -54,8 +81,17 @@ export const checkConnectionStatus = async (instanceName: string): Promise<boole
         const data = await fallbackResponse.json();
         console.log("Connection status response from fallback:", data);
         
-        return data.status === 'connected' || data.isConnected === true;
+        // Check for connected status in multiple possible response formats
+        if (data.status === 'connected' || 
+            data.isConnected === true || 
+            (data.connected === true) || 
+            (data.data && data.data.connected === true)) {
+          return true;
+        }
+        
+        return false;
       } catch (fallbackError) {
+        clearTimeout(fallbackTimeoutId);
         console.error("Fallback status check failed:", fallbackError);
         
         // For development, provide a fallback

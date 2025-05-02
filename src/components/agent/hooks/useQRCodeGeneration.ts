@@ -8,6 +8,8 @@ import { useQRCodeConnection } from "./qrcode/useQRCodeConnection";
 export const useQRCodeGeneration = (instanceId: string, clientIdentifier?: string) => {
   const [showQRCodeDialog, setShowQRCodeDialog] = useState(false);
   const [qrGenerationAttempted, setQrGenerationAttempted] = useState(false);
+  const [isDialogClosedByUser, setIsDialogClosedByUser] = useState(false);
+  const [instanceReady, setInstanceReady] = useState(false);
   
   const { 
     qrCodeImage, 
@@ -30,7 +32,7 @@ export const useQRCodeGeneration = (instanceId: string, clientIdentifier?: strin
     clearConnectionCheck
   } = useQRCodeConnection();
 
-  // Clear intervals when component unmounts
+  // Clean up intervals when component unmounts
   useEffect(() => {
     return () => {
       if (timerIntervalRef.current !== null) {
@@ -49,12 +51,19 @@ export const useQRCodeGeneration = (instanceId: string, clientIdentifier?: strin
     setQrCodeImage(null);
     clearQRCodeTimer();
     clearConnectionCheck();
+    setIsDialogClosedByUser(false);
+    setInstanceReady(true);
     // Additional logic for when agent is connected
   }, [clearQRCodeTimer, clearConnectionCheck, setQrCodeImage]);
 
   // Function to show QR code dialog and handle QR code generation
   const handleShowQRCode = useCallback(async () => {
-    if (qrGenerationAttempted && !qrCodeImage) {
+    // Reset state
+    setIsDialogClosedByUser(false);
+    setInstanceReady(false);
+    
+    // If we've already tried and failed to generate a QR code and haven't closed the dialog manually
+    if (qrGenerationAttempted && !qrCodeImage && !isDialogClosedByUser) {
       toast.error("Não foi possível gerar o QR Code. Tente novamente mais tarde.");
       return;
     }
@@ -62,14 +71,17 @@ export const useQRCodeGeneration = (instanceId: string, clientIdentifier?: strin
     console.log("Initiating QR code generation for:", instanceId, "Client ID:", clientIdentifier);
     setShowQRCodeDialog(true);
     
-    // Reset state
+    // Always clean up previous state when showing the dialog
+    clearQRCodeTimer();
+    clearConnectionCheck();
+    
+    // If we don't already have a QR code image, generate one
     if (!qrCodeImage) {
       setQrCodeImage(null);
-      clearQRCodeTimer();
-      clearConnectionCheck();
       
       // Get QR code
       setQrGenerationAttempted(true);
+      console.log("Calling updateQRCode for:", instanceId);
       const success = await updateQRCode(instanceId, clientIdentifier);
       
       if (success) {
@@ -77,8 +89,15 @@ export const useQRCodeGeneration = (instanceId: string, clientIdentifier?: strin
         // Start timer for QR code refresh
         startQRCodeUpdateTimer(instanceId);
         
-        // Start checking connection status
-        startConnectionStatusCheck(instanceId, handleConnected);
+        // Add small delay before checking connection
+        setTimeout(() => {
+          // Start checking connection status
+          if (!isDialogClosedByUser) {
+            console.log("Starting connection status checks");
+            startConnectionStatusCheck(instanceId, handleConnected);
+          }
+        }, 2000);
+        
       } else {
         console.error("Failed to generate QR code");
         toast.error("Erro ao gerar QR Code. Tente novamente.");
@@ -87,12 +106,19 @@ export const useQRCodeGeneration = (instanceId: string, clientIdentifier?: strin
     } else {
       // If we already have a QR code, just show it without regenerating
       console.log("Using existing QR code");
+      // Start timer for QR code refresh
+      startQRCodeUpdateTimer(instanceId);
+      
+      // Start checking connection status
+      startConnectionStatusCheck(instanceId, handleConnected);
     }
+    
   }, [
     instanceId,
     clientIdentifier,
     qrCodeImage,
     qrGenerationAttempted,
+    isDialogClosedByUser,
     setQrCodeImage, 
     clearQRCodeTimer, 
     clearConnectionCheck, 
@@ -105,9 +131,10 @@ export const useQRCodeGeneration = (instanceId: string, clientIdentifier?: strin
   // Function to close QR code dialog and clean up
   const handleCloseQRCode = useCallback(() => {
     setShowQRCodeDialog(false);
+    setIsDialogClosedByUser(true);
     clearQRCodeTimer();
     clearConnectionCheck();
-    // Don't clear qrCodeImage immediately to avoid regeneration when reopening
+    // Don't clear qrCodeImage immediately to avoid regeneration when reopening quickly
   }, [clearQRCodeTimer, clearConnectionCheck]);
 
   return {
@@ -119,6 +146,7 @@ export const useQRCodeGeneration = (instanceId: string, clientIdentifier?: strin
     connectionCheckAttempts,
     handleShowQRCode,
     handleCloseQRCode,
-    handleConnected
+    handleConnected,
+    instanceReady
   };
 };
