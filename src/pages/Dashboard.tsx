@@ -83,10 +83,6 @@ const Dashboard = () => {
     }
   }, [navigate, toast, userEmail, isTrialPlan, isTrialExpired, isSubscriptionExpired]);
 
-  const handleNavigateToMyAgents = useCallback(() => {
-    navigate('/agents');
-  }, [navigate]);
-
   return (
     <MainLayout title="Dashboard">
       <div className="space-y-8">
@@ -98,7 +94,7 @@ const Dashboard = () => {
             onCreateAgent={(type) => {
               navigate(`/create-agent?type=${type}`);
             }}
-            onNavigateToAgents={handleNavigateToMyAgents}
+            onNavigateToAgents={() => {}}
             isChecking={isChecking}
           />
         </div>

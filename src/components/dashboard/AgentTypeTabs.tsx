@@ -55,17 +55,25 @@ export function AgentTypeTabs({
               Gerencie seus agentes existentes ou crie novos para expandir seu atendimento.
             </p>
             
-            <div className="flex flex-col sm:flex-row gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {userAgents.map(agent => (
+                <AgentCard
+                  key={agent.id}
+                  name={agent.name}
+                  description={agent.type || "Agente personalizado"}
+                  type={agent.type as AgentType || "custom"}
+                  onClick={() => navigate(`/agent-analytics/${agent.id}`)}
+                />
+              ))}
+            </div>
+            
+            <div className="flex flex-col sm:flex-row gap-4 mt-6">
               <Button 
                 onClick={() => navigate('/dashboard?tab=discover')} 
                 disabled={isChecking}
               >
                 <PlusCircle className="mr-2 h-4 w-4" />
                 {isChecking ? "Verificando..." : "Criar Novo Agente"}
-              </Button>
-              
-              <Button variant="outline" onClick={onNavigateToAgents}>
-                Ver todos os meus agentes
               </Button>
             </div>
           </>
