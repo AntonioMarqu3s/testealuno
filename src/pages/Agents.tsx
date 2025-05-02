@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import MainLayout from "@/components/layout/MainLayout";
@@ -74,20 +75,27 @@ const Agents = () => {
     navigate('/plan-checkout');
   };
 
-  const handleDeleteAgent = (agentId: string) => {
+  const handleDeleteAgent = async (agentId: string) => {
     try {
-      deleteUserAgent(userEmail, agentId);
-      // Update local state after deletion
-      setUserAgents(prevAgents => prevAgents.filter(agent => agent.id !== agentId));
-      toastHook({
-        title: "Agente excluído",
-        description: "O agente foi excluído com sucesso.",
-      });
+      const agent = userAgents.find(a => a.id === agentId);
+      
+      // Delete agent from localStorage and call webhook
+      const deletedSuccessfully = await deleteUserAgent(userEmail, agentId);
+      
+      if (deletedSuccessfully) {
+        // Update local state after deletion
+        setUserAgents(prevAgents => prevAgents.filter(agent => agent.id !== agentId));
+        
+        toast.success("Agente excluído", {
+          description: "O agente e sua instância no WhatsApp foram removidos com sucesso.",
+        });
+      } else {
+        throw new Error("Falha ao excluir o agente");
+      }
     } catch (error) {
-      toastHook({
-        variant: "destructive",
-        title: "Erro",
-        description: "Não foi possível excluir o agente.",
+      console.error("Error deleting agent:", error);
+      toast.error("Erro ao excluir agente", {
+        description: "Não foi possível excluir completamente o agente. Tente novamente.",
       });
     }
   };
@@ -108,16 +116,13 @@ const Agents = () => {
         agent.id === agentId ? { ...agent, isConnected, connectInstancia: isConnected } : agent
       ));
       
-      toastHook({
-        title: isConnected ? "Agente conectado" : "Agente desconectado",
+      toast.success(isConnected ? "Agente conectado" : "Agente desconectado", {
         description: isConnected ? 
           "O agente foi conectado com sucesso." : 
           "O agente foi desconectado com sucesso.",
       });
     } catch (error) {
-      toastHook({
-        variant: "destructive",
-        title: "Erro",
+      toast.error("Erro de conexão", {
         description: `Não foi possível ${isConnected ? 'conectar' : 'desconectar'} o agente.`,
       });
     }

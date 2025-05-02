@@ -1,5 +1,7 @@
+
 import { getStorageItem, setStorageItem, ALL_AGENTS_KEY } from '../storage/localStorageService';
 import { Agent } from '@/components/agent/AgentTypes';
+import { toast } from "sonner";
 
 /**
  * Get all agents for a user
@@ -54,12 +56,54 @@ export const saveAgent = (email: string, agent: Agent): void => {
 };
 
 /**
+ * Call webhook to delete instance from WhatsApp server
+ */
+export const deleteWhatsAppInstance = async (instanceName: string): Promise<boolean> => {
+  try {
+    // Try to call the webhook to delete the instance
+    const response = await fetch('https://n8n-n8n.31kvca.easypanel.host/webhook/delete-ínstancia', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ instanceName }),
+    });
+    
+    if (!response.ok) {
+      console.error("Error deleting WhatsApp instance:", response.status);
+      return false;
+    }
+    
+    return true;
+  } catch (error) {
+    console.error("Failed to call delete instance webhook:", error);
+    return false;
+  }
+};
+
+/**
  * Delete an agent for the user
  */
-export const deleteUserAgent = (email: string, agentId: string): void => {
+export const deleteUserAgent = async (email: string, agentId: string): Promise<boolean> => {
   const allAgentsData = getStorageItem<Record<string, Agent[]>>(ALL_AGENTS_KEY, {});
   
   if (allAgentsData[email]) {
+    // Find the agent to get the instance name before deletion
+    const agent = allAgentsData[email].find(a => a.id === agentId);
+    
+    if (agent && agent.instanceId) {
+      // Call webhook to delete the instance from WhatsApp server
+      try {
+        const webhookSuccess = await deleteWhatsAppInstance(agent.instanceId);
+        if (!webhookSuccess) {
+          console.warn("Could not delete WhatsApp instance, but will proceed with local deletion");
+        }
+      } catch (error) {
+        console.error("Error calling delete webhook:", error);
+        // Continue with deletion even if webhook fails
+      }
+    }
+    
     // Filter out deleted agent
     allAgentsData[email] = allAgentsData[email].filter(agent => agent.id !== agentId);
     
@@ -67,9 +111,13 @@ export const deleteUserAgent = (email: string, agentId: string): void => {
     setStorageItem(ALL_AGENTS_KEY, allAgentsData);
     
     // Decrement the agent count in the user's plan
-    const decrementAgentCount = require('../plan/userPlanService').decrementAgentCount;
+    const decrementAgentCount = require('../plan/planLimitService').decrementAgentCount;
     decrementAgentCount(email);
+    
+    return true;
   }
+  
+  return false;
 };
 
 /**
