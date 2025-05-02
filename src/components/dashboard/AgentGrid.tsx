@@ -1,71 +1,43 @@
 
-import { AgentCard, AgentType } from "./AgentCard";
-import { 
-  Users, 
-  UserCheck, 
-  HeadsetIcon, 
-  UserPlus,
-  PlusCircle,
-  Send,
-  Calendar // Added for secretary agent
-} from "lucide-react";
-import { useMemo } from "react";
+import { AgentCard } from "./AgentCard";
 
-export function AgentGrid() {
-  const agentTypes = useMemo(() => [
+interface AgentGridProps {
+  onCreateAgent: () => void;
+  isChecking?: boolean;
+}
+
+export function AgentGrid({ onCreateAgent, isChecking = false }: AgentGridProps) {
+  const agentTypes = [
     {
-      title: "Vendedor",
-      description: "Agente especializado em vendas e negociação",
-      type: "sales" as AgentType,
-      icon: <Users className="h-5 w-5" />,
+      type: "whatsapp",
+      title: "Agente WhatsApp",
+      description: "Um agente para receber e responder mensagens no WhatsApp automaticamente.",
+      icon: "💬"
     },
     {
-      title: "SDR",
-      description: "Especialista em prospecção e qualificação",
-      type: "sdr" as AgentType,
-      icon: <UserPlus className="h-5 w-5" />,
+      type: "instagram",
+      title: "Agente Instagram",
+      description: "Um agente para gerenciar interações do Instagram.",
+      icon: "📸"
     },
     {
-      title: "Closer",
-      description: "Especialista em fechamento de negócios",
-      type: "closer" as AgentType,
-      icon: <UserCheck className="h-5 w-5" />,
-    },
-    {
-      title: "Atendimento",
-      description: "Suporte ao cliente e atendimento",
-      type: "support" as AgentType,
-      icon: <HeadsetIcon className="h-5 w-5" />,
-    },
-    {
-      title: "Disparo",
-      description: "Especialista em disparo de mensagens em massa",
-      type: "broadcast" as AgentType,
-      icon: <Send className="h-5 w-5" />,
-    },
-    {
-      title: "Secretária Pessoal",
-      description: "Gerencia agenda, emails e relatórios",
-      type: "secretary" as AgentType,
-      icon: <Calendar className="h-5 w-5" />,
-    },
-    {
-      title: "Personalizado",
-      description: "Crie um agente personalizado para sua necessidade",
-      type: "custom" as AgentType,
-      icon: <PlusCircle className="h-5 w-5" />,
-    },
-  ], []);
+      type: "facebook",
+      title: "Agente Facebook",
+      description: "Um agente para automação de mensagens no Facebook.",
+      icon: "👍"
+    }
+  ];
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
       {agentTypes.map((agent) => (
-        <AgentCard
+        <AgentCard 
           key={agent.type}
           title={agent.title}
           description={agent.description}
-          type={agent.type}
           icon={agent.icon}
+          onClick={() => onCreateAgent()}
+          isLoading={isChecking}
         />
       ))}
     </div>

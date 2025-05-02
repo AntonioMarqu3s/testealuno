@@ -20,7 +20,7 @@ export const useAgentSubmission = (agentType: string) => {
   const { toast: toastHook } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmitAgent = (values: AgentFormValues) => {
+  const handleSubmitAgent = async (values: AgentFormValues) => {
     setIsSubmitting(true);
     
     try {
@@ -28,7 +28,9 @@ export const useAgentSubmission = (agentType: string) => {
       const userEmail = getCurrentUserEmail() || "user@example.com";
       
       // Check if the user can create more agents
-      if (!canCreateAgent(userEmail)) {
+      const canCreate = await canCreateAgent(userEmail);
+      
+      if (!canCreate) {
         toastHook({
           title: "Limite de plano atingido",
           description: "Seu plano atual não permite a criação de agentes. Faça upgrade para um plano pago para criar agentes.",
@@ -70,6 +72,9 @@ export const useAgentSubmission = (agentType: string) => {
       });
       
       setIsSubmitting(false);
+      
+      // Navigate to agents page
+      navigate('/agents');
     } catch (error) {
       console.error("Error creating agent:", error);
       toast.error("Erro ao criar agente", {

@@ -7,7 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import { toast } from "sonner";
 import { AgentFormValues } from "@/components/agent/form/agentSchema";
 import { getCurrentUserEmail } from "@/services/user/userService";
-import { getUserPlan, PlanType, hasTrialExpired } from "@/services/plan/userPlanService";
+import { getUserPlan } from "@/services/plan/userPlanService";
 import { canCreateAgent } from "@/services/plan/planLimitService";
 
 const CreateAgent = () => {
@@ -19,51 +19,73 @@ const CreateAgent = () => {
   const type = searchParams.get('type');
   const [initialValues, setInitialValues] = useState<Partial<AgentFormValues> | null>(null);
   const [isEdit, setIsEdit] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Check user plan status first
-    const userEmail = getCurrentUserEmail();
-    const userPlan = getUserPlan(userEmail);
-    const isTrialExpired = hasTrialExpired(userEmail);
-    
-    // Check if the user can create more agents
-    const canCreate = canCreateAgent(userEmail);
-    
-    // If editing, we don't need to check plan limits
-    if (agentId) {
-      const storedAgent = sessionStorage.getItem('editingAgent');
-      if (storedAgent) {
-        setIsEdit(true);
-        const agent = JSON.parse(storedAgent);
-        setInitialValues({
-          agentName: agent.name,
-          // Add other fields as needed
-        });
+    const checkPermissions = async () => {
+      setIsLoading(true);
+      
+      // Get user email
+      const userEmail = getCurrentUserEmail();
+      
+      // If editing, we don't need to check plan limits
+      if (agentId) {
+        const storedAgent = sessionStorage.getItem('editingAgent');
+        if (storedAgent) {
+          setIsEdit(true);
+          const agent = JSON.parse(storedAgent);
+          setInitialValues({
+            agentName: agent.name,
+            // Add other fields as needed
+          });
+        }
+        setIsLoading(false);
+        return;
       }
-      return;
-    }
+      
+      // Check if the user can create more agents based on database rules
+      const canCreate = await canCreateAgent(userEmail);
+      
+      // If user cannot create more agents, redirect to plans page
+      if (!canCreate) {
+        toast.warning("Limite de plano atingido", {
+          description: "Seu plano atual não permite a criação de mais agentes. Por favor, faça upgrade para um plano maior."
+        });
+        navigate('/plans');
+        return;
+      }
+      
+      // Check if type is valid, if not redirect
+      if (!type) {
+        toast.info("Selecione um tipo de agente", {
+          description: "Por favor, escolha um tipo de agente antes de prosseguir com a criação."
+        });
+        navigate('/dashboard?tab=agents');
+      }
+      
+      setIsLoading(false);
+    };
     
-    // If user cannot create more agents (regardless of plan type), redirect to plans page
-    if (!canCreate) {
-      toast.warning("Limite de plano atingido", {
-        description: "Seu plano atual não permite a criação de mais agentes. Por favor, faça upgrade para um plano maior."
-      });
-      navigate('/plans');
-      return;
-    }
-    
-    // Check if type is valid, if not redirect
-    if (!type && !isEdit) {
-      toast.info("Selecione um tipo de agente", {
-        description: "Por favor, escolha um tipo de agente antes de prosseguir com a criação."
-      });
-      navigate('/dashboard?tab=agents');
-    }
+    checkPermissions();
   }, [agentId, type, toastHook, navigate, isEdit]);
 
   // Return early if no type, but only after the useEffect has run
   if (!type && !isEdit) {
     return null;
+  }
+
+  // Show loading state while checking permissions
+  if (isLoading) {
+    return (
+      <MainLayout title={isEdit ? "Editar Agente" : "Criar Agente"}>
+        <div className="flex justify-center items-center min-h-[400px]">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+            <p className="mt-4 text-muted-foreground">Verificando permissões...</p>
+          </div>
+        </div>
+      </MainLayout>
+    );
   }
 
   return (

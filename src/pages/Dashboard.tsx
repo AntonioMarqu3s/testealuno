@@ -14,7 +14,7 @@ import { TrialBanner } from "@/components/dashboard/TrialBanner";
 import { AgentTypeTabs } from "@/components/dashboard/AgentTypeTabs";
 import { DashboardCards } from "@/components/dashboard/DashboardCards";
 import { useToast } from "@/hooks/use-toast";
-import { useMemo, useCallback } from "react";
+import { useMemo, useCallback, useState } from "react";
 import { canCreateAgent } from "@/services/plan/planLimitService";
 
 const Dashboard = () => {
@@ -23,6 +23,7 @@ const Dashboard = () => {
   const { toast } = useToast();
   const searchParams = new URLSearchParams(location.search);
   const currentTab = searchParams.get('tab') || 'agents';
+  const [isChecking, setIsChecking] = useState(false);
   
   // Get user information
   const userEmail = getCurrentUserEmail();
@@ -34,21 +35,35 @@ const Dashboard = () => {
   const isTrialExpired = hasTrialExpired(userEmail);
   const isTrialPlan = userPlan.plan === PlanType.FREE_TRIAL;
 
-  const handleCreateAgent = useCallback(() => {
-    const canCreate = canCreateAgent(userEmail);
+  const handleCreateAgent = useCallback(async () => {
+    setIsChecking(true);
     
-    // Check if the user can create more agents
-    if (!canCreate) {
+    try {
+      // Check if the user can create more agents based on database rules
+      const canCreate = await canCreateAgent(userEmail);
+      
+      // Check if the user can create more agents
+      if (!canCreate) {
+        toast({
+          title: "Limite de plano atingido",
+          description: "Seu plano atual não permite a criação de mais agentes. Por favor, faça upgrade para um plano pago.",
+          variant: "destructive"
+        });
+        // Add a small delay before redirecting to prevent loop issues
+        setTimeout(() => navigate('/plans'), 100);
+      } else {
+        // Navigate to agent type selection
+        navigate('/create-agent');
+      }
+    } catch (error) {
+      console.error("Error checking agent creation permissions:", error);
       toast({
-        title: "Limite de plano atingido",
-        description: "Seu plano atual não permite a criação de mais agentes. Por favor, faça upgrade para um plano pago.",
+        title: "Erro de verificação",
+        description: "Ocorreu um erro ao verificar suas permissões. Por favor, tente novamente.",
         variant: "destructive"
       });
-      // Add a small delay before redirecting to prevent loop issues
-      setTimeout(() => navigate('/plans'), 100);
-    } else {
-      // Navigate to agent type selection
-      navigate('/create-agent');
+    } finally {
+      setIsChecking(false);
     }
   }, [navigate, toast, userEmail]);
 
@@ -80,6 +95,7 @@ const Dashboard = () => {
           currentTab={currentTab}
           onCreateAgent={handleCreateAgent}
           onNavigateToAgents={handleNavigateToMyAgents}
+          isChecking={isChecking}
         />
 
         <DashboardCards 

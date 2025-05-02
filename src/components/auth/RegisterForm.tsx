@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -81,8 +80,10 @@ export function RegisterForm({
     try {
       console.log(`Attempting to register with email: ${values.email}`);
       
-      // Always apply FREE_TRIAL plan
-      const planToApply = PlanType.FREE_TRIAL;
+      // Determine plan type based on promo code
+      // If promo code OFERTAMDF is applied, set plan to 1 (BASIC)
+      // otherwise set to 0 (FREE_TRIAL without trial days)
+      const planToApply = promoApplied ? PlanType.BASIC : PlanType.FREE_TRIAL;
       
       const { data, error } = await supabase.auth.signUp({
         email: values.email,
@@ -113,9 +114,22 @@ export function RegisterForm({
       // Update user email
       updateCurrentUserEmail(values.email);
       
-      // Update user plan based on selection or promo code
-      // IMPORTANT: Pass promoApplied flag to updateUserPlan to set trial days properly
-      updateUserPlan(values.email, planToApply, undefined, undefined, undefined, promoApplied);
+      // Calculate trial end date (5 days from now) if promo code is applied
+      let trialEndDate;
+      if (promoApplied) {
+        trialEndDate = new Date();
+        trialEndDate.setDate(trialEndDate.getDate() + 5);
+      }
+      
+      // Update user plan based on promo code
+      updateUserPlan(
+        values.email,
+        planToApply,
+        undefined,
+        undefined,
+        undefined,
+        promoApplied
+      );
       
       // Success message - different messages based on promo code
       toast.success("Conta criada com sucesso!", { 

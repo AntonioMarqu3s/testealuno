@@ -1,23 +1,92 @@
 
 import { getUserPlan, hasTrialExpired, PlanType } from './userPlanService';
 import { getUserAgents } from '../agent/agentStorageService';
+import { supabase } from '@/lib/supabase';
 
 /**
  * Check if a user can create more agents based on their plan limits
  * @param email User email
  * @returns boolean indicating if user can create more agents
  */
-export const canCreateAgent = (email: string): boolean => {
-  const userPlan = getUserPlan(email);
-  const userAgents = getUserAgents(email);
-  
-  // If user is on FREE_TRIAL plan and trial has expired, they cannot create agents
-  if (userPlan.plan === PlanType.FREE_TRIAL && hasTrialExpired(email)) {
-    return false;
+export const canCreateAgent = async (email: string): Promise<boolean> => {
+  try {
+    // First get the user ID from the current session
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) {
+      console.log('No authenticated user found');
+      return false;
+    }
+    
+    // Get user plan directly from the database
+    const { data: planData, error } = await supabase
+      .from('user_plans')
+      .select('plan, trial_ends_at, agent_limit')
+      .eq('user_id', user.id)
+      .single();
+    
+    if (error) {
+      console.error('Error fetching user plan:', error);
+      
+      // Fallback to local storage if database query fails
+      const userPlan = getUserPlan(email);
+      const userAgents = getUserAgents(email);
+      
+      // Check if user is on FREE_TRIAL plan and trial has expired
+      if (userPlan.plan === PlanType.FREE_TRIAL && hasTrialExpired(email)) {
+        return false;
+      }
+      
+      return userAgents.length < userPlan.agentLimit;
+    }
+    
+    if (!planData) {
+      console.log('No plan data found for user');
+      return false;
+    }
+    
+    // Check plan rules:
+    // 1. If plan is 0 (FREE_TRIAL) and trial_ends_at exists and is in the future, allow creation
+    // 2. If plan is >= 1 (paid plan), allow creation based on agent limit
+    const currentDate = new Date();
+    const trialEndDate = planData.trial_ends_at ? new Date(planData.trial_ends_at) : null;
+    
+    // Get user agents count
+    const { data: userAgents } = await supabase
+      .from('agents')
+      .select('id')
+      .eq('user_id', user.id);
+    
+    const agentCount = userAgents ? userAgents.length : 0;
+    
+    // If plan is 0 (FREE_TRIAL), check trial expiration
+    if (planData.plan === 0) {
+      // Only allow if there's a valid trial and it hasn't expired
+      if (!trialEndDate || currentDate > trialEndDate) {
+        console.log('Trial has expired or no trial end date');
+        return false;
+      }
+    }
+    
+    // Check if user has reached their agent limit
+    console.log(`Agent count: ${agentCount}, Agent limit: ${planData.agent_limit}`);
+    return agentCount < planData.agent_limit;
+    
+  } catch (error) {
+    console.error('Error in canCreateAgent:', error);
+    
+    // Fallback to local storage if database query fails
+    const userPlan = getUserPlan(email);
+    const userAgents = getUserAgents(email);
+    
+    // If user is on FREE_TRIAL plan and trial has expired, they cannot create agents
+    if (userPlan.plan === PlanType.FREE_TRIAL && hasTrialExpired(email)) {
+      return false;
+    }
+    
+    // Check if user has reached the agent limit for their plan
+    return userAgents.length < userPlan.agentLimit;
   }
-  
-  // Check if user has reached the agent limit for their plan
-  return userAgents.length < userPlan.agentLimit;
 };
 
 /**

@@ -1,51 +1,77 @@
 
-import { useNavigate } from "react-router-dom";
-import { AgentGrid } from "@/components/dashboard/AgentGrid";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Users } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { AgentGrid } from "./AgentGrid";
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
-import { memo } from "react";
+import { getCurrentUserEmail } from "@/services/user/userService";
+import { getUserAgents } from "@/services/agent/agentStorageService";
+import { PlusCircle } from "lucide-react";
 
 interface AgentTypeTabsProps {
   currentTab: string;
   onCreateAgent: () => void;
   onNavigateToAgents: () => void;
+  isChecking?: boolean;
 }
 
-export const AgentTypeTabs = memo(({ 
+export function AgentTypeTabs({ 
   currentTab, 
   onCreateAgent, 
-  onNavigateToAgents 
-}: AgentTypeTabsProps) => {
+  onNavigateToAgents,
+  isChecking = false
+}: AgentTypeTabsProps) {
+  const navigate = useNavigate();
+  const userEmail = getCurrentUserEmail();
+  const userAgents = getUserAgents(userEmail);
+  
+  const handleTabChange = (value: string) => {
+    navigate(`/dashboard?tab=${value}`);
+  };
+
   return (
-    <Tabs defaultValue={currentTab} value={currentTab}>
-      <TabsList>
-        <TabsTrigger value="agents">Tipos de Agentes</TabsTrigger>
-        <TabsTrigger value="my-agents" onClick={onNavigateToAgents}>Meus Agentes</TabsTrigger>
-      </TabsList>
-      <TabsContent value="agents" className="space-y-6">
-        <div className="mt-6">
-          <h3 className="text-lg font-medium mb-4">Escolha um tipo de agente para começar</h3>
-          <AgentGrid />
-        </div>
-      </TabsContent>
-      <TabsContent value="my-agents">
-        <div className="mt-6 flex flex-col items-center justify-center min-h-[400px] border border-dashed rounded-lg p-8">
-          <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-4">
-            <Users className="h-8 w-8 text-primary" />
+    <Tabs defaultValue={currentTab} onValueChange={handleTabChange}>
+      <div className="flex justify-between items-center mb-4">
+        <TabsList>
+          <TabsTrigger value="agents">Meus Agentes ({userAgents.length})</TabsTrigger>
+          <TabsTrigger value="discover">Conhecer Mais</TabsTrigger>
+        </TabsList>
+        
+        <Button onClick={onCreateAgent} disabled={isChecking}>
+          <PlusCircle className="mr-2 h-4 w-4" />
+          {isChecking ? "Verificando..." : "Criar Agente"}
+        </Button>
+      </div>
+      
+      <TabsContent value="agents" className="space-y-4">
+        {userAgents.length > 0 ? (
+          <>
+            <p className="text-muted-foreground">
+              Gerencie seus agentes existentes ou crie novos para expandir seu atendimento.
+            </p>
+            
+            <Button variant="outline" onClick={onNavigateToAgents}>
+              Ver todos os meus agentes
+            </Button>
+          </>
+        ) : (
+          <div className="text-center py-10">
+            <h3 className="text-xl font-medium mb-2">Você ainda não tem agentes</h3>
+            <p className="text-muted-foreground mb-4">
+              Crie seu primeiro agente para começar a usar nossa plataforma.
+            </p>
+            <Button onClick={onCreateAgent} disabled={isChecking}>
+              {isChecking ? "Verificando..." : "Criar meu primeiro agente"}
+            </Button>
           </div>
-          <h3 className="text-xl font-medium">Nenhum agente criado ainda</h3>
-          <p className="text-muted-foreground text-center max-w-md mt-2 mb-6">
-            Crie seu primeiro agente de IA personalizado para automatizar tarefas de vendas, prospecção ou atendimento.
-          </p>
-          <Button onClick={onCreateAgent}>
-            <Plus className="mr-2 h-4 w-4" /> Criar Agente
-          </Button>
-        </div>
+        )}
+      </TabsContent>
+      
+      <TabsContent value="discover">
+        <p className="text-muted-foreground mb-4">
+          Conheça nosso catálogo de agentes disponíveis e escolha o melhor para o seu negócio.
+        </p>
+        <AgentGrid onCreateAgent={onCreateAgent} isChecking={isChecking} />
       </TabsContent>
     </Tabs>
   );
-});
-
-AgentTypeTabs.displayName = "AgentTypeTabs";
+}
