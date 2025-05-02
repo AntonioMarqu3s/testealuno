@@ -17,7 +17,7 @@ export const WelcomeHeader = ({ onCreateAgent }: WelcomeHeaderProps) => {
           Crie e personalize seus agentes de IA para diferentes finalidades.
         </p>
       </div>
-      <Button className="md:w-auto w-full" onClick={() => navigate('/dashboard?tab=discover')}>
+      <Button className="md:w-auto w-full" onClick={onCreateAgent}>
         Criar Novo Agente
       </Button>
     </div>

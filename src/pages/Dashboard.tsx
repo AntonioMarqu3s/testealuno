@@ -4,15 +4,13 @@ import MainLayout from "@/components/layout/MainLayout";
 import { getCurrentUserEmail } from "@/services/user/userService";
 import { 
   getUserPlan, 
-  PlanType, 
+  PlanType,
   getTrialDaysRemaining, 
   hasTrialExpired,
   hasSubscriptionExpired
 } from "@/services/plan/userPlanService";
 import { getUserAgents } from "@/services/agent/agentStorageService";
 import { WelcomeHeader } from "@/components/dashboard/WelcomeHeader";
-import { TrialBanner } from "@/components/dashboard/TrialBanner";
-import { AgentTypeTabs } from "@/components/dashboard/AgentTypeTabs";
 import { ResourcesCard } from "@/components/dashboard/ResourcesCard";
 import { useToast } from "@/hooks/use-toast";
 import { useCallback, useState } from "react";
@@ -20,10 +18,7 @@ import { canCreateAgent } from "@/services/plan/planLimitService";
 
 const Dashboard = () => {
   const navigate = useNavigate();
-  const location = useLocation();
   const { toast } = useToast();
-  const searchParams = new URLSearchParams(location.search);
-  const currentTab = searchParams.get('tab') || 'discover'; // Default to discover tab
   const [isChecking, setIsChecking] = useState(false);
   
   // Get user information
@@ -70,7 +65,7 @@ const Dashboard = () => {
         // Add a small delay before redirecting to prevent loop issues
         setTimeout(() => navigate('/plans'), 100);
       } else {
-        // Navigate to agent type selection - redirect to discover tab
+        // Navigate to agent type selection
         navigate('/dashboard?tab=discover');
       }
     } catch (error) {
@@ -85,55 +80,26 @@ const Dashboard = () => {
     }
   }, [navigate, toast, userEmail, isTrialPlan, isTrialExpired, isSubscriptionExpired]);
 
-  const handleNavigateToMyAgents = useCallback(() => {
-    navigate('/agents');
-  }, [navigate]);
-  
   const handleUpgrade = useCallback(() => {
     navigate('/plans');
   }, [navigate]);
-
-  // Determine if we should show a banner
-  const shouldShowBanner = isTrialPlan || isSubscriptionExpired;
 
   return (
     <MainLayout title="Dashboard">
       <div className="space-y-8">
         <WelcomeHeader onCreateAgent={handleCreateAgent} />
         
-        {shouldShowBanner && (
-          <TrialBanner 
-            isTrialExpired={isTrialPlan ? isTrialExpired : false}
+        <div className="max-w-md mx-auto">
+          <ResourcesCard 
+            userAgentsCount={userAgents.length}
+            agentLimit={userPlan.agentLimit}
+            planName={userPlan.name}
+            isTrialPlan={isTrialPlan}
+            isTrialExpired={isTrialExpired}
+            isSubscriptionExpired={isSubscriptionExpired}
             trialDaysRemaining={trialDaysRemaining}
-            isSubscriptionExpired={!isTrialPlan ? isSubscriptionExpired : false}
             onUpgrade={handleUpgrade}
           />
-        )}
-        
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2">
-            <AgentTypeTabs 
-              currentTab={currentTab}
-              onCreateAgent={(type) => {
-                navigate(`/create-agent?type=${type}`);
-              }}
-              onNavigateToAgents={handleNavigateToMyAgents}
-              isChecking={isChecking}
-            />
-          </div>
-          
-          <div className="lg:col-span-1">
-            <ResourcesCard 
-              userAgentsCount={userAgents.length}
-              agentLimit={userPlan.agentLimit}
-              planName={userPlan.name}
-              isTrialPlan={isTrialPlan}
-              isTrialExpired={isTrialExpired}
-              isSubscriptionExpired={isSubscriptionExpired}
-              trialDaysRemaining={trialDaysRemaining}
-              onUpgrade={handleUpgrade}
-            />
-          </div>
         </div>
       </div>
     </MainLayout>
