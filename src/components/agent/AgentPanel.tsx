@@ -42,44 +42,26 @@ export const AgentPanel: React.FC<AgentPanelProps> = ({
     timerCount,
     connectionCheckAttempts,
     handleShowQRCode,
-    handleCloseQRCode,
-    handleRefreshQRCode,
-    isConnected: isQRConnected,
-    setIsConnected: setQRConnected
+    handleCloseQRCode 
   } = useQRCodeGeneration(agent.instanceId, agent.clientIdentifier);
   
   const { isDisconnecting, isCheckingStatus, handleDisconnect, checkConnectionStatus } = useAgentConnection();
 
-  // Sync the local connected state with QR code hook's connected state
+  // Check connection status when component mounts
   useEffect(() => {
-    if (isQRConnected !== isConnected) {
-      setIsConnected(isQRConnected);
-      
-      // Update parent state if callback provided
-      if (onToggleConnection && isQRConnected !== agent.isConnected) {
-        onToggleConnection(agent.id, isQRConnected);
-      }
-    }
-  }, [isQRConnected, isConnected, agent.id, agent.isConnected, onToggleConnection]);
-
-  // Check connection status when component mounts - only one time
-  useEffect(() => {
-    if (agent.instanceId && agent.isConnected) {
-      // Only check if the agent is marked as connected
+    if (agent.instanceId) {
       const verifyStatus = async () => {
         try {
           console.log("Verifying agent connection status on mount:", agent.instanceId);
           const connected = await checkConnectionStatus(agent.instanceId);
           
           // Only update if the connection status is different
-          if (!connected && isConnected) {
-            console.log("Agent was marked as connected but is actually disconnected");
-            setIsConnected(false);
-            setQRConnected(false);
+          if (connected !== isConnected) {
+            setIsConnected(connected);
             
             // Update parent state if callback provided
             if (onToggleConnection) {
-              onToggleConnection(agent.id, false);
+              onToggleConnection(agent.id, connected);
             }
           }
         } catch (error) {
@@ -90,7 +72,7 @@ export const AgentPanel: React.FC<AgentPanelProps> = ({
       
       verifyStatus();
     }
-  }, [agent.instanceId, agent.isConnected, checkConnectionStatus, isConnected, agent.id, onToggleConnection, setQRConnected]);
+  }, [agent.instanceId, checkConnectionStatus, isConnected, agent.id, onToggleConnection]);
 
   // Handle auto show QR code when directed from agent creation
   useEffect(() => {
@@ -101,14 +83,8 @@ export const AgentPanel: React.FC<AgentPanelProps> = ({
   }, [autoShowQR, agent.name, showQRCodeDialog, handleShowQRCode]);
 
   const handleEdit = () => {
-    // Store the current connection status in the session storage to preserve it during edit
-    const agentData = {
-      ...agent,
-      isConnected: isConnected // Ensure we pass the current connection state
-    };
-    
     // Prepare agent data for editing and navigate
-    sessionStorage.setItem('editingAgent', JSON.stringify(agentData));
+    sessionStorage.setItem('editingAgent', JSON.stringify(agent));
     navigate(`/edit-agent/${agent.id}?type=${agent.type}`);
   };
 
@@ -125,14 +101,11 @@ export const AgentPanel: React.FC<AgentPanelProps> = ({
       const success = await handleDisconnect(agent.instanceId);
       if (success) {
         setIsConnected(false);
-        setQRConnected(false);
         
         // Update parent state if callback provided
         if (onToggleConnection) {
           onToggleConnection(agent.id, false);
         }
-        
-        toast.success("Agente desconectado com sucesso!");
       }
     } catch (error) {
       console.error("Error disconnecting agent:", error);
@@ -143,39 +116,21 @@ export const AgentPanel: React.FC<AgentPanelProps> = ({
   const handleConnectClick = () => {
     // Gera QR code e configura callback de conexão
     handleShowQRCode();
+    // Evitar navegação para página de análise aqui
   };
-
-  // Handler for dialog close event
-  const handleQRDialogClose = async (open: boolean) => {
-    if (!open) {
-      // Dialog is closing, check connection status before final close
-      try {
-        console.log("QR dialog closing, checking connection status for:", agent.instanceId);
-        const isStillConnected = await checkConnectionStatus(agent.instanceId);
-        
-        // Update connection status based on check
-        if (isStillConnected && !isConnected) {
-          console.log("Connection detected on dialog close!");
-          setIsConnected(true);
-          setQRConnected(true);
-          
-          // Update parent state if callback provided
-          if (onToggleConnection) {
-            onToggleConnection(agent.id, true);
-          }
-          
-          toast.success("Agente conectado com sucesso!");
-        }
-      } catch (error) {
-        console.error("Error checking connection on dialog close:", error);
-      }
-      
-      // Close dialog regardless of connection status
-      handleCloseQRCode();
-      setShowQRCodeDialog(false);
-    } else {
-      setShowQRCodeDialog(true);
+  
+  const handleQRConnected = () => {
+    // Handle successful connection
+    setIsConnected(true);
+    
+    // Update parent state if callback provided
+    if (onToggleConnection) {
+      console.log("QR code scanned successfully, updating agent connection status");
+      onToggleConnection(agent.id, true);
     }
+    
+    // Close QR dialog
+    setShowQRCodeDialog(false);
   };
 
   return (
@@ -210,12 +165,16 @@ export const AgentPanel: React.FC<AgentPanelProps> = ({
       {/* QR Code Dialog */}
       <QRCodeDialog
         open={showQRCodeDialog}
-        onOpenChange={handleQRDialogClose}
+        onOpenChange={(open) => {
+          if (!open) {
+            handleCloseQRCode();
+          }
+          setShowQRCodeDialog(open);
+        }}
         qrCodeImage={qrCodeImage}
         timerCount={timerCount}
         connectionCheckAttempts={connectionCheckAttempts}
         isGeneratingQRCode={isGeneratingQRCode}
-        onRefresh={handleRefreshQRCode}
       />
     </Card>
   );

@@ -15,7 +15,6 @@ const CreateAgent = () => {
   const type = searchParams.get('type');
   const [initialValues, setInitialValues] = useState<Partial<AgentFormValues> | null>(null);
   const [isEdit, setIsEdit] = useState(false);
-  const [connectionStatus, setConnectionStatus] = useState(false);
 
   useEffect(() => {
     // Check if we're in edit mode
@@ -24,9 +23,6 @@ const CreateAgent = () => {
       if (storedAgent) {
         const agent = JSON.parse(storedAgent);
         setIsEdit(true);
-        
-        // Store the connection status in state
-        setConnectionStatus(agent.isConnected || false);
         
         // Map agent data to form values
         setInitialValues({
@@ -61,7 +57,7 @@ const CreateAgent = () => {
           </h1>
           <p className="text-muted-foreground mt-2">
             {isEdit 
-              ? `Atualize as configurações do seu agente${connectionStatus ? " (agente conectado)" : ""}`
+              ? "Atualize as configurações do seu agente" 
               : "Configure seu agente personalizado em algumas etapas simples"
             }
           </p>
@@ -71,7 +67,6 @@ const CreateAgent = () => {
           isEditing={isEdit}
           agentId={agentId}
           initialValues={initialValues}
-          preserveConnectionStatus={connectionStatus}
         />
       </div>
     </MainLayout>

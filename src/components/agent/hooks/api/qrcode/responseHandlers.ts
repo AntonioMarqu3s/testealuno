@@ -63,62 +63,39 @@ export const getPlaceholderQRCode = (): string => {
  * Parses API response based on content type to extract QR code data
  */
 export const parseQRCodeResponse = async (response: Response): Promise<string | null> => {
-  try {
-    const contentType = response.headers.get('content-type');
-    console.log("Response content type:", contentType);
-    
-    // Handle image responses
-    if (contentType && contentType.includes('image/')) {
-      console.log("Received direct image response");
-      const blob = await response.blob();
-      return createBlobURL(blob);
-    }
-    
-    // Handle text/plain responses (which might be base64)
-    if (contentType && contentType.includes('text/plain')) {
-      const textData = await response.text();
-      return extractQRCodeFromText(textData);
-    }
-    
-    // Handle JSON responses
-    if (contentType && contentType.includes('application/json')) {
-      let responseText;
-      try {
-        responseText = await response.text();
-        if (!responseText || responseText.trim() === '') {
-          console.error("Empty JSON response received");
-          return null;
-        }
-        
-        const data = JSON.parse(responseText);
-        return extractQRCodeFromJSON(data);
-      } catch (jsonError) {
-        console.error("Failed to parse JSON response:", jsonError);
-        
-        // If we have the response text, try to use it directly
-        if (responseText && responseText.length > 100) {
-          console.log("Attempting to use response text as base64 after JSON parse failure");
-          return extractQRCodeFromText(responseText);
-        }
-        return null;
-      }
-    }
-    
-    // Try to parse as text anyway as last resort
-    try {
-      const text = await response.text();
-      if (text && text.length > 100) {
-        console.log("Attempting to use raw response as base64, length:", text.length);
-        return extractQRCodeFromText(text);
-      }
-    } catch (textError) {
-      console.error("Failed to extract text from response:", textError);
-    }
-    
-    console.error("Could not extract QR code from response");
-    return null;
-  } catch (error) {
-    console.error("Error in parseQRCodeResponse:", error);
-    return null;
+  const contentType = response.headers.get('content-type');
+  console.log("Response content type:", contentType);
+  
+  // Handle image responses
+  if (contentType && contentType.includes('image/')) {
+    console.log("Received direct image response");
+    const blob = await response.blob();
+    return createBlobURL(blob);
   }
+  
+  // Handle text/plain responses (which might be base64)
+  if (contentType && contentType.includes('text/plain')) {
+    const textData = await response.text();
+    return extractQRCodeFromText(textData);
+  }
+  
+  // Handle JSON responses
+  if (contentType && contentType.includes('application/json')) {
+    const data = await response.json();
+    return extractQRCodeFromJSON(data);
+  }
+  
+  // Try to parse as text anyway as last resort
+  try {
+    const text = await response.text();
+    if (text && text.length > 100) {
+      console.log("Attempting to use raw response as base64, length:", text.length);
+      return `data:image/png;base64,${text.trim()}`;
+    }
+  } catch (textError) {
+    console.error("Failed to extract text from response:", textError);
+  }
+  
+  console.error("Could not extract QR code from response");
+  return null;
 };

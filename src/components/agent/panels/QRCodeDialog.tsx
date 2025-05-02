@@ -9,7 +9,7 @@ import {
   DialogClose,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { AlertCircle, RefreshCw, X } from "lucide-react";
+import { AlertCircle, X } from "lucide-react";
 
 interface QRCodeDialogProps {
   open: boolean;
@@ -51,17 +51,12 @@ export const QRCodeDialog: React.FC<QRCodeDialogProps> = ({
   
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent 
-        className="sm:max-w-md" 
-        onInteractOutside={(e) => {
-          // Prevent closing when clicking outside - always prevent to keep dialog open until button is clicked
+      <DialogContent className="sm:max-w-md" onInteractOutside={(e) => {
+        // Prevent closing when clicking outside to avoid accidental interruptions
+        if (isGeneratingQRCode || isCheckingConnection) {
           e.preventDefault();
-        }}
-        onEscapeKeyDown={(e) => {
-          // Prevent closing with escape key to keep dialog open until button is clicked
-          e.preventDefault();
-        }}
-      >
+        }
+      }}>
         <DialogHeader>
           <DialogTitle>QR Code do Agente</DialogTitle>
           <DialogDescription>
@@ -131,7 +126,6 @@ export const QRCodeDialog: React.FC<QRCodeDialogProps> = ({
             }}
             disabled={isGeneratingQRCode}
           >
-            <RefreshCw className="mr-2 h-4 w-4" /> 
             Atualizar QR
           </Button>
           <DialogClose asChild>

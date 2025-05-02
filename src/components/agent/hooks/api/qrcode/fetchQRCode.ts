@@ -18,7 +18,6 @@ export const fetchQRCode = async (instanceName: string): Promise<string | null> 
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ instanceName }),
-        signal: AbortSignal.timeout(QR_CODE_REQUEST_TIMEOUT), // 15 second timeout
       });
       
       if (!response.ok) {
@@ -27,13 +26,7 @@ export const fetchQRCode = async (instanceName: string): Promise<string | null> 
       }
       
       const qrCode = await parseQRCodeResponse(response);
-      if (qrCode) {
-        console.log("Successfully retrieved QR code from primary endpoint");
-        return qrCode;
-      } else {
-        console.error("Primary endpoint returned invalid QR code");
-        throw new Error("Invalid QR code data from primary endpoint");
-      }
+      if (qrCode) return qrCode;
       
     } catch (primaryError) {
       console.error("Primary endpoint error:", primaryError);
@@ -52,33 +45,21 @@ export const fetchQRCode = async (instanceName: string): Promise<string | null> 
         
         if (!fallbackResponse.ok) {
           console.error("Fallback response not OK:", fallbackResponse.status);
-          try {
-            const errorText = await fallbackResponse.text();
-            console.error("Fallback error text:", errorText);
-          } catch (e) {
-            console.error("Could not read fallback error text");
-          }
+          const errorText = await fallbackResponse.text();
+          console.error("Fallback error text:", errorText);
           throw new Error(`Failed to fetch QR code from fallback endpoint: ${fallbackResponse.status}`);
         }
         
         const qrCode = await parseQRCodeResponse(fallbackResponse);
-        if (qrCode) {
-          console.log("Successfully retrieved QR code from fallback endpoint");
-          return qrCode;
-        } else {
-          console.error("Fallback endpoint returned invalid QR code");
-          throw new Error("Invalid QR code data from fallback endpoint");
-        }
+        if (qrCode) return qrCode;
       } catch (fallbackError) {
         console.error("Fallback endpoint error:", fallbackError);
-        throw fallbackError;
       }
     }
   } catch (error) {
     console.error("Error fetching QR code:", error);
   }
   
-  console.log("All QR code fetching attempts failed, using placeholder");
   // For development purposes or as last resort, return a placeholder QR code
   return getPlaceholderQRCode();
 };
