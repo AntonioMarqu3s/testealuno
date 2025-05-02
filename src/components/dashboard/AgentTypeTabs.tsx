@@ -1,3 +1,4 @@
+
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useNavigate } from "react-router-dom";
 import { AgentGrid } from "./AgentGrid";
@@ -58,10 +59,11 @@ export function AgentTypeTabs({
               {userAgents.map(agent => (
                 <AgentCard
                   key={agent.id}
-                  name={agent.name}
+                  title={agent.name}
                   description={agent.type || "Agente personalizado"}
                   type={agent.type as AgentType || "custom"}
-                  onClick={() => navigate(`/agent-analytics/${agent.id}`)}
+                  icon={agent.type ? agent.type.charAt(0).toUpperCase() + agent.type.slice(1) : "⚙️"}
+                  onSelect={() => navigate(`/agent-analytics/${agent.id}`)}
                 />
               ))}
             </div>
