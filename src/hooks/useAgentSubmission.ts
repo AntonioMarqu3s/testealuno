@@ -35,7 +35,7 @@ export const useAgentSubmission = (agentType: string) => {
           variant: "destructive"
         });
         setIsSubmitting(false);
-        navigate('/agents?showUpgrade=true');
+        navigate('/plans');
         return;
       }
       

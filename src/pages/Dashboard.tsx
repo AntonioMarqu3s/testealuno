@@ -31,8 +31,13 @@ const Dashboard = () => {
   const isTrialPlan = userPlan.plan === PlanType.FREE_TRIAL;
 
   const handleCreateAgent = () => {
-    // Navigate to agent type selection
-    navigate('/create-agent');
+    // If free trial plan, redirect to plans page
+    if (userPlan.plan === PlanType.FREE_TRIAL) {
+      navigate('/plans');
+    } else {
+      // Navigate to agent type selection
+      navigate('/create-agent');
+    }
   };
 
   const handleNavigateToMyAgents = () => {
@@ -40,7 +45,7 @@ const Dashboard = () => {
   };
   
   const handleUpgrade = () => {
-    navigate('/plan-checkout');
+    navigate('/plans');
   };
 
   return (

@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -47,7 +46,7 @@ export function RegisterForm({
   handleDemoLogin,
   onSwitchToLogin
 }: RegisterFormProps) {
-  const [selectedPlan, setSelectedPlan] = useState<PlanType>(PlanType.BASIC);
+  const [selectedPlan, setSelectedPlan] = useState<PlanType>(PlanType.FREE_TRIAL);
   const [promoApplied, setPromoApplied] = useState<boolean>(false);
 
   const form = useForm<RegisterFormValues>({
@@ -84,17 +83,8 @@ export function RegisterForm({
     try {
       console.log(`Attempting to register with email: ${values.email}`);
       
-      // Determine if promo code is applied
-      const hasValidPromoCode = values.promoCode && checkPromoCode(values.promoCode);
-      
-      // Use the selected plan type, but if promo code is applied, use FREE_TRIAL
-      const planToApply = hasValidPromoCode ? PlanType.FREE_TRIAL : selectedPlan;
-      
-      if (!hasValidPromoCode && selectedPlan === PlanType.FREE_TRIAL) {
-        toast.error("Você precisa aplicar um código promocional válido para ter acesso ao período de teste.");
-        setIsLoading(false);
-        return;
-      }
+      // Always use FREE_TRIAL plan for new registrations without valid promo code
+      const planToApply = PlanType.FREE_TRIAL;
       
       const { data, error } = await supabase.auth.signUp({
         email: values.email,
@@ -104,8 +94,8 @@ export function RegisterForm({
           data: {
             email: values.email,
             plan: planToApply,
-            trialStartDate: hasValidPromoCode ? new Date().toISOString() : null,
-            promoCode: hasValidPromoCode ? values.promoCode.toUpperCase() : null
+            trialStartDate: new Date().toISOString(),
+            promoCode: values.promoCode ? values.promoCode.toUpperCase() : null
           }
         }
       });
@@ -130,9 +120,9 @@ export function RegisterForm({
       
       // Success message
       toast.success("Conta criada com sucesso!", { 
-        description: hasValidPromoCode 
+        description: promoApplied 
           ? "Seu período de teste gratuito de 5 dias foi iniciado."
-          : "Obrigado por escolher nosso plano."
+          : "Sua conta foi criada. Por favor, faça upgrade para um plano pago para começar a usar."
       });
       
       onSuccessfulAuth();
