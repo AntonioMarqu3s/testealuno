@@ -10,6 +10,7 @@ export const useQRCodeGeneration = (instanceId: string, clientIdentifier?: strin
   const [qrGenerationAttempted, setQrGenerationAttempted] = useState(false);
   const [isDialogClosedByUser, setIsDialogClosedByUser] = useState(false);
   const [instanceReady, setInstanceReady] = useState(false);
+  const [isConnected, setIsConnected] = useState(false);
   
   const { 
     qrCodeImage, 
@@ -53,6 +54,7 @@ export const useQRCodeGeneration = (instanceId: string, clientIdentifier?: strin
     clearConnectionCheck();
     setIsDialogClosedByUser(false);
     setInstanceReady(true);
+    setIsConnected(true); // Update connected state
     // Additional logic for when agent is connected
   }, [clearQRCodeTimer, clearConnectionCheck, setQrCodeImage]);
 
@@ -147,6 +149,8 @@ export const useQRCodeGeneration = (instanceId: string, clientIdentifier?: strin
     handleShowQRCode,
     handleCloseQRCode,
     handleConnected,
-    instanceReady
+    instanceReady,
+    isConnected, // Expose connection status
+    setIsConnected // Expose method to update connection status
   };
 };

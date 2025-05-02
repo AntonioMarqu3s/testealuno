@@ -17,8 +17,17 @@ export const useAgentConnection = () => {
     
     setIsDisconnecting(true);
     try {
+      console.log("Attempting to disconnect instance:", instanceId);
       const success = await disconnectInstance(instanceId);
+      if (success) {
+        console.log("Instance disconnected successfully");
+      } else {
+        console.warn("Failed to disconnect instance");
+      }
       return success;
+    } catch (error) {
+      console.error("Error during disconnect:", error);
+      return false;
     } finally {
       setIsDisconnecting(false);
     }
