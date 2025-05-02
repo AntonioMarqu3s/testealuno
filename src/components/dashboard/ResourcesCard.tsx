@@ -17,6 +17,7 @@ interface ResourcesCardProps {
   planName: string;
   isTrialPlan: boolean;
   isTrialExpired: boolean;
+  isSubscriptionExpired?: boolean;
   trialDaysRemaining: number;
   onUpgrade: () => void;
 }
@@ -27,6 +28,7 @@ export const ResourcesCard = ({
   planName,
   isTrialPlan,
   isTrialExpired,
+  isSubscriptionExpired = false,
   trialDaysRemaining,
   onUpgrade
 }: ResourcesCardProps) => {
@@ -59,11 +61,19 @@ export const ResourcesCard = ({
                 {isTrialExpired ? "Expirado" : `${trialDaysRemaining} dias restantes`}
               </Badge>
             )}
+            {!isTrialPlan && isSubscriptionExpired && (
+              <Badge variant="destructive" className="text-xs">
+                Assinatura expirada
+              </Badge>
+            )}
           </div>
         </div>
       </CardContent>
       <CardFooter>
-        <Button variant="outline" className="w-full" onClick={onUpgrade}>Fazer upgrade</Button>
+        <Button variant="outline" className="w-full" onClick={onUpgrade}>
+          {isTrialPlan && isTrialExpired ? "Ativar plano" : 
+           isSubscriptionExpired ? "Renovar assinatura" : "Fazer upgrade"}
+        </Button>
       </CardFooter>
     </Card>
   );

@@ -7,7 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import { toast } from "sonner";
 import { AgentFormValues } from "@/components/agent/form/agentSchema";
 import { getCurrentUserEmail } from "@/services/user/userService";
-import { getUserPlan } from "@/services/plan/userPlanService";
+import { getUserPlan, hasTrialExpired, hasSubscriptionExpired, PlanType } from "@/services/plan/userPlanService";
 import { canCreateAgent } from "@/services/plan/planLimitService";
 
 const CreateAgent = () => {
@@ -43,14 +43,30 @@ const CreateAgent = () => {
         return;
       }
       
+      // Get user plan to determine reason for potential restrictions
+      const userPlan = getUserPlan(userEmail);
+      const isTrialPlan = userPlan.plan === PlanType.FREE_TRIAL;
+      const isTrialExpired = hasTrialExpired(userEmail);
+      const isSubscriptionExpired = hasSubscriptionExpired(userEmail);
+      
       // Check if the user can create more agents based on database rules
       const canCreate = await canCreateAgent(userEmail);
       
-      // If user cannot create more agents, redirect to plans page
+      // If user cannot create more agents, redirect to plans page with appropriate message
       if (!canCreate) {
-        toast.warning("Limite de plano atingido", {
-          description: "Seu plano atual não permite a criação de mais agentes. Por favor, faça upgrade para um plano maior."
-        });
+        if (isTrialPlan && isTrialExpired) {
+          toast.warning("Teste gratuito expirado", {
+            description: "Seu período de teste gratuito expirou. Por favor, faça upgrade para um plano pago."
+          });
+        } else if (!isTrialPlan && isSubscriptionExpired) {
+          toast.warning("Assinatura expirada", {
+            description: "Sua assinatura expirou. Por favor, renove seu plano para continuar usando."
+          });
+        } else {
+          toast.warning("Limite de plano atingido", {
+            description: "Seu plano atual não permite a criação de mais agentes. Por favor, faça upgrade para um plano maior."
+          });
+        }
         navigate('/plans');
         return;
       }

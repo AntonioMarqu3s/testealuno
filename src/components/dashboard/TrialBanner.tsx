@@ -6,6 +6,7 @@ import { Link } from "react-router-dom";
 interface TrialBannerProps {
   userEmail?: string;
   isTrialExpired?: boolean;
+  isSubscriptionExpired?: boolean;
   trialDaysRemaining?: number;
   onUpgrade?: () => void;
 }
@@ -13,6 +14,7 @@ interface TrialBannerProps {
 export const TrialBanner = ({ 
   userEmail, 
   isTrialExpired: propIsExpired, 
+  isSubscriptionExpired: propIsSubscriptionExpired,
   trialDaysRemaining: propDaysRemaining, 
   onUpgrade 
 }: TrialBannerProps) => {
@@ -20,14 +22,41 @@ export const TrialBanner = ({
   const isExpired = propIsExpired !== undefined ? propIsExpired : 
     userEmail ? hasTrialExpired(userEmail) : false;
   
+  const isSubscriptionExpired = propIsSubscriptionExpired !== undefined ? propIsSubscriptionExpired :
+    userEmail ? hasSubscriptionExpired(userEmail) : false;
+  
   const daysRemaining = propDaysRemaining !== undefined ? propDaysRemaining : 
     userEmail ? getTrialDaysRemaining(userEmail) : 0;
   
   // If there's no trial (daysRemaining is 0 and not expired), don't show banner
-  if (!daysRemaining && !isExpired) {
+  if (!daysRemaining && !isExpired && !isSubscriptionExpired) {
     return null;
   }
   
+  // Show subscription expired banner
+  if (isSubscriptionExpired) {
+    return (
+      <div className="w-full bg-destructive/15 dark:bg-destructive/20 p-4 rounded-lg flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div className="flex items-center gap-2">
+          <AlertTriangle className="h-5 w-5 text-destructive" />
+          <p className="text-sm font-medium">
+            Sua assinatura expirou. Faça upgrade agora para continuar utilizando todos os recursos.
+          </p>
+        </div>
+        {onUpgrade ? (
+          <Button onClick={onUpgrade} className="whitespace-nowrap">
+            Fazer Upgrade
+          </Button>
+        ) : (
+          <Button asChild className="whitespace-nowrap">
+            <Link to="/plans">Fazer Upgrade</Link>
+          </Button>
+        )}
+      </div>
+    );
+  }
+  
+  // Show trial expired banner
   if (isExpired) {
     return (
       <div className="w-full bg-destructive/15 dark:bg-destructive/20 p-4 rounded-lg flex flex-col sm:flex-row items-center justify-between gap-4">
@@ -54,6 +83,7 @@ export const TrialBanner = ({
     return null;
   }
   
+  // Show trial countdown banner
   return (
     <div className="w-full bg-amber-50 dark:bg-amber-950/30 p-4 rounded-lg flex flex-col sm:flex-row items-center justify-between gap-4">
       <div>
@@ -89,4 +119,4 @@ export const TrialBanner = ({
 };
 
 // Need to import these functions since we're using them directly in the component
-import { getTrialDaysRemaining, hasTrialExpired } from "@/services/plan/userPlanService";
+import { getTrialDaysRemaining, hasTrialExpired, hasSubscriptionExpired } from "@/services/plan/userPlanService";
