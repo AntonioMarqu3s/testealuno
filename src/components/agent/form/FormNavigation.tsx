@@ -9,6 +9,7 @@ interface FormNavigationProps {
   onNext: () => void;
   isSubmitting: boolean;
   isEditing?: boolean;
+  isNextDisabled?: boolean;
 }
 
 const FormNavigation = ({
@@ -17,7 +18,8 @@ const FormNavigation = ({
   onBack,
   onNext,
   isSubmitting,
-  isEditing = false
+  isEditing = false,
+  isNextDisabled = false
 }: FormNavigationProps) => {
   const isFirstStep = step === 1;
   const isLastStep = step === totalSteps;
@@ -39,7 +41,7 @@ const FormNavigation = ({
           {isSubmitting ? "Enviando..." : isEditing ? "Atualizar Agente" : "Criar Agente"}
         </Button>
       ) : (
-        <Button type="button" onClick={onNext}>
+        <Button type="button" onClick={onNext} disabled={isNextDisabled}>
           Continuar <ArrowRight className="ml-2 h-4 w-4" />
         </Button>
       )}
