@@ -31,8 +31,23 @@ const PlanCheckout = () => {
       return;
     }
     
-    // Redirect to Kiwify payment page
-    window.location.href = PAYMENT_LINKS[selectedPlan];
+    // Adicionar parâmetros de retorno à URL de pagamento
+    const returnUrl = encodeURIComponent(`${window.location.origin}/agents?payment_confirmed=true&plan=${selectedPlan}`);
+    
+    // Construir URL de pagamento com parâmetros de retorno
+    let paymentUrl = PAYMENT_LINKS[selectedPlan];
+    if (paymentUrl.includes('?')) {
+      paymentUrl += `&return_url=${returnUrl}`;
+    } else {
+      paymentUrl += `?return_url=${returnUrl}`;
+    }
+    
+    // Salvar o plano selecionado no localStorage para verificação posterior
+    localStorage.setItem('selected_plan_for_payment', selectedPlan.toString());
+    localStorage.setItem('payment_started_at', new Date().toISOString());
+    
+    // Redirecionar para a página de pagamento
+    window.location.href = paymentUrl;
   };
   
   return (

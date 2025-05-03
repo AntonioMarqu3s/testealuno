@@ -14,6 +14,7 @@ import { Agent } from "@/components/agent/AgentTypes";
 import { AgentPanel } from "@/components/agent/AgentPanel";
 import { canCreateAgent } from "@/services";
 import { Button } from "@/components/ui/button";
+import { checkAndSyncPlan } from "@/services/plan/planSyncService";
 
 const Agents = () => {
   
@@ -26,8 +27,8 @@ const Agents = () => {
   const userEmail = getCurrentUserEmail();
   
   // Get user plan and check trial status
-  const userPlan = getUserPlan(userEmail);
-  const isTrialExpired = hasTrialExpired(userEmail);
+  const [userPlan, setUserPlan] = useState(getUserPlan(userEmail));
+  const [isTrialExpired, setIsTrialExpired] = useState(hasTrialExpired(userEmail));
   
   // Get user agents with state management
   const [userAgents, setUserAgents] = useState<Agent[]>([]);
@@ -35,6 +36,20 @@ const Agents = () => {
   const [qrAgentId, setQrAgentId] = useState<string | null>(null);
   const [canCreate, setCanCreate] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  // Check for payment confirmation and sync plan on load
+  useEffect(() => {
+    const initPlanCheck = async () => {
+      setIsRefreshing(true);
+      await checkAndSyncPlan(location, userEmail);
+      // Recarregar plano após a sincronização
+      setUserPlan(getUserPlan(userEmail));
+      setIsRefreshing(false);
+    };
+
+    initPlanCheck();
+  }, [location, userEmail]);
   
   // Check if user can create agents
   useEffect(() => {
@@ -43,7 +58,7 @@ const Agents = () => {
       setCanCreate(result);
     };
     checkCanCreate();
-  }, [userEmail]);
+  }, [userEmail, userPlan]);
   
   // Check for URL parameter to show upgrade modal
   useEffect(() => {
@@ -95,6 +110,19 @@ const Agents = () => {
   const handleUpgradeConfirm = () => {
     setShowUpgradeModal(false);
     navigate('/plans');
+  };
+
+  // Função para forçar a atualização do plano e recarregar a página
+  const handleRefreshPlan = async () => {
+    setIsRefreshing(true);
+    await checkAndSyncPlan(location, userEmail);
+    // Recarregar plano após a sincronização
+    setUserPlan(getUserPlan(userEmail));
+    setIsRefreshing(false);
+    toast({
+      title: "Plano sincronizado",
+      description: `Seu plano atual é: ${userPlan.name}`,
+    });
   };
 
   const handleDeleteAgent = async (agentId: string) => {
@@ -195,11 +223,21 @@ const Agents = () => {
   return (
     <MainLayout title="Meus Agentes">
       <div className="space-y-6">
-        <AgentsHeader 
-          userPlanType={userPlan.plan} 
-          onCreateAgent={handleCreateAgent} 
-          onUpgradeClick={handleUpgradeClick}
-        />
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <AgentsHeader 
+            userPlanType={userPlan.plan} 
+            onCreateAgent={handleCreateAgent} 
+            onUpgradeClick={handleUpgradeClick}
+          />
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={handleRefreshPlan} 
+            disabled={isRefreshing}
+          >
+            {isRefreshing ? "Atualizando..." : "Atualizar Plano"}
+          </Button>
+        </div>
         
         {userAgents.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
