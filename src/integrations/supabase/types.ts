@@ -122,21 +122,6 @@ export type Database = {
           },
         ]
       }
-      "instancias-agente-conecta": {
-        Row: {
-          created_at: string
-          id: number
-        }
-        Insert: {
-          created_at?: string
-          id?: number
-        }
-        Update: {
-          created_at?: string
-          id?: number
-        }
-        Relationships: []
-      }
       user_plans: {
         Row: {
           agent_limit: number

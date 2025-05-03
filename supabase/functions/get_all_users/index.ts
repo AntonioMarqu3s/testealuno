@@ -41,10 +41,10 @@ Deno.serve(async (req) => {
     
     console.log('User verified:', user.id)
 
-    // Verify user is an admin using is_admin_user function
+    // Verify user is an admin using our database function instead of making another edge function call
     console.log('Checking if user is admin')
-    const { data: isAdmin, error: adminCheckError } = await supabaseClient.functions.invoke('is_admin_user', {
-      body: { user_id: user.id }
+    const { data: isAdminData, error: adminCheckError } = await supabaseClient.rpc('is_admin', {
+      checking_user_id: user.id
     })
     
     if (adminCheckError) {
@@ -52,9 +52,9 @@ Deno.serve(async (req) => {
       throw new Error(`Unauthorized: Error checking admin status: ${adminCheckError.message}`)
     }
     
-    console.log('Admin check result:', isAdmin)
+    console.log('Admin check result:', isAdminData)
     
-    if (!isAdmin?.isAdmin) {
+    if (!isAdminData) {
       console.log('User is not an admin')
       throw new Error('Unauthorized: User is not an admin')
     }
