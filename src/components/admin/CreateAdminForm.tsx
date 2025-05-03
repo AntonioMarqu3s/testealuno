@@ -34,33 +34,49 @@ export function CreateAdminForm({ onSuccess, enablePrivilegeSelection = false }:
     setIsLoading(true);
     
     try {
+      console.log("Creating admin with email:", email);
+      
       // First check if the user exists
       const { data: userData, error: userError } = await supabase.rpc("get_user_by_email", {
         p_email: email
       });
       
       if (userError) {
+        console.error("Error fetching user:", userError);
         throw new Error("Erro ao buscar usuário");
       }
       
-      if (!userData) {
+      if (!userData || !userData.id) {
         toast.error("Usuário não encontrado", {
           description: "Este email não está cadastrado no sistema."
         });
         return;
       }
       
+      console.log("Found user:", userData);
+      
       // Check if user is already an admin via edge function
-      const { data: adminCheck, error: adminCheckError } = await supabase.functions.invoke('is_admin_user', {
-        body: { user_id: userData.id }
-      });
-      
-      if (adminCheckError) {
-        throw new Error("Erro ao verificar status de administrador");
-      }
-      
-      if (adminCheck?.isAdmin) {
-        toast.error("Este usuário já é administrador");
+      try {
+        const { data: adminCheck, error: adminCheckError } = await supabase.functions.invoke('is_admin_user', {
+          body: { user_id: userData.id }
+        });
+        
+        if (adminCheckError) {
+          console.error("Error checking admin status:", adminCheckError);
+          throw new Error("Erro ao verificar status de administrador");
+        }
+        
+        console.log("Admin check result:", adminCheck);
+        
+        if (adminCheck?.isAdmin) {
+          toast.error("Este usuário já é administrador");
+          return;
+        }
+      } catch (checkErr) {
+        console.error("Error in admin check:", checkErr);
+        toast.error("Erro ao verificar status de administrador", {
+          description: checkErr instanceof Error ? checkErr.message : "Erro desconhecido"
+        });
         return;
       }
       
@@ -73,9 +89,11 @@ export function CreateAdminForm({ onSuccess, enablePrivilegeSelection = false }:
         });
         
       if (insertError) {
-        throw new Error("Erro ao adicionar administrador");
+        console.error("Error adding admin:", insertError);
+        throw new Error("Erro ao adicionar administrador: " + insertError.message);
       }
       
+      console.log("Admin added successfully:", newAdmin);
       toast.success("Administrador adicionado com sucesso");
       setEmail("");
       onSuccess();

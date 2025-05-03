@@ -26,14 +26,17 @@ Deno.serve(async (req) => {
     
     // Handle both POST with body and GET with query params
     if (req.method === 'POST') {
-      const { user_id } = await req.json();
-      userId = user_id;
+      const body = await req.json();
+      userId = body.user_id;
+      console.log("Received user_id in POST body:", userId);
     } else {
       const url = new URL(req.url);
       userId = url.searchParams.get('user_id');
+      console.log("Received user_id in query params:", userId);
     }
     
     if (!userId) {
+      console.error("No user_id provided in request");
       throw new Error('User ID is required');
     }
 
@@ -44,8 +47,11 @@ Deno.serve(async (req) => {
     );
 
     if (error) {
+      console.error("RPC error:", error);
       throw error;
     }
+
+    console.log("Admin check result:", data);
 
     // Return admin info if found
     return new Response(

@@ -8,6 +8,8 @@ export async function checkAdminStatus(userId: string): Promise<{
   adminId?: string;
 }> {
   try {
+    console.log("Checking admin status for user:", userId);
+    
     // Verify against user_metadata first (safer approach)
     const { data: { user } } = await supabase.auth.getUser();
     
@@ -25,6 +27,8 @@ export async function checkAdminStatus(userId: string): Promise<{
       console.error("Error checking admin status:", error);
       return { isAdmin: false };
     }
+    
+    console.log("Admin status check result:", data);
     
     return { 
       isAdmin: Boolean(data?.isAdmin), 
