@@ -14,6 +14,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Agent } from "@/components/agent/AgentTypes";
 import { AgentPanel } from "@/components/agent/AgentPanel";
 import { canCreateAgent } from "@/services";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const Agents = () => {
   const navigate = useNavigate();
@@ -31,14 +32,19 @@ const Agents = () => {
   // Get user agents with state management
   const [userAgents, setUserAgents] = useState<Agent[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [qrAgentId, setQrAgentId] = useState<string | null>(null);
   const [canCreate, setCanCreate] = useState(false);
   
   // Check if user can create agents
   useEffect(() => {
     const checkCanCreate = async () => {
-      const result = await canCreateAgent(userEmail);
-      setCanCreate(result);
+      try {
+        const result = await canCreateAgent(userEmail);
+        setCanCreate(result);
+      } catch (error) {
+        console.error("Error checking if user can create agents:", error);
+      }
     };
     checkCanCreate();
   }, [userEmail]);
@@ -55,11 +61,25 @@ const Agents = () => {
   useEffect(() => {
     if (userEmail) {
       setIsLoading(true);
-      const agents = getUserAgents(userEmail);
-      setUserAgents(agents);
-      setIsLoading(false);
+      setLoadError(null);
+      
+      try {
+        const agents = getUserAgents(userEmail);
+        console.log(`Loaded ${agents.length} agents for ${userEmail}`);
+        setUserAgents(agents);
+      } catch (error) {
+        console.error("Error loading agents:", error);
+        setLoadError("Não foi possível carregar os agentes. Por favor, tente novamente.");
+        toast({
+          variant: "destructive",
+          title: "Erro ao carregar agentes",
+          description: "Não foi possível carregar seus agentes. Por favor, recarregue a página.",
+        });
+      } finally {
+        setIsLoading(false);
+      }
     }
-  }, [userEmail]);
+  }, [userEmail, toast]);
   
   const handleCreateAgent = async () => {
     // Verify again if user can create more agents
@@ -136,6 +156,7 @@ const Agents = () => {
           "O agente foi desconectado com sucesso.",
       });
     } catch (error) {
+      console.error("Erro ao alterar status de conexão:", error);
       toast({
         variant: "destructive",
         title: "Erro",
@@ -157,6 +178,59 @@ const Agents = () => {
     }
   }, [location.search]);
 
+  // Função para recarregar os agentes
+  const handleReloadAgents = () => {
+    // Simples reload da página para atualizar tudo
+    window.location.reload();
+  };
+
+  // Renderiza a lista de agentes ou o estado vazio
+  const renderAgentContent = () => {
+    if (isLoading) {
+      return (
+        <div className="space-y-6">
+          {[1, 2, 3].map((index) => (
+            <div key={index} className="flex flex-col space-y-3">
+              <Skeleton className="h-48 w-full rounded-md" />
+            </div>
+          ))}
+        </div>
+      );
+    }
+
+    if (loadError) {
+      return (
+        <div className="flex flex-col items-center justify-center p-8 border border-dashed rounded-lg space-y-4">
+          <div className="text-destructive text-center">
+            <h3 className="text-lg font-medium">Erro ao carregar agentes</h3>
+            <p className="text-muted-foreground">{loadError}</p>
+          </div>
+          <Button onClick={handleReloadAgents} variant="outline">
+            Tentar novamente
+          </Button>
+        </div>
+      );
+    }
+
+    if (userAgents.length === 0) {
+      return <EmptyAgentState onCreateAgent={handleCreateAgent} />;
+    }
+
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {userAgents.map(agent => (
+          <AgentPanel 
+            key={agent.id}
+            agent={agent}
+            onDelete={handleDeleteAgent}
+            onToggleConnection={handleToggleConnection}
+            autoShowQR={agent.id === qrAgentId}
+          />
+        ))}
+      </div>
+    );
+  };
+
   return (
     <MainLayout title="Meus Agentes">
       <div className="space-y-6">
@@ -166,21 +240,7 @@ const Agents = () => {
           onUpgradeClick={handleUpgradeClick}
         />
         
-        {userAgents.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {userAgents.map(agent => (
-              <AgentPanel 
-                key={agent.id}
-                agent={agent}
-                onDelete={handleDeleteAgent}
-                onToggleConnection={handleToggleConnection}
-                autoShowQR={agent.id === qrAgentId}
-              />
-            ))}
-          </div>
-        ) : (
-          <EmptyAgentState onCreateAgent={handleCreateAgent} />
-        )}
+        {renderAgentContent()}
       </div>
       
       <UpgradeModal 

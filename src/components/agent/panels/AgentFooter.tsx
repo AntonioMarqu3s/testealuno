@@ -1,9 +1,7 @@
 
-import React from "react";
-import { CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
-import { BarChart, QrCode, WifiOff } from "lucide-react";
+import { CardFooter } from "@/components/ui/card";
+import { QrCode, Power, Loader2, RefreshCw } from "lucide-react";
 import { Agent } from "../AgentTypes";
 
 interface AgentFooterProps {
@@ -11,44 +9,94 @@ interface AgentFooterProps {
   onGenerateQR: () => void;
   onDisconnect: () => void;
   isGeneratingQR: boolean;
-  isDisconnecting: boolean;
+  isDisconnecting?: boolean;
+  connectionCheckFailed?: boolean;
 }
 
-export const AgentFooter: React.FC<AgentFooterProps> = ({
+export const AgentFooter = ({
   agent,
   onGenerateQR,
   onDisconnect,
   isGeneratingQR,
-  isDisconnecting
-}) => {
+  isDisconnecting = false,
+  connectionCheckFailed = false
+}: AgentFooterProps) => {
+  if (!agent) return null;
+
   return (
-    <CardFooter className="flex justify-between gap-2 pt-2">
+    <CardFooter className="flex justify-between border-t p-4">
       {agent.isConnected ? (
         <Button 
-          variant="outline" 
-          className="flex-1 text-red-600 border-red-200 hover:bg-red-50" 
+          variant="destructive" 
+          className="w-full" 
           onClick={onDisconnect}
           disabled={isDisconnecting}
         >
-          <WifiOff className="mr-2 h-4 w-4" /> 
-          {isDisconnecting ? "Desconectando..." : "Desconectar"}
+          {isDisconnecting ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Desconectando...
+            </>
+          ) : (
+            <>
+              <Power className="mr-2 h-4 w-4" />
+              Desconectar
+            </>
+          )}
         </Button>
       ) : (
-        <Button 
-          variant="outline" 
-          className="flex-1" 
-          onClick={onGenerateQR}
-          disabled={isGeneratingQR}
-        >
-          <QrCode className="mr-2 h-4 w-4" /> 
-          {isGeneratingQR ? "Gerando..." : "Gerar QR Code"}
-        </Button>
+        <>
+          {connectionCheckFailed ? (
+            <div className="w-full flex gap-2">
+              <Button 
+                variant="outline" 
+                className="flex-1"
+                onClick={onGenerateQR}
+              >
+                <RefreshCw className="mr-2 h-4 w-4" />
+                Verificar Novamente
+              </Button>
+              <Button 
+                variant="default" 
+                className="flex-1"
+                onClick={onGenerateQR}
+                disabled={isGeneratingQR}
+              >
+                {isGeneratingQR ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Gerando...
+                  </>
+                ) : (
+                  <>
+                    <QrCode className="mr-2 h-4 w-4" />
+                    QR Code
+                  </>
+                )}
+              </Button>
+            </div>
+          ) : (
+            <Button 
+              variant="default" 
+              className="w-full"
+              onClick={onGenerateQR}
+              disabled={isGeneratingQR}
+            >
+              {isGeneratingQR ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Gerando QR Code...
+                </>
+              ) : (
+                <>
+                  <QrCode className="mr-2 h-4 w-4" />
+                  Gerar QR Code
+                </>
+              )}
+            </Button>
+          )}
+        </>
       )}
-      <Button asChild className="flex-1 bg-purple-600 hover:bg-purple-700">
-        <Link to={`/agent-analytics/${agent.id}`}>
-          <BarChart className="mr-2 h-4 w-4" /> Análise
-        </Link>
-      </Button>
     </CardFooter>
   );
 };
