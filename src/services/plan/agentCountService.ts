@@ -1,6 +1,7 @@
 
 import { getUserPlan, hasTrialExpired } from './userPlanService';
 import { getUserAgents } from '../agent/agentStorageService';
+import { PlanType } from './planTypes';
 
 /**
  * Get the number of remaining agents that can be created

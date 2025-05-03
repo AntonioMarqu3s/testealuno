@@ -9,9 +9,10 @@ import { updateCurrentUserEmail } from "@/services/user/userService";
 import { PlanType, updateUserPlan } from "@/services/plan/userPlanService";
 import { PlanSelector } from "./PlanSelector";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { PromoCodeInput } from "./PromoCodeInput";
+import { RegisterFormValues, registerSchema } from "./RegisterFormSchema";
 
 interface RegisterFormProps {
   email: string;
@@ -22,18 +23,6 @@ interface RegisterFormProps {
   onShowConnectionError: (errorDetails: string) => void;
   onSwitchToLogin: () => void;
 }
-
-const registerSchema = z.object({
-  email: z.string().email("Email inválido"),
-  password: z.string().min(6, "A senha deve ter pelo menos 6 caracteres"),
-  confirmPassword: z.string().min(6, "A senha deve ter pelo menos 6 caracteres"),
-  promoCode: z.string().optional()
-}).refine((data) => data.password === data.confirmPassword, {
-  message: "As senhas não coincidem",
-  path: ["confirmPassword"],
-});
-
-type RegisterFormValues = z.infer<typeof registerSchema>;
 
 export function RegisterForm({
   email,
@@ -61,18 +50,6 @@ export function RegisterForm({
     // Convert to uppercase for case-insensitive comparison
     const normalizedCode = code.toUpperCase();
     return normalizedCode === "OFERTAMDF";
-  };
-
-  const handleApplyPromoCode = () => {
-    const promoCode = form.getValues("promoCode");
-    if (promoCode && checkPromoCode(promoCode)) {
-      setPromoApplied(true);
-      toast.success("Código promocional aplicado com sucesso!", {
-        description: "Você receberá 5 dias de teste gratuito."
-      });
-    } else if (promoCode) {
-      toast.error("Código promocional inválido");
-    }
   };
 
   const handleSubmit = async (values: RegisterFormValues) => {
@@ -163,99 +140,14 @@ export function RegisterForm({
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)}>
         <CardContent className="space-y-4">
-          <FormField
-            control={form.control}
-            name="email"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Email</FormLabel>
-                <FormControl>
-                  <Input 
-                    {...field} 
-                    type="email" 
-                    placeholder="seu@email.com" 
-                    onChange={(e) => {
-                      field.onChange(e);
-                      setEmail(e.target.value);
-                    }}
-                    required 
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="password"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Senha</FormLabel>
-                <FormControl>
-                  <Input 
-                    {...field}
-                    type="password"
-                    placeholder="Sua senha segura"
-                    required 
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="confirmPassword"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Confirmar Senha</FormLabel>
-                <FormControl>
-                  <Input 
-                    {...field}
-                    type="password"
-                    placeholder="Confirme sua senha"
-                    required 
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+          <EmailPasswordFields form={form} setEmail={setEmail} />
           
           <div className="space-y-2">
-            <FormField
-              control={form.control}
-              name="promoCode"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Código Promocional</FormLabel>
-                  <div className="flex gap-2">
-                    <FormControl>
-                      <Input 
-                        {...field}
-                        placeholder="Código promocional (opcional)"
-                        className={promoApplied ? "border-green-500 text-green-600" : ""}
-                        disabled={promoApplied}
-                      />
-                    </FormControl>
-                    <Button 
-                      type="button" 
-                      variant={promoApplied ? "outline" : "secondary"}
-                      onClick={handleApplyPromoCode}
-                      disabled={!field.value || promoApplied}
-                      className={promoApplied ? "border-green-500 text-green-600" : ""}
-                    >
-                      {promoApplied ? "Aplicado" : "Aplicar"}
-                    </Button>
-                  </div>
-                  {promoApplied && (
-                    <p className="text-sm text-green-600 mt-1">
-                      Código promocional válido! 5 dias de teste gratuito.
-                    </p>
-                  )}
-                  <FormMessage />
-                </FormItem>
-              )}
+            <PromoCodeInput 
+              form={form} 
+              promoApplied={promoApplied} 
+              setPromoApplied={setPromoApplied} 
+              checkPromoCode={checkPromoCode} 
             />
           </div>
           
@@ -277,5 +169,76 @@ export function RegisterForm({
         </CardFooter>
       </form>
     </Form>
+  );
+}
+
+// Extracted component for email and password fields
+interface EmailPasswordFieldsProps {
+  form: ReturnType<typeof useForm<RegisterFormValues>>;
+  setEmail: (email: string) => void;
+}
+
+function EmailPasswordFields({ form, setEmail }: EmailPasswordFieldsProps) {
+  return (
+    <>
+      <FormField
+        control={form.control}
+        name="email"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Email</FormLabel>
+            <FormControl>
+              <Input 
+                {...field} 
+                type="email" 
+                placeholder="seu@email.com" 
+                onChange={(e) => {
+                  field.onChange(e);
+                  setEmail(e.target.value);
+                }}
+                required 
+              />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+      <FormField
+        control={form.control}
+        name="password"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Senha</FormLabel>
+            <FormControl>
+              <Input 
+                {...field}
+                type="password"
+                placeholder="Sua senha segura"
+                required 
+              />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+      <FormField
+        control={form.control}
+        name="confirmPassword"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Confirmar Senha</FormLabel>
+            <FormControl>
+              <Input 
+                {...field}
+                type="password"
+                placeholder="Confirme sua senha"
+                required 
+              />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+    </>
   );
 }
