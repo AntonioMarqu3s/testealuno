@@ -416,7 +416,8 @@ export default function AdminPayments() {
                       <TableCell>R$ {payment.amount.toFixed(2)}</TableCell>
                       <TableCell>{formatDate(payment.expirationDate)}</TableCell>
                       <TableCell>
-                        <Badge variant={payment.status === 'completed' ? 'success' : payment.status === 'pending' ? 'warning' : 'destructive'}>
+                        <Badge variant={payment.status === 'completed' ? 'success' : 
+                                payment.status === 'pending' ? 'secondary' : 'destructive'}>
                           {payment.status === 'completed' ? 'Pago' : 
                            payment.status === 'pending' ? 'Pendente' : 'Falhou'}
                         </Badge>
