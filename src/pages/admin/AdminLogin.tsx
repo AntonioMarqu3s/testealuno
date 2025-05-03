@@ -29,13 +29,11 @@ export default function AdminLogin() {
         return;
       }
       
-      // Normalize email (lowercase)
-      const normalizedEmail = email.toLowerCase().trim();
-      
-      const success = await adminLogin(normalizedEmail, password);
+      // Always use the fixed admin email
+      const success = await adminLogin("admin@example.com", password);
       
       if (!success) {
-        setLoginError("Falha na autenticação. Verifique seu email e senha.");
+        setLoginError("Falha na autenticação. Verifique sua senha.");
       }
     } catch (error) {
       console.error("Admin login error:", error);
@@ -66,7 +64,7 @@ export default function AdminLogin() {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="admin@exemplo.com"
+                placeholder="admin@example.com"
                 required
                 readOnly
                 className="bg-gray-100"
@@ -94,7 +92,7 @@ export default function AdminLogin() {
             <Alert className="bg-blue-50 border-blue-200">
               <Info className="h-5 w-5 text-blue-500" />
               <AlertDescription>
-                Use o email <strong>admin@example.com</strong> e senha <strong>@admin123456</strong>
+                Use a senha <strong>@admin123456</strong>
               </AlertDescription>
             </Alert>
             

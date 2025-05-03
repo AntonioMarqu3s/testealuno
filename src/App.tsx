@@ -1,4 +1,3 @@
-
 import { useEffect } from "react";
 import { Toaster as ShadcnToaster } from "@/components/ui/toaster";
 import { Toaster as SonnerToaster } from "@/components/ui/sonner";
@@ -55,22 +54,13 @@ function App() {
   useEffect(() => {
     const createAdminUser = async () => {
       try {
-        // Check if admin exists
-        const { data: adminCheck } = await supabase
-          .from('admin_users')
-          .select('*')
-          .limit(1);
+        console.log('Creating initial admin user...');
+        const { data, error } = await supabase.functions.invoke("create-initial-admin");
         
-        // Only create admin if no admins exist
-        if (!adminCheck || adminCheck.length === 0) {
-          console.log('Creating initial admin user...');
-          const { data, error } = await supabase.functions.invoke("create-initial-admin");
-          
-          if (error) {
-            console.error("Error creating admin:", error);
-          } else if (data?.success) {
-            console.log("Admin created successfully:", data.credentials.email);
-          }
+        if (error) {
+          console.error("Error creating admin:", error);
+        } else if (data?.success) {
+          console.log("Admin setup completed:", data.message);
         }
       } catch (err) {
         console.error("Error in admin initialization:", err);

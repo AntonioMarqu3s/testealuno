@@ -14,6 +14,8 @@ Deno.serve(async (req) => {
   }
 
   try {
+    console.log("Starting create-initial-admin function");
+    
     // Initialize Supabase client using environment variables
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
@@ -24,34 +26,6 @@ Deno.serve(async (req) => {
     // Admin credentials - fixed for simplicity
     const adminEmail = 'admin@example.com'
     const adminPassword = '@admin123456'
-
-    // Check if an administrator already exists
-    const { data: adminUsers, error: queryError } = await supabaseClient
-      .from('admin_users')
-      .select('*')
-      .eq('email', adminEmail)
-      .limit(1)
-    
-    if (queryError) {
-      console.error('Error checking existing administrators:', queryError)
-      throw queryError
-    }
-    
-    // If admin already exists, return success with credentials
-    if (adminUsers && adminUsers.length > 0) {
-      console.log('Administrator already exists')
-      return new Response(JSON.stringify({
-        success: true,
-        message: 'Administrator already exists',
-        credentials: {
-          email: adminEmail,
-          password: adminPassword
-        }
-      }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 200
-      })
-    }
 
     // Try to get the user by email first
     const { data: { users }, error: getUserError } = await supabaseClient.auth.admin.listUsers();
@@ -94,6 +68,8 @@ Deno.serve(async (req) => {
         console.error('Error updating admin password:', updateError);
         throw updateError;
       }
+      
+      console.log('Admin password updated successfully');
     }
 
     // Add user to admin_users table if not already there

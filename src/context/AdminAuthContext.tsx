@@ -35,8 +35,9 @@ export const AdminAuthProvider = ({ children }: AdminAuthProviderProps) => {
   useEffect(() => {
     const checkAdminSession = async () => {
       try {
+        // First check localStorage for admin flag
         const adminSession = localStorage.getItem(ADMIN_SESSION_KEY);
-        console.log("Checking admin session:", adminSession);
+        console.log("Initial check for admin session:", adminSession);
         
         if (adminSession === "true") {
           // Verify with Supabase if session is valid
@@ -44,50 +45,39 @@ export const AdminAuthProvider = ({ children }: AdminAuthProviderProps) => {
           const session = data.session;
           
           if (!session) {
-            console.log("No valid session found");
+            console.log("No valid session found, removing admin flag");
             localStorage.removeItem(ADMIN_SESSION_KEY);
             setIsAdmin(false);
             setIsLoading(false);
             return;
           }
           
-          const user = session.user;
+          // We have a session, verify if user is admin
+          const userId = session.user.id;
+          console.log("Found authenticated user:", userId);
           
-          if (user) {
-            console.log("Found user:", user.id);
-            // Verify admin role
-            const { data: adminData, error: adminError } = await supabase
-              .from('admin_users')
-              .select('*')
-              .eq('user_id', user.id)
-              .maybeSingle();
-            
-            if (adminError) {
-              console.error("Error checking admin status:", adminError);
-              localStorage.removeItem(ADMIN_SESSION_KEY);
-              setIsAdmin(false);
-              setIsLoading(false);
-              return;
-            }
-              
-            if (adminData) {
-              console.log("User is admin:", adminData);
-              setIsAdmin(true);
-            } else {
-              console.log("User is not admin");
-              localStorage.removeItem(ADMIN_SESSION_KEY);
-              setIsAdmin(false);
-            }
+          // Check admin_users table
+          const { data: adminData, error: adminError } = await supabase
+            .from('admin_users')
+            .select('*')
+            .eq('user_id', userId)
+            .maybeSingle();
+          
+          if (adminError) {
+            console.error("Error checking admin status:", adminError);
+            localStorage.removeItem(ADMIN_SESSION_KEY);
+            setIsAdmin(false);
+          } else if (adminData) {
+            console.log("User confirmed as admin:", adminData);
+            setIsAdmin(true);
           } else {
-            console.log("No user found");
+            console.log("User is not an admin");
             localStorage.removeItem(ADMIN_SESSION_KEY);
             setIsAdmin(false);
           }
-        } else {
-          console.log("No admin session found");
         }
       } catch (err) {
-        console.error("Error checking admin session:", err);
+        console.error("Error in admin session check:", err);
         localStorage.removeItem(ADMIN_SESSION_KEY);
         setIsAdmin(false);
       } finally {
@@ -101,32 +91,44 @@ export const AdminAuthProvider = ({ children }: AdminAuthProviderProps) => {
   // Set up auth state listener
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      (event, session) => {
         console.log("Auth state changed:", event, session?.user?.id);
         
         if (event === 'SIGNED_OUT') {
+          console.log("User signed out, removing admin status");
           setIsAdmin(false);
           localStorage.removeItem(ADMIN_SESSION_KEY);
           return;
         }
         
         if (session?.user) {
-          // Check if user is admin
+          // We need to check if the user is an admin, but we can't do this
+          // directly in the callback as it could cause issues with Supabase's
+          // auth state management. Use setTimeout to defer this check.
           setTimeout(async () => {
             try {
-              const { data: adminData } = await supabase
+              const { data: adminData, error: adminError } = await supabase
                 .from('admin_users')
                 .select('*')
                 .eq('user_id', session.user.id)
                 .maybeSingle();
                 
+              if (adminError) {
+                console.error("Error checking admin status in auth change:", adminError);
+                return;
+              }
+                
               if (adminData) {
                 console.log("User confirmed as admin via auth state change");
                 setIsAdmin(true);
                 localStorage.setItem(ADMIN_SESSION_KEY, "true");
+              } else {
+                console.log("User is not an admin");
+                setIsAdmin(false);
+                localStorage.removeItem(ADMIN_SESSION_KEY);
               }
             } catch (err) {
-              console.error("Error checking admin status in auth state change:", err);
+              console.error("Error checking admin status on auth change:", err);
             }
           }, 0);
         }
@@ -143,13 +145,24 @@ export const AdminAuthProvider = ({ children }: AdminAuthProviderProps) => {
       setIsLoading(true);
       console.log("Attempting admin login with:", { email });
       
+      // Use fixed credentials for admin
+      const fixedEmail = "admin@example.com";
+      const fixedPassword = "@admin123456";
+      
       // Normalize email (lowercase)
       const normalizedEmail = email.toLowerCase().trim();
       
+      // Check if using the fixed admin credentials
+      if (normalizedEmail !== fixedEmail) {
+        console.error("Invalid admin email");
+        toast.error("Email de administrador inválido");
+        return false;
+      }
+      
       // Sign in with Supabase auth
       const { data, error } = await supabase.auth.signInWithPassword({
-        email: normalizedEmail,
-        password
+        email: fixedEmail, // Always use the fixed email
+        password: password  // Use the provided password
       });
       
       if (error) {
@@ -171,7 +184,7 @@ export const AdminAuthProvider = ({ children }: AdminAuthProviderProps) => {
       
       console.log("User authenticated:", data.user.id);
       
-      // Check if the user is an admin
+      // Check if the user is an admin in the admin_users table
       const { data: adminData, error: adminError } = await supabase
         .from('admin_users')
         .select('*')
