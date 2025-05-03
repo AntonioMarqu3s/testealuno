@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import MainLayout from "@/components/layout/MainLayout";
@@ -15,6 +14,7 @@ import { Agent } from "@/components/agent/AgentTypes";
 import { AgentPanel } from "@/components/agent/AgentPanel";
 import { canCreateAgent } from "@/services";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
 
 const Agents = () => {
   const navigate = useNavigate();
