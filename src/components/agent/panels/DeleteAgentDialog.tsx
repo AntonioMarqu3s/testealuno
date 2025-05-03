@@ -23,8 +23,12 @@ export const DeleteAgentDialog: React.FC<DeleteAgentDialogProps> = ({
     <AlertDialogContent>
       <AlertDialogHeader>
         <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
-        <AlertDialogDescription>
-          Tem certeza que deseja excluir o agente "{agentName}"? Esta ação não pode ser desfeita.
+        <AlertDialogDescription className="space-y-2">
+          <p>Tem certeza que deseja excluir o agente "{agentName}"?</p>
+          <p className="font-medium text-destructive">
+            Esta ação excluirá o agente permanentemente e não poderá ser desfeita.
+          </p>
+          <p>Todos os dados associados serão removidos do sistema.</p>
         </AlertDialogDescription>
       </AlertDialogHeader>
       <AlertDialogFooter>
@@ -33,7 +37,7 @@ export const DeleteAgentDialog: React.FC<DeleteAgentDialogProps> = ({
           onClick={onDelete}
           className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
         >
-          Excluir
+          Excluir Permanentemente
         </AlertDialogAction>
       </AlertDialogFooter>
     </AlertDialogContent>

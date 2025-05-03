@@ -13,6 +13,7 @@ import { DeleteAgentDialog } from "./panels/DeleteAgentDialog";
 import { QRCodeDialog } from "./panels/QRCodeDialog";
 import { useQRCodeGeneration } from "./hooks/useQRCodeGeneration";
 import { useAgentConnection } from "./hooks/useAgentConnection";
+import { useAgentSubmission } from "@/hooks/useAgentSubmission";
 
 interface AgentPanelProps {
   agent: Agent;
@@ -46,6 +47,7 @@ export const AgentPanel: React.FC<AgentPanelProps> = ({
   } = useQRCodeGeneration(agent.instanceId, agent.clientIdentifier);
   
   const { isDisconnecting, isCheckingStatus, handleDisconnect, checkConnectionStatus } = useAgentConnection();
+  const { isDeleting, handleDeleteAgent } = useAgentSubmission(agent.type || "");
 
   // Check connection status when component mounts
   useEffect(() => {
@@ -89,12 +91,13 @@ export const AgentPanel: React.FC<AgentPanelProps> = ({
     navigate(`/edit-agent/${agent.id}?type=${agent.type}`);
   };
 
-  const handleDelete = () => {
+  const confirmDelete = async () => {
     if (onDelete) {
       onDelete(agent.id);
-      toast.success("Agente removido com sucesso!");
-      setShowDeleteDialog(false);
+    } else {
+      await handleDeleteAgent(agent.id);
     }
+    setShowDeleteDialog(false);
   };
   
   const handleDisconnectClick = async () => {
@@ -159,7 +162,7 @@ export const AgentPanel: React.FC<AgentPanelProps> = ({
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <DeleteAgentDialog 
           agentName={agent.name}
-          onDelete={handleDelete}
+          onDelete={confirmDelete}
         />
       </AlertDialog>
       

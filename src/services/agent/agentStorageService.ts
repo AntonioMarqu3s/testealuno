@@ -1,5 +1,7 @@
+
 import { getStorageItem, setStorageItem, ALL_AGENTS_KEY } from '../storage/localStorageService';
 import { Agent } from '@/components/agent/AgentTypes';
+import { toast } from 'sonner';
 
 /**
  * Get all agents for a user
@@ -56,10 +58,23 @@ export const saveAgent = (email: string, agent: Agent): void => {
 /**
  * Delete an agent for the user
  */
-export const deleteUserAgent = (email: string, agentId: string): void => {
+export const deleteUserAgent = async (email: string, agentId: string): Promise<boolean> => {
   const allAgentsData = getStorageItem<Record<string, Agent[]>>(ALL_AGENTS_KEY, {});
   
   if (allAgentsData[email]) {
+    // Get the agent being deleted
+    const agentToDelete = allAgentsData[email].find(agent => agent.id === agentId);
+    
+    if (agentToDelete?.instanceId) {
+      try {
+        // Call webhook to delete instance
+        await deleteAgentInstance(agentToDelete.instanceId);
+      } catch (error) {
+        console.error("Error deleting agent instance:", error);
+        // Continue with deletion even if API call fails
+      }
+    }
+    
     // Filter out deleted agent
     allAgentsData[email] = allAgentsData[email].filter(agent => agent.id !== agentId);
     
@@ -69,6 +84,35 @@ export const deleteUserAgent = (email: string, agentId: string): void => {
     // Decrement the agent count in the user's plan
     const decrementAgentCount = require('../plan/userPlanService').decrementAgentCount;
     decrementAgentCount(email);
+    
+    return true;
+  }
+  
+  return false;
+};
+
+/**
+ * Delete agent instance via webhook API
+ */
+const deleteAgentInstance = async (instanceId: string): Promise<boolean> => {
+  try {
+    const response = await fetch('https://n8n-n8n.31kvca.easypanel.host/webhook/delete-instancia', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ instanceName: instanceId })
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Failed to delete instance: ${response.status}`);
+    }
+    
+    console.log("Agent instance deleted successfully:", instanceId);
+    return true;
+  } catch (error) {
+    console.error("Error calling delete instance webhook:", error);
+    return false;
   }
 };
 

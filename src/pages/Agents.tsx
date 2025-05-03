@@ -14,6 +14,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Agent } from "@/components/agent/AgentTypes";
 import { AgentPanel } from "@/components/agent/AgentPanel";
 import { canCreateAgent } from "@/services";
+import { Button } from "@/components/ui/button";
 
 const Agents = () => {
   const navigate = useNavigate();
@@ -33,6 +34,7 @@ const Agents = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [qrAgentId, setQrAgentId] = useState<string | null>(null);
   const [canCreate, setCanCreate] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   
   // Check if user can create agents
   useEffect(() => {
@@ -95,21 +97,40 @@ const Agents = () => {
     navigate('/plans');
   };
 
-  const handleDeleteAgent = (agentId: string) => {
+  const handleDeleteAgent = async (agentId: string) => {
     try {
-      deleteUserAgent(userEmail, agentId);
-      // Update local state after deletion
-      setUserAgents(prevAgents => prevAgents.filter(agent => agent.id !== agentId));
-      toast({
-        title: "Agente excluído",
-        description: "O agente foi excluído com sucesso.",
-      });
+      setIsDeleting(true);
+      
+      // Get agent details before deletion
+      const agentToDelete = userAgents.find(agent => agent.id === agentId);
+      
+      // Delete agent from localStorage and call webhook API
+      const success = await deleteUserAgent(userEmail, agentId);
+      
+      if (success) {
+        // Update local state after deletion
+        setUserAgents(prevAgents => prevAgents.filter(agent => agent.id !== agentId));
+        
+        toast({
+          title: "Agente excluído",
+          description: "O agente foi excluído permanentemente com sucesso.",
+        });
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Erro",
+          description: "Não foi possível excluir o agente. Tente novamente.",
+        });
+      }
     } catch (error) {
+      console.error("Error deleting agent:", error);
       toast({
         variant: "destructive",
         title: "Erro",
-        description: "Não foi possível excluir o agente.",
+        description: "Ocorreu um erro ao excluir o agente.",
       });
+    } finally {
+      setIsDeleting(false);
     }
   };
   

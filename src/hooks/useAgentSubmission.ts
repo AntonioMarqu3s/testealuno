@@ -19,6 +19,7 @@ export const useAgentSubmission = (agentType: string) => {
   const navigate = useNavigate();
   const { toast: toastHook } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const handleSubmitAgent = (values: AgentFormValues) => {
     setIsSubmitting(true);
@@ -119,22 +120,39 @@ export const useAgentSubmission = (agentType: string) => {
     }
   };
 
-  const handleDeleteAgent = (agentId: string) => {
-    const userEmail = getCurrentUserEmail() || "user@example.com";
+  const handleDeleteAgent = async (agentId: string) => {
+    setIsDeleting(true);
     
-    // Delete agent from localStorage
-    deleteUserAgent(userEmail, agentId);
-    
-    toast.success("Agente removido com sucesso", {
-      description: "O agente foi excluído com sucesso.",
-    });
-    
-    // Navigate back to agents page after deletion
-    navigate('/agents');
+    try {
+      const userEmail = getCurrentUserEmail() || "user@example.com";
+      
+      // Delete agent from localStorage and call webhook
+      const success = await deleteUserAgent(userEmail, agentId);
+      
+      if (success) {
+        toast.success("Agente removido com sucesso", {
+          description: "O agente e todos os seus dados foram excluídos permanentemente.",
+        });
+      } else {
+        toast.error("Erro ao remover agente", {
+          description: "Ocorreu um erro ao remover o agente. Tente novamente.",
+        });
+      }
+    } catch (error) {
+      console.error("Error deleting agent:", error);
+      toast.error("Erro ao excluir agente", {
+        description: "Ocorreu um erro ao excluir o agente. Por favor, tente novamente.",
+      });
+    } finally {
+      setIsDeleting(false);
+      // Navigate back to agents page after deletion
+      navigate('/agents');
+    }
   };
 
   return {
     isSubmitting,
+    isDeleting,
     handleSubmitAgent,
     handleUpdateAgent,
     handleDeleteAgent
