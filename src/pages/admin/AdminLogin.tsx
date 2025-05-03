@@ -5,12 +5,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Shield, AlertTriangle, Info } from "lucide-react";
+import { Shield, AlertTriangle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { toast } from "sonner";
 
 export default function AdminLogin() {
-  // Email is fixed as admin@example.com
+  // Email is fixed as admin@example.com but not shown to users
   const fixedEmail = "admin@example.com";
   const [password, setPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -64,18 +64,6 @@ export default function AdminLogin() {
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                value={fixedEmail}
-                placeholder="admin@example.com"
-                required
-                readOnly
-                className="bg-gray-100"
-              />
-            </div>
-            <div className="space-y-2">
               <Label htmlFor="password">Senha</Label>
               <Input
                 id="password"
@@ -93,13 +81,6 @@ export default function AdminLogin() {
                 <AlertDescription className="text-red-700">{loginError}</AlertDescription>
               </Alert>
             )}
-            
-            <Alert className="bg-blue-50 border-blue-200">
-              <Info className="h-5 w-5 text-blue-500" />
-              <AlertDescription>
-                Use a senha <strong>@admin123456</strong>
-              </AlertDescription>
-            </Alert>
             
             <Button
               type="submit"
