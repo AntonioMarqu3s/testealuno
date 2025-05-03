@@ -1,8 +1,9 @@
 
 export * from './userPlanService';
 export * from './planLimitService';
+export * from './planConnectionService';
 
-// Export from supabsePlanService but exclude the connection functions that exist in planConnectionService
+// Export from supabsePlanService 
 export {
   getUserPlanFromSupabase,
   saveUserPlanToSupabase,
@@ -10,6 +11,3 @@ export {
   migratePlanToSupabase,
   updatePlanPaymentInfo
 } from './supabsePlanService';
-
-// Export the connection functions from planConnectionService
-export * from './planConnectionService';
