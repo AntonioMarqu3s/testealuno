@@ -9,19 +9,14 @@ import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
-import { updatePlanConnectionStatus } from "@/services/plan/planConnectionService";
 import { Loader2, RefreshCw } from "lucide-react";
-import { ManualPlanUpdate } from "@/components/plan/ManualPlanUpdate";
 
 export default function Settings() {
   const { user } = useAuth();
   const [userEmail, setUserEmail] = useState<string>("");
   const [plan, setPlan] = useState<any>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [connectInstancia, setConnectInstancia] = useState(false);
-  const [isUpdatingConnection, setIsUpdatingConnection] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
 
   const loadUserData = async () => {
@@ -53,7 +48,6 @@ export default function Settings() {
               connectInstancia: data.connect_instancia,
               updatedAt: data.updated_at
             });
-            setConnectInstancia(data.connect_instancia || false);
             console.log("Loaded plan data from Supabase:", data);
             setIsLoading(false);
             return;
@@ -65,7 +59,6 @@ export default function Settings() {
         // Fallback to local storage if no Supabase data
         const userPlan = getUserPlan(email);
         setPlan(userPlan);
-        setConnectInstancia(userPlan.connectInstancia || false);
         console.log("Loaded plan data from localStorage:", userPlan);
       }
     } catch (error) {
@@ -79,34 +72,6 @@ export default function Settings() {
   useEffect(() => {
     loadUserData();
   }, [user?.email, user?.id]);
-
-  // Handle connection toggle
-  const handleConnectionToggle = async () => {
-    if (!user?.id) {
-      toast.error("Você precisa estar logado para alterar essa configuração");
-      return;
-    }
-
-    setIsUpdatingConnection(true);
-    try {
-      const success = await updatePlanConnectionStatus(user.id, !connectInstancia);
-      if (success) {
-        setConnectInstancia(!connectInstancia);
-        toast.success(
-          !connectInstancia 
-            ? "Conexão automática ativada" 
-            : "Conexão automática desativada"
-        );
-      } else {
-        toast.error("Erro ao atualizar a configuração");
-      }
-    } catch (error) {
-      console.error("Error updating connection status:", error);
-      toast.error("Erro ao atualizar a configuração");
-    } finally {
-      setIsUpdatingConnection(false);
-    }
-  };
 
   // Handle manual sync of user plan data
   const handleSyncUserPlan = async () => {
@@ -206,41 +171,6 @@ export default function Settings() {
                   </p>
                 </div>
               </div>
-            </CardContent>
-          </Card>
-          
-          {/* Auto Connection Settings */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Configurações de Conexão</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-lg font-medium">Conectar instâncias automaticamente</h3>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    Ao ativar, novos agentes tentarão se conectar automaticamente quando criados
-                  </p>
-                </div>
-                <Switch 
-                  checked={connectInstancia}
-                  onCheckedChange={handleConnectionToggle}
-                  disabled={isUpdatingConnection || isLoading}
-                />
-              </div>
-            </CardContent>
-          </Card>
-          
-          {/* Manual Plan Update */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Atualização Manual de Plano</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ManualPlanUpdate 
-                userEmail={userEmail} 
-                onUpdateComplete={loadUserData}
-              />
             </CardContent>
           </Card>
           
