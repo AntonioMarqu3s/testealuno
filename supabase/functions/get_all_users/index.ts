@@ -24,33 +24,51 @@ Deno.serve(async (req) => {
     // Get auth token from request
     const authHeader = req.headers.get('Authorization')
     if (!authHeader) {
+      console.log('Missing Authorization header')
       throw new Error('Missing Authorization header')
     }
 
-    // Verify the user making the request is an admin
-    const { data: { user }, error: userError } = await supabaseClient.auth.getUser(
-      authHeader.replace('Bearer ', '')
-    )
+    // Verify the user making the request is authenticated
+    const token = authHeader.replace('Bearer ', '')
+    console.log('Verifying user with token:', token.substring(0, 10) + '...')
+    
+    const { data: { user }, error: userError } = await supabaseClient.auth.getUser(token)
 
     if (userError || !user) {
+      console.log('User verification failed:', userError?.message || 'No user found')
       throw new Error('Unauthorized')
     }
+    
+    console.log('User verified:', user.id)
 
-    // Verify user is an admin
-    const { data: adminCheck, error: adminError } = await supabaseClient.rpc('is_admin_user', { 
-      user_id: user.id 
+    // Verify user is an admin using is_admin_user function
+    console.log('Checking if user is admin')
+    const { data: isAdmin, error: adminCheckError } = await supabaseClient.functions.invoke('is_admin_user', {
+      body: { user_id: user.id }
     })
     
-    if (adminError || !adminCheck || adminCheck.length === 0) {
+    if (adminCheckError) {
+      console.log('Admin check error:', adminCheckError.message)
+      throw new Error(`Unauthorized: Error checking admin status: ${adminCheckError.message}`)
+    }
+    
+    console.log('Admin check result:', isAdmin)
+    
+    if (!isAdmin?.isAdmin) {
+      console.log('User is not an admin')
       throw new Error('Unauthorized: User is not an admin')
     }
 
-    // Get all users from auth.users using service role
+    // Get all users from auth.users using admin API
+    console.log('Fetching all users')
     const { data: authUsers, error: authUsersError } = await supabaseClient.auth.admin.listUsers()
     
     if (authUsersError) {
+      console.log('Error fetching users:', authUsersError.message)
       throw new Error(`Error fetching users: ${authUsersError.message}`)
     }
+    
+    console.log(`Successfully fetched ${authUsers.users.length} users`)
 
     // Format the users data for the client
     const formattedUsers = authUsers.users.map(user => ({
@@ -58,7 +76,8 @@ Deno.serve(async (req) => {
       email: user.email,
       created_at: user.created_at,
       last_sign_in_at: user.last_sign_in_at,
-      isActive: user.last_sign_in_at !== null
+      isActive: user.last_sign_in_at !== null,
+      metadata: user.user_metadata
     }))
 
     return new Response(
@@ -66,7 +85,7 @@ Deno.serve(async (req) => {
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
   } catch (error) {
-    console.error('Error fetching users:', error)
+    console.error('Error in get_all_users:', error.message)
     
     return new Response(
       JSON.stringify({ error: error.message }), 

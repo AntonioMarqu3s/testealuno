@@ -25,12 +25,21 @@ export function useAdminUsers() {
       setIsLoading(true);
       setError(null);
 
+      console.log("Fetching users from edge function");
       // Fetch users using our edge function
-      const { data: users, error: usersError } = await supabase.functions.invoke("get_all_users");
+      const { data, error } = await supabase.functions.invoke("get_all_users");
       
-      if (usersError) {
-        throw new Error(usersError.message || "Error fetching users");
+      if (error) {
+        console.error("Edge function error:", error);
+        throw new Error(error.message || "Error fetching users");
       }
+
+      if (!data || !Array.isArray(data)) {
+        console.error("Invalid response from edge function:", data);
+        throw new Error("Invalid response from server");
+      }
+      
+      console.log(`Successfully fetched ${data.length} users`);
 
       // Fetch user plans to enrich the data
       const { data: plans, error: plansError } = await supabase
@@ -39,10 +48,11 @@ export function useAdminUsers() {
         
       if (plansError) {
         console.error("Error fetching user plans:", plansError);
+        // Continue without plans data
       }
 
       // Map plans to users
-      const enrichedUsers = users.map((user: any) => {
+      const enrichedUsers = data.map((user: any) => {
         const userPlan = plans?.find(plan => plan.user_id === user.id);
         return {
           ...user,
@@ -56,9 +66,11 @@ export function useAdminUsers() {
 
       setUsers(enrichedUsers);
     } catch (err) {
-      console.error("Error fetching users:", err);
+      console.error("Error in fetchUsers:", err);
       setError(err instanceof Error ? err : new Error("Failed to fetch users"));
-      toast.error("Erro ao carregar usuários");
+      toast.error("Erro ao carregar usuários", {
+        description: err instanceof Error ? err.message : "Erro desconhecido"
+      });
     } finally {
       setIsLoading(false);
     }

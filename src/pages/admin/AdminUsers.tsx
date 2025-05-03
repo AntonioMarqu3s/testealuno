@@ -10,7 +10,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { UserPlus, Edit, Trash, Search, Users } from "lucide-react";
+import { UserPlus, Edit, Trash, Search, Users, RefreshCw } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { CreateUserForm } from "@/components/admin/CreateUserForm";
@@ -18,12 +18,14 @@ import { UserDetails } from "@/components/admin/UserDetails";
 import { useAdminUsers } from "@/hooks/admin/useAdminUsers";
 import { useAdminAgents } from "@/hooks/admin/useAdminAgents";
 import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
 
 export default function AdminUsers() {
   const [searchTerm, setSearchTerm] = useState("");
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
-  const { users, isLoading, error } = useAdminUsers();
+  const { users, isLoading, error, fetchUsers } = useAdminUsers();
   const { agents } = useAdminAgents();
 
   const filteredUsers = users.filter(user => 
@@ -45,26 +47,38 @@ export default function AdminUsers() {
     return grouped;
   }, [agents]);
 
+  // Handle manual refresh
+  const handleRefresh = () => {
+    fetchUsers();
+  };
+
   return (
     <AdminLayout>
       <div className="p-6 space-y-6">
         <div className="flex justify-between items-center">
           <h1 className="text-3xl font-bold">Gerenciar Usuários</h1>
           
-          <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-            <DialogTrigger asChild>
-              <Button>
-                <UserPlus className="h-4 w-4 mr-2" />
-                Criar Usuário
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-md">
-              <DialogHeader>
-                <DialogTitle>Criar Novo Usuário</DialogTitle>
-              </DialogHeader>
-              <CreateUserForm onSuccess={() => setIsCreateDialogOpen(false)} />
-            </DialogContent>
-          </Dialog>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={handleRefresh} disabled={isLoading}>
+              <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+              Atualizar
+            </Button>
+            
+            <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+              <DialogTrigger asChild>
+                <Button>
+                  <UserPlus className="h-4 w-4 mr-2" />
+                  Criar Usuário
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-md">
+                <DialogHeader>
+                  <DialogTitle>Criar Novo Usuário</DialogTitle>
+                </DialogHeader>
+                <CreateUserForm onSuccess={() => setIsCreateDialogOpen(false)} />
+              </DialogContent>
+            </Dialog>
+          </div>
         </div>
 
         <div className="flex items-center space-x-2">
@@ -79,15 +93,26 @@ export default function AdminUsers() {
           </div>
         </div>
         
+        {error && (
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>Erro</AlertTitle>
+            <AlertDescription>
+              {error.message}
+              <div className="mt-2">
+                <Button variant="outline" size="sm" onClick={handleRefresh}>
+                  Tentar novamente
+                </Button>
+              </div>
+            </AlertDescription>
+          </Alert>
+        )}
+        
         {isLoading ? (
           <div className="flex justify-center py-8">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
           </div>
-        ) : error ? (
-          <div className="text-center py-8 text-red-500">
-            Erro ao carregar usuários: {error.message}
-          </div>
-        ) : (
+        ) : !error && (
           <div className="border rounded-md">
             <Table>
               <TableHeader>
@@ -104,7 +129,7 @@ export default function AdminUsers() {
                 {filteredUsers.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={6} className="text-center h-24">
-                      Nenhum usuário encontrado
+                      {users.length === 0 ? "Nenhum usuário encontrado" : "Nenhum resultado para a busca"}
                     </TableCell>
                   </TableRow>
                 ) : (
