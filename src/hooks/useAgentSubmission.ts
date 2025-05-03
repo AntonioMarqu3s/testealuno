@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
@@ -13,6 +14,7 @@ import {
   deleteUserAgent,
   updateUserAgent
 } from "@/services";
+import { deleteAgentFromSupabase, saveAgentToSupabase } from "@/services/agent/supabaseAgentService";
 import { supabase } from "@/lib/supabase";
 
 export const useAgentSubmission = (agentType: string) => {
@@ -81,41 +83,18 @@ export const useAgentSubmission = (agentType: string) => {
       // Save agent to localStorage
       saveAgent(userEmail, newAgent);
       
-      // Save agent to Supabase database
-      const { error } = await supabase
-        .from('agents')
-        .insert({
-          id: newAgent.id,
-          name: values.agentName,
-          type: agentType,
-          is_connected: false,
-          connect_instancia: false,
-          created_at: new Date().toISOString(),
-          instance_id: instanceId,
-          client_identifier: clientIdentifier,
-          user_id: userEmail,
-          // Store all agent form data as additional fields or in a JSON column
-          agent_data: {
-            personality: values.personality,
-            customPersonality: values.customPersonality,
-            companyName: values.companyName,
-            companyDescription: values.companyDescription,
-            segment: values.segment,
-            mission: values.mission,
-            vision: values.vision,
-            mainDifferentials: values.mainDifferentials,
-            competitors: values.competitors,
-            commonObjections: values.commonObjections,
-            productName: values.productName,
-            productDescription: values.productDescription,
-            problemsSolved: values.problemsSolved,
-            benefits: values.benefits,
-            differentials: values.differentials
-          }
-        });
-        
-      if (error) {
-        console.error("Error saving agent to Supabase:", error);
+      // Save agent to Supabase using our dedicated function
+      const saveResult = await saveAgentToSupabase(
+        newAgent.id,
+        userEmail,
+        values,
+        agentType,
+        instanceId,
+        clientIdentifier,
+        false // not connected initially
+      );
+      
+      if (!saveResult) {
         toast.error("Erro ao salvar no banco de dados", {
           description: "O agente foi criado localmente, mas ocorreu um erro ao salvá-lo no banco de dados.",
         });
@@ -159,6 +138,16 @@ export const useAgentSubmission = (agentType: string) => {
         clientIdentifier // Add client identifier
       });
       
+      // Update agent in Supabase
+      saveAgentToSupabase(
+        agentId,
+        userEmail,
+        values,
+        agentType,
+        instanceId,
+        clientIdentifier
+      );
+      
       toast.success("Agente atualizado com sucesso", {
         description: `O agente ${values.agentName} foi atualizado com sucesso.`,
       });
@@ -189,14 +178,11 @@ export const useAgentSubmission = (agentType: string) => {
       // Delete agent from localStorage and call webhook
       const success = await deleteUserAgent(userEmail, agentId);
       
-      // Delete agent from Supabase database
-      const { error } = await supabase
-        .from('agents')
-        .delete()
-        .eq('id', agentId);
-        
-      if (error) {
-        console.error("Error deleting agent from database:", error);
+      // Delete agent from Supabase database using our enhanced function
+      const dbDeleted = await deleteAgentFromSupabase(agentId);
+      
+      if (!dbDeleted) {
+        console.error("Error deleting agent from database");
         toast.error("Erro na exclusão do banco de dados", {
           description: "O agente foi removido localmente, mas ocorreu um erro ao excluí-lo do banco de dados.",
         });

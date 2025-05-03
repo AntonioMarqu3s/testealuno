@@ -96,20 +96,68 @@ export const updateAgentConnectionStatus = async (agentId: string, isConnected: 
  */
 export const getAgentConnectionStatus = async (agentId: string): Promise<boolean> => {
   try {
+    // First check if agent exists in database
+    const { data: checkData, error: checkError } = await supabase
+      .from('agents')
+      .select('id')
+      .eq('id', agentId);
+      
+    if (checkError || !checkData || checkData.length === 0) {
+      console.log('Agent not found in database, returning default connection status');
+      return false;
+    }
+    
+    // Then get connection status
     const { data, error } = await supabase
       .from('agents')
       .select('connect_instancia')
       .eq('id', agentId)
-      .single();
+      .maybeSingle();
       
-    if (error || !data) {
+    if (error) {
       console.error('Error getting agent connection status:', error);
       return false;
     }
     
-    return data.connect_instancia || false;
+    return data?.connect_instancia || false;
   } catch (error) {
     console.error('Exception getting agent connection status:', error);
+    return false;
+  }
+};
+
+/**
+ * Delete agent from Supabase
+ */
+export const deleteAgentFromSupabase = async (agentId: string): Promise<boolean> => {
+  try {
+    // Check if agent exists in Supabase first
+    const { data: checkData, error: checkError } = await supabase
+      .from('agents')
+      .select('id')
+      .eq('id', agentId);
+      
+    // If agent doesn't exist or we get an error, return success anyway
+    // This allows local deletion to proceed even if not in Supabase yet
+    if (checkError || !checkData || checkData.length === 0) {
+      console.log('Agent not found in database, skipping database deletion');
+      return true;
+    }
+    
+    // Delete agent from Supabase
+    const { error } = await supabase
+      .from('agents')
+      .delete()
+      .eq('id', agentId);
+      
+    if (error) {
+      console.error('Error deleting agent from Supabase:', error);
+      return false;
+    }
+    
+    return true;
+  } catch (error) {
+    console.error('Exception deleting agent from Supabase:', error);
     return false;
   }
 };
@@ -168,4 +216,3 @@ export const saveAgentToSupabase = async (
     return false;
   }
 };
-

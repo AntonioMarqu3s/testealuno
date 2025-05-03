@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
@@ -35,6 +34,7 @@ export const AgentPanel: React.FC<AgentPanelProps> = ({
   const userEmail = getCurrentUserEmail();
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [isConnected, setIsConnected] = useState(agent.isConnected || agent.connectInstancia || false);
+  const [localIsDeleting, setLocalIsDeleting] = useState(false);
   const [hasAutoShowQRTriggered, setHasAutoShowQRTriggered] = useState(false);
   
   // Custom hooks for QR code and connection
@@ -51,6 +51,11 @@ export const AgentPanel: React.FC<AgentPanelProps> = ({
   
   const { isDisconnecting, isCheckingStatus, handleDisconnect, checkConnectionStatus } = useAgentConnection();
   const { handleDeleteAgent } = useAgentSubmission(agent.type || "");
+
+  // Keep local deleting state in sync with prop
+  useEffect(() => {
+    setLocalIsDeleting(isDeleting);
+  }, [isDeleting]);
 
   // Check connection status when component mounts
   useEffect(() => {
@@ -95,12 +100,22 @@ export const AgentPanel: React.FC<AgentPanelProps> = ({
   };
 
   const confirmDelete = async () => {
-    if (onDelete) {
-      onDelete(agent.id);
-    } else {
-      await handleDeleteAgent(agent.id);
+    setLocalIsDeleting(true);
+    try {
+      if (onDelete) {
+        await onDelete(agent.id);
+      } else {
+        await handleDeleteAgent(agent.id);
+      }
+    } catch (error) {
+      console.error("Error during agent deletion:", error);
+      toast.error("Erro ao excluir o agente", {
+        description: "Ocorreu um erro inesperado ao excluir o agente. Tente novamente.",
+      });
+    } finally {
+      setShowDeleteDialog(false);
+      setLocalIsDeleting(false);
     }
-    setShowDeleteDialog(false);
   };
   
   const handleDisconnectClick = async () => {
@@ -166,7 +181,7 @@ export const AgentPanel: React.FC<AgentPanelProps> = ({
         <DeleteAgentDialog 
           agentName={agent.name}
           onDelete={confirmDelete}
-          isDeleting={isDeleting}
+          isDeleting={localIsDeleting}
         />
       </AlertDialog>
       
