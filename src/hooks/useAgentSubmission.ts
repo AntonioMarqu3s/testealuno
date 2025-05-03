@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
@@ -22,7 +21,7 @@ export const useAgentSubmission = (agentType: string) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  const handleSubmitAgent = (values: AgentFormValues) => {
+  const handleSubmitAgent = async (values: AgentFormValues) => {
     setIsSubmitting(true);
     
     try {
@@ -50,7 +49,7 @@ export const useAgentSubmission = (agentType: string) => {
       // Increment user's agent count
       incrementAgentCount(userEmail);
       
-      // Create agent object
+      // Create agent object with detailed information from form values
       const newAgent = {
         id: `agent-${Date.now()}`, // Use timestamp for unique ID
         name: values.agentName,
@@ -58,7 +57,23 @@ export const useAgentSubmission = (agentType: string) => {
         isConnected: false,
         createdAt: new Date(),
         instanceId,
-        clientIdentifier
+        clientIdentifier,
+        // Store all agent form data
+        personality: values.personality,
+        customPersonality: values.customPersonality,
+        companyName: values.companyName,
+        companyDescription: values.companyDescription,
+        segment: values.segment,
+        mission: values.mission,
+        vision: values.vision,
+        mainDifferentials: values.mainDifferentials,
+        competitors: values.competitors,
+        commonObjections: values.commonObjections,
+        productName: values.productName,
+        productDescription: values.productDescription,
+        problemsSolved: values.problemsSolved,
+        benefits: values.benefits,
+        differentials: values.differentials
       };
 
       console.log("Saving new agent:", newAgent);
@@ -66,12 +81,55 @@ export const useAgentSubmission = (agentType: string) => {
       // Save agent to localStorage
       saveAgent(userEmail, newAgent);
       
+      // Save agent to Supabase database
+      const { error } = await supabase
+        .from('agents')
+        .insert({
+          id: newAgent.id,
+          name: values.agentName,
+          type: agentType,
+          is_connected: false,
+          connect_instancia: false,
+          created_at: new Date().toISOString(),
+          instance_id: instanceId,
+          client_identifier: clientIdentifier,
+          user_id: userEmail,
+          // Store all agent form data as additional fields or in a JSON column
+          agent_data: {
+            personality: values.personality,
+            customPersonality: values.customPersonality,
+            companyName: values.companyName,
+            companyDescription: values.companyDescription,
+            segment: values.segment,
+            mission: values.mission,
+            vision: values.vision,
+            mainDifferentials: values.mainDifferentials,
+            competitors: values.competitors,
+            commonObjections: values.commonObjections,
+            productName: values.productName,
+            productDescription: values.productDescription,
+            problemsSolved: values.problemsSolved,
+            benefits: values.benefits,
+            differentials: values.differentials
+          }
+        });
+        
+      if (error) {
+        console.error("Error saving agent to Supabase:", error);
+        toast.error("Erro ao salvar no banco de dados", {
+          description: "O agente foi criado localmente, mas ocorreu um erro ao salvá-lo no banco de dados.",
+        });
+      }
+      
       // Show success message
       toast.success("Agente criado com sucesso", {
         description: `O agente ${values.agentName} foi criado e está pronto para uso.`,
       });
       
       setIsSubmitting(false);
+      
+      // Navigate to the agents page
+      navigate('/agents');
     } catch (error) {
       console.error("Error creating agent:", error);
       toast.error("Erro ao criar agente", {
