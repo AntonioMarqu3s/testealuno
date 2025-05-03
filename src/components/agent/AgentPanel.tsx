@@ -71,7 +71,7 @@ export const AgentPanel: React.FC<AgentPanelProps> = ({
     handleCloseQRCode 
   } = useQRCodeGeneration(processedAgent.instanceId, processedAgent.clientIdentifier);
   
-  const { isDisconnecting, isCheckingStatus, handleDisconnect, checkConnectionStatus } = useAgentConnection();
+  const { isDisconnecting, isCheckingStatus, handleDisconnect } = useAgentConnection();
   const { handleDeleteAgent } = useAgentSubmission(processedAgent.type || "");
 
   // Keep local deleting state in sync with prop
@@ -79,32 +79,7 @@ export const AgentPanel: React.FC<AgentPanelProps> = ({
     setLocalIsDeleting(isDeleting);
   }, [isDeleting]);
 
-  // Check connection status when component mounts
-  useEffect(() => {
-    if (processedAgent.instanceId) {
-      const verifyStatus = async () => {
-        try {
-          console.log("Verifying agent connection status on mount:", processedAgent.instanceId);
-          const connected = await checkConnectionStatus(processedAgent.instanceId, processedAgent.id);
-          
-          // Only update if the connection status is different
-          if (connected !== isConnected) {
-            setIsConnected(connected);
-            
-            // Update parent state if callback provided
-            if (onToggleConnection) {
-              onToggleConnection(processedAgent.id, connected);
-            }
-          }
-        } catch (error) {
-          console.error("Error checking connection status:", error);
-          // Don't update status on error, keep current state
-        }
-      };
-      
-      verifyStatus();
-    }
-  }, [processedAgent.instanceId, processedAgent.id, checkConnectionStatus, isConnected, onToggleConnection]);
+  // Removed connection status check on mount that was causing loops
 
   // Handle auto show QR code when directed from agent creation - only trigger once
   useEffect(() => {
@@ -166,7 +141,6 @@ export const AgentPanel: React.FC<AgentPanelProps> = ({
   const handleConnectClick = () => {
     // Gera QR code e configura callback de conexão
     handleShowQRCode();
-    // Evitar navegação para página de análise aqui
   };
   
   const handleQRConnected = () => {

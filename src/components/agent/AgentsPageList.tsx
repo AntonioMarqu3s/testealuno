@@ -82,7 +82,7 @@ export const AgentsPageList = ({
   
   const handleToggleConnection = async (agentId: string, isConnected: boolean) => {
     try {
-      // Update agent connection status in localStorage
+      // Simplified: just update local state without additional API checks
       updateUserAgent(userEmail, agentId, {
         isConnected: isConnected,
         connectInstancia: isConnected
