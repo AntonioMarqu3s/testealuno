@@ -4,6 +4,7 @@ import { getCurrentUser } from "@/services/auth/supabaseAuth";
 import { getUserPlan, PlanType, updateUserPlan } from "@/services/plan/userPlanService";
 import { getUserPlanFromSupabase, updateUserPlanInSupabase } from "@/services/plan/supabsePlanService";
 import { toast } from "sonner";
+import { Location as RouterLocation } from "react-router-dom";
 
 /**
  * Força uma sincronização do plano do usuário entre o Supabase e o localStorage
@@ -72,7 +73,7 @@ export const syncUserPlan = async (userEmail: string): Promise<boolean> => {
  * Verifica se há um código de confirmação de pagamento na URL
  * e atualiza o plano do usuário se necessário
  */
-export const checkPaymentConfirmation = async (location: Location, userEmail: string): Promise<boolean> => {
+export const checkPaymentConfirmation = async (location: RouterLocation, userEmail: string): Promise<boolean> => {
   const searchParams = new URLSearchParams(location.search);
   const paymentConfirmed = searchParams.get('payment_confirmed');
   const planType = searchParams.get('plan');
@@ -110,7 +111,7 @@ export const checkPaymentConfirmation = async (location: Location, userEmail: st
 /**
  * Utilitário para verificar o plano atual e garantir que está sincronizado
  */
-export const checkAndSyncPlan = async (location: Location, userEmail: string): Promise<void> => {
+export const checkAndSyncPlan = async (location: RouterLocation, userEmail: string): Promise<void> => {
   // Primeiro verifica se há confirmação de pagamento na URL
   const paymentProcessed = await checkPaymentConfirmation(location, userEmail);
   
