@@ -1,3 +1,5 @@
 
 export * from './userPlanService';
 export * from './planLimitService';
+export * from './supabsePlanService';
+export * from './planConnectionService';

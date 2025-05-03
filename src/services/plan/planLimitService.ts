@@ -1,22 +1,60 @@
 
 import { getUserPlan, hasTrialExpired, PlanType } from './userPlanService';
 import { getUserAgents } from '../agent/agentStorageService';
+import { getUserPlanFromSupabase } from './supabsePlanService';
+import { getCurrentUser } from '../auth/supabaseAuth';
 
 /**
  * Check if a user can create more agents based on their plan limits
  * @param email User email
  * @returns boolean indicating if user can create more agents
  */
-export const canCreateAgent = (email: string): boolean => {
+export const canCreateAgent = async (email: string): Promise<boolean> => {
+  const user = await getCurrentUser();
+  
+  if (!user) {
+    console.log('No authenticated user found');
+    return false;
+  }
+
+  // Try to get user plan from Supabase first
+  const supabasePlan = await getUserPlanFromSupabase(user.id);
+  
+  if (supabasePlan) {
+    console.log('Using Supabase plan data');
+    // If plan is FREE_TRIAL, check if trial is active
+    if (supabasePlan.plan === PlanType.FREE_TRIAL) {
+      // Check if trial is active by comparing trial_ends_at with current date
+      if (supabasePlan.trialEndsAt) {
+        const now = new Date();
+        const trialEnds = new Date(supabasePlan.trialEndsAt);
+        const isTrialActive = now < trialEnds;
+        console.log(`Trial active: ${isTrialActive}, ends: ${trialEnds}`);
+        return isTrialActive;
+      }
+      return false;
+    }
+    
+    // For paid plans, check agent limit
+    const userAgents = getUserAgents(email);
+    return userAgents.length < supabasePlan.agentLimit;
+  }
+  
+  // Fallback to local storage if Supabase data is not available
+  console.log('Falling back to local storage plan data');
   const userPlan = getUserPlan(email);
   const userAgents = getUserAgents(email);
   
-  // If user is on FREE_TRIAL plan, they cannot create agents - need to upgrade first
+  // If FREE_TRIAL, check if trial is still active
   if (userPlan.plan === PlanType.FREE_TRIAL) {
-    return false;
+    if (hasTrialExpired(email)) {
+      console.log('Trial has expired');
+      return false;
+    }
+    return userPlan.trialEndsAt ? true : false;
   }
   
-  // Check if user has reached the agent limit for their plan
+  // For paid plans, check agent limit
   return userAgents.length < userPlan.agentLimit;
 };
 

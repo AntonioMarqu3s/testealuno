@@ -81,8 +81,19 @@ export function RegisterForm({
     try {
       console.log(`Attempting to register with email: ${values.email}`);
       
-      // Users without valid promo code always get FREE_TRIAL plan without trial days
+      // Get trial info
+      const hasValidPromo = values.promoCode && checkPromoCode(values.promoCode);
+      
+      // All users get the FREE_TRIAL plan
       const planToApply = PlanType.FREE_TRIAL;
+      
+      // Calculate trial end date if it's a valid promo code
+      let trialEndsAt = null;
+      if (hasValidPromo) {
+        const trialEnd = new Date();
+        trialEnd.setDate(trialEnd.getDate() + 5); // 5 days trial
+        trialEndsAt = trialEnd.toISOString();
+      }
       
       const { data, error } = await supabase.auth.signUp({
         email: values.email,
@@ -92,7 +103,9 @@ export function RegisterForm({
           data: {
             email: values.email,
             plan: planToApply,
-            promoCode: values.promoCode ? values.promoCode.toUpperCase() : null
+            promoCode: values.promoCode ? values.promoCode.toUpperCase() : null,
+            trialEndsAt: trialEndsAt,
+            trialInit: new Date().toISOString()
           }
         }
       });
@@ -112,12 +125,19 @@ export function RegisterForm({
       // Update user email
       updateCurrentUserEmail(values.email);
       
-      // Update user plan based on selection or promo code
-      updateUserPlan(values.email, planToApply, undefined, undefined, undefined, promoApplied);
+      // Update user plan based on selection and promo code
+      updateUserPlan(
+        values.email, 
+        planToApply, 
+        undefined, 
+        undefined, 
+        undefined, 
+        hasValidPromo
+      );
       
       // Success message - different messages based on promo code
       toast.success("Conta criada com sucesso!", { 
-        description: promoApplied 
+        description: hasValidPromo 
           ? "Seu período de teste gratuito de 5 dias foi iniciado."
           : "Sua conta foi criada. Por favor, verifique seu email para confirmar seu cadastro." 
       });

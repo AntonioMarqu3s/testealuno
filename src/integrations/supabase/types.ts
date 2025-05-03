@@ -71,6 +71,7 @@ export type Database = {
           plan: number
           subscription_ends_at: string | null
           trial_ends_at: string | null
+          trial_init: string | null
           updated_at: string | null
           user_id: string
         }
@@ -84,6 +85,7 @@ export type Database = {
           plan?: number
           subscription_ends_at?: string | null
           trial_ends_at?: string | null
+          trial_init?: string | null
           updated_at?: string | null
           user_id: string
         }
@@ -97,6 +99,7 @@ export type Database = {
           plan?: number
           subscription_ends_at?: string | null
           trial_ends_at?: string | null
+          trial_init?: string | null
           updated_at?: string | null
           user_id?: string
         }
