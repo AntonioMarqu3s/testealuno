@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Shield, ShieldAlert, Pencil, Trash } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
+import { useAdminAuth } from "@/context/AdminAuthContext";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -33,26 +34,11 @@ interface AdminUsersProps {
 export function AdminUsers({ onEditAdmin }: AdminUsersProps) {
   const [admins, setAdmins] = useState<AdminUser[]>([]);
   const [loading, setLoading] = useState(true);
-  const [currentUserAdminId, setCurrentUserAdminId] = useState<string | null>(null);
-  const [currentUserAdminLevel, setCurrentUserAdminLevel] = useState<string | null>(null);
+  const { currentUserAdminId, currentUserAdminLevel } = useAdminAuth();
 
   const fetchAdmins = async () => {
     try {
       setLoading(true);
-      
-      // Get current user's ID
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("User not found");
-      
-      // Check current user's admin level using edge function
-      const { data: adminCheck } = await supabase.functions.invoke('is_admin_user', {
-        body: { user_id: user.id }
-      });
-      
-      if (adminCheck?.isAdmin) {
-        setCurrentUserAdminId(adminCheck.adminId);
-        setCurrentUserAdminLevel(adminCheck.adminLevel);
-      }
       
       // Fetch admin users using direct SQL for reliability
       const { data: adminData, error: adminError } = await supabase

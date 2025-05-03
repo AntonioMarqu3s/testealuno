@@ -1,3 +1,4 @@
+
 import { useEffect } from "react";
 import { Toaster as ShadcnToaster } from "@/components/ui/toaster";
 import { Toaster as SonnerToaster } from "@/components/ui/sonner";
@@ -8,7 +9,7 @@ import { AuthProvider } from "./context/AuthContext";
 import { AdminAuthProvider } from "./context/AdminAuthContext";
 import { AdminGuard } from "./components/admin/AdminGuard";
 import { supabase } from "@/lib/supabase";
-import { toast } from "sonner";
+import { initializeAdminUser } from "@/utils/adminAuthUtils";
 import AuthCallback from "./pages/AuthCallback";
 import ResetPassword from "./pages/ResetPassword";
 import Index from "./pages/Index";
@@ -25,7 +26,6 @@ import Settings from "./pages/Settings";
 import AdminLogin from "./pages/admin/AdminLogin";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminUsers from "./pages/admin/AdminUsers";
-import AdminAgents from "./pages/admin/AdminAgents";
 import AdminPlans from "./pages/admin/AdminPlans";
 import AdminPayments from "./pages/admin/AdminPayments";
 import AdminAdministrators from "./pages/admin/AdminAdministrators";
@@ -52,22 +52,7 @@ function App() {
 
   // Initialize admin user
   useEffect(() => {
-    const createAdminUser = async () => {
-      try {
-        console.log('Creating initial admin user...');
-        const { data, error } = await supabase.functions.invoke("create-initial-admin");
-        
-        if (error) {
-          console.error("Error creating admin:", error);
-        } else if (data?.success) {
-          console.log("Admin setup completed:", data.message);
-        }
-      } catch (err) {
-        console.error("Error in admin initialization:", err);
-      }
-    };
-    
-    createAdminUser();
+    initializeAdminUser();
   }, []);
 
   return (
@@ -105,7 +90,6 @@ function App() {
                   <Route path="/admin" element={<AdminLogin />} />
                   <Route path="/admin/dashboard" element={<AdminGuard><AdminDashboard /></AdminGuard>} />
                   <Route path="/admin/users" element={<AdminGuard><AdminUsers /></AdminGuard>} />
-                  <Route path="/admin/agents" element={<AdminGuard><AdminAgents /></AdminGuard>} />
                   <Route path="/admin/plans" element={<AdminGuard><AdminPlans /></AdminGuard>} />
                   <Route path="/admin/payments" element={<AdminGuard><AdminPayments /></AdminGuard>} />
                   <Route path="/admin/administrators" element={<AdminGuard><AdminAdministrators /></AdminGuard>} />
