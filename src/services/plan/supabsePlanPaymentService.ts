@@ -1,6 +1,6 @@
 
 import { supabase } from '@/lib/supabase';
-import { PlanType, UserPlan } from './planTypes';
+import { PlanType, UserPlan, PLAN_DETAILS } from './planTypes';
 
 /**
  * Update user plan with payment information
@@ -51,7 +51,28 @@ export const migratePlanToSupabase = async (userId: string, email: string, plan:
   }
   
   if (data && data.length > 0) {
-    // Plan already exists, no need to migrate
+    console.log('Plan already exists in Supabase, updating...');
+    // Plan already exists, update it instead of creating a new one
+    const { error: updateError } = await supabase
+      .from('user_plans')
+      .update({
+        plan: plan.plan,
+        name: PLAN_DETAILS[plan.plan].name, // Use name from PLAN_DETAILS to ensure it's not null
+        agent_limit: plan.agentLimit,
+        trial_ends_at: plan.trialEndsAt,
+        subscription_ends_at: plan.subscriptionEndsAt,
+        payment_date: plan.paymentDate,
+        payment_status: plan.paymentStatus || 'pending',
+        connect_instancia: plan.connectInstancia || false,
+        updated_at: new Date().toISOString()
+      })
+      .eq('user_id', userId);
+      
+    if (updateError) {
+      console.error('Error updating plan in Supabase:', updateError);
+    } else {
+      console.log('Successfully updated plan in Supabase for user:', email);
+    }
     return;
   }
   
@@ -69,7 +90,7 @@ export const migratePlanToSupabase = async (userId: string, email: string, plan:
     .insert([{
       user_id: userId,
       plan: plan.plan,
-      name: plan.name,
+      name: PLAN_DETAILS[plan.plan].name, // Use name from PLAN_DETAILS to ensure it's not null
       agent_limit: plan.agentLimit,
       trial_ends_at: plan.trialEndsAt,
       subscription_ends_at: subscriptionEndsAt,
@@ -81,5 +102,7 @@ export const migratePlanToSupabase = async (userId: string, email: string, plan:
     
   if (insertError) {
     console.error('Error migrating plan to Supabase:', insertError);
+  } else {
+    console.log('Successfully migrated plan to Supabase for user:', email);
   }
 };

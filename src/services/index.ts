@@ -8,7 +8,7 @@ export * from './user';
 export { generateAgentInstanceId, generateUniqueInstanceId } from './agent/agentInstanceService';
 export { getUserAgents, saveAgent, deleteUserAgent, updateUserAgent } from './agent/agentStorageService';
 export { canCreateAgent, incrementAgentCount } from './plan/planLimitService';
-export { getCurrentUserEmail } from './user/userService';
+export { getCurrentUserEmail, forceSyncUserPlanWithSupabase } from './auth/supabaseAuth';
 
 // Export plan connection service - already exported via './plan' above
 // export { updatePlanConnectionStatus, getPlanConnectionStatus } from './plan/planConnectionService';

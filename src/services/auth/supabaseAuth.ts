@@ -63,16 +63,41 @@ export const initializeUserDataAfterLogin = async (): Promise<void> => {
 // Migrate local data to Supabase
 export const migrateLocalDataToSupabase = async (userId: string, email: string): Promise<void> => {
   try {
-    // 1. Migrate agents data
-    const localAgents = getUserAgents(email);
-    await migrateAgentsToSupabase(userId, email, localAgents);
+    console.log(`Starting data migration for user ${email}`);
     
-    // 2. Migrate user plan data
+    // 1. Migrate user plan data first
     const userPlan = getUserPlan(email);
+    console.log(`Migrating plan data for user ${email}:`, userPlan);
     await migratePlanToSupabase(userId, email, userPlan);
     
+    // 2. Migrate agents data
+    const localAgents = getUserAgents(email);
+    console.log(`Migrating ${localAgents.length} agents for user ${email}`);
+    await migrateAgentsToSupabase(userId, email, localAgents);
+    
     console.log(`Data migration completed for user ${email}`);
+    
+    // Force refresh of data on the settings page if user is on that page
+    if (window.location.pathname === '/settings') {
+      console.log('User is on settings page, refreshing data...');
+      window.location.reload();
+    }
   } catch (error) {
     console.error('Error migrating data to Supabase:', error);
+  }
+};
+
+// Force synchronize user plan data with Supabase
+export const forceSyncUserPlanWithSupabase = async (): Promise<boolean> => {
+  try {
+    const user = await getCurrentUser();
+    if (!user || !user.email) return false;
+    
+    const userPlan = getUserPlan(user.email);
+    await migratePlanToSupabase(user.id, user.email, userPlan);
+    return true;
+  } catch (error) {
+    console.error('Error force syncing user plan with Supabase:', error);
+    return false;
   }
 };

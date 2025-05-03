@@ -1,7 +1,8 @@
+
 import { useEffect, useState } from "react";
 import MainLayout from "@/components/layout/MainLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { getCurrentUserEmail } from "@/services";
+import { getCurrentUserEmail, forceSyncUserPlanWithSupabase } from "@/services";
 import { getUserPlan, getTrialDaysRemaining, getSubscriptionDaysRemaining, PlanType } from "@/services/plan/userPlanService";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/lib/supabase";
@@ -9,7 +10,9 @@ import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { Button } from "@/components/ui/button";
 import { updatePlanConnectionStatus } from "@/services/plan/planConnectionService";
+import { Loader2, RefreshCw } from "lucide-react";
 
 export default function Settings() {
   const { user } = useAuth();
@@ -18,60 +21,61 @@ export default function Settings() {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [connectInstancia, setConnectInstancia] = useState(false);
   const [isUpdatingConnection, setIsUpdatingConnection] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
+
+  const loadUserData = async () => {
+    setIsLoading(true);
+    try {
+      // Get current user email
+      const email = user?.email || await getCurrentUserEmail();
+      setUserEmail(email || "");
+
+      if (email) {
+        // Try to get user plan from Supabase first
+        if (user?.id) {
+          const { data, error } = await supabase
+            .from('user_plans')
+            .select('*')
+            .eq('user_id', user.id)
+            .single();
+
+          if (data) {
+            // Convert Supabase data to match our local format
+            setPlan({
+              plan: data.plan,
+              name: data.name,
+              agentLimit: data.agent_limit,
+              trialEndsAt: data.trial_ends_at,
+              subscriptionEndsAt: data.subscription_ends_at,
+              paymentDate: data.payment_date,
+              paymentStatus: data.payment_status,
+              connectInstancia: data.connect_instancia,
+              updatedAt: data.updated_at
+            });
+            setConnectInstancia(data.connect_instancia || false);
+            console.log("Loaded plan data from Supabase:", data);
+            setIsLoading(false);
+            return;
+          } else if (error && !error.message.includes('No rows found')) {
+            console.error("Error loading user plan from Supabase:", error);
+          }
+        }
+        
+        // Fallback to local storage if no Supabase data
+        const userPlan = getUserPlan(email);
+        setPlan(userPlan);
+        setConnectInstancia(userPlan.connectInstancia || false);
+        console.log("Loaded plan data from localStorage:", userPlan);
+      }
+    } catch (error) {
+      console.error("Error loading user data:", error);
+      toast.error("Erro ao carregar dados do usuário");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   useEffect(() => {
-    async function loadUserData() {
-      setIsLoading(true);
-      try {
-        // Get current user email
-        const email = user?.email || await getCurrentUserEmail();
-        setUserEmail(email || "");
-
-        if (email) {
-          // Try to get user plan from Supabase first
-          if (user?.id) {
-            const { data, error } = await supabase
-              .from('user_plans')
-              .select('*')
-              .eq('user_id', user.id)
-              .single();
-
-            if (data) {
-              // Convert Supabase data to match our local format
-              setPlan({
-                plan: data.plan,
-                name: data.name,
-                agentLimit: data.agent_limit,
-                trialEndsAt: data.trial_ends_at,
-                subscriptionEndsAt: data.subscription_ends_at,
-                paymentDate: data.payment_date,
-                paymentStatus: data.payment_status,
-                connectInstancia: data.connect_instancia,
-                updatedAt: data.updated_at
-              });
-              setConnectInstancia(data.connect_instancia || false);
-              console.log("Loaded plan data from Supabase:", data);
-              setIsLoading(false);
-              return;
-            } else if (error && !error.message.includes('No rows found')) {
-              console.error("Error loading user plan from Supabase:", error);
-            }
-          }
-          
-          // Fallback to local storage if no Supabase data
-          const userPlan = getUserPlan(email);
-          setPlan(userPlan);
-          setConnectInstancia(userPlan.connectInstancia || false);
-          console.log("Loaded plan data from localStorage:", userPlan);
-        }
-      } catch (error) {
-        console.error("Error loading user data:", error);
-        toast.error("Erro ao carregar dados do usuário");
-      } finally {
-        setIsLoading(false);
-      }
-    }
-
     loadUserData();
   }, [user?.email, user?.id]);
 
@@ -100,6 +104,31 @@ export default function Settings() {
       toast.error("Erro ao atualizar a configuração");
     } finally {
       setIsUpdatingConnection(false);
+    }
+  };
+
+  // Handle manual sync of user plan data
+  const handleSyncUserPlan = async () => {
+    if (!user?.id) {
+      toast.error("Você precisa estar logado para sincronizar os dados");
+      return;
+    }
+
+    setIsSyncing(true);
+    try {
+      const success = await forceSyncUserPlanWithSupabase();
+      if (success) {
+        toast.success("Dados sincronizados com sucesso");
+        // Reload user data after sync
+        await loadUserData();
+      } else {
+        toast.error("Erro ao sincronizar dados");
+      }
+    } catch (error) {
+      console.error("Error syncing user plan data:", error);
+      toast.error("Erro ao sincronizar dados");
+    } finally {
+      setIsSyncing(false);
     }
   };
 
@@ -203,8 +232,22 @@ export default function Settings() {
           
           {/* Subscription Information */}
           <Card>
-            <CardHeader>
+            <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle>Informações de Assinatura</CardTitle>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={handleSyncUserPlan}
+                disabled={isSyncing || isLoading}
+                className="flex items-center gap-2"
+              >
+                {isSyncing ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <RefreshCw className="h-4 w-4" />
+                )}
+                Sincronizar Dados
+              </Button>
             </CardHeader>
             <CardContent>
               {isLoading ? (
