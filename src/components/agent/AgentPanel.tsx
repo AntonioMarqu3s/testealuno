@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
@@ -33,7 +32,6 @@ export const AgentPanel: React.FC<AgentPanelProps> = ({
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [isConnected, setIsConnected] = useState(agent.isConnected || agent.connectInstancia || false);
   const [hasAutoShowQRTriggered, setHasAutoShowQRTriggered] = useState(false);
-  const [connectionCheckFailed, setConnectionCheckFailed] = useState(false);
   
   // Custom hooks for QR code and connection
   const { 
@@ -54,42 +52,32 @@ export const AgentPanel: React.FC<AgentPanelProps> = ({
     if (agent.instanceId) {
       const verifyStatus = async () => {
         try {
-          console.log("Verificando status de conexão do agente:", agent.name);
-          setConnectionCheckFailed(false);
+          console.log("Verifying agent connection status on mount:", agent.instanceId);
+          const connected = await checkConnectionStatus(agent.instanceId, agent.id);
           
-          // Primeiro verifica se o agente está marcado como conectado no estado local
-          if (agent.isConnected || agent.connectInstancia) {
-            const connected = await checkConnectionStatus(agent.instanceId, agent.id);
+          // Only update if the connection status is different
+          if (connected !== isConnected) {
+            setIsConnected(connected);
             
-            // Apenas atualiza se o status de conexão for diferente
-            if (connected !== isConnected) {
-              console.log(`Status de conexão alterado para o agente ${agent.name}: ${connected}`);
-              setIsConnected(connected);
-              
-              // Atualiza o estado do componente pai se o callback for fornecido
-              if (onToggleConnection) {
-                onToggleConnection(agent.id, connected);
-              }
+            // Update parent state if callback provided
+            if (onToggleConnection) {
+              onToggleConnection(agent.id, connected);
             }
           }
         } catch (error) {
-          console.error("Erro ao verificar status de conexão:", error);
-          setConnectionCheckFailed(true);
-          // Não atualiza o status em caso de erro, mantém o estado atual
+          console.error("Error checking connection status:", error);
+          // Don't update status on error, keep current state
         }
       };
       
-      // Executa a verificação, mas não trava a UI se falhar
-      verifyStatus().catch(error => {
-        console.error("Erro não tratado na verificação de status:", error);
-      });
+      verifyStatus();
     }
-  }, [agent.instanceId, agent.id, agent.name, agent.isConnected, agent.connectInstancia, checkConnectionStatus, isConnected, onToggleConnection]);
+  }, [agent.instanceId, agent.id, checkConnectionStatus, isConnected, onToggleConnection]);
 
   // Handle auto show QR code when directed from agent creation - only trigger once
   useEffect(() => {
     if (autoShowQR && !showQRCodeDialog && !hasAutoShowQRTriggered) {
-      console.log("Auto mostrando QR code para o agente:", agent.name);
+      console.log("Auto showing QR code for agent:", agent.name);
       setHasAutoShowQRTriggered(true);
       setTimeout(() => handleShowQRCode(), 300);
     }
@@ -121,7 +109,7 @@ export const AgentPanel: React.FC<AgentPanelProps> = ({
         }
       }
     } catch (error) {
-      console.error("Erro ao desconectar agente:", error);
+      console.error("Error disconnecting agent:", error);
       toast.error("Erro ao desconectar agente. Tente novamente.");
     }
   };
@@ -138,7 +126,7 @@ export const AgentPanel: React.FC<AgentPanelProps> = ({
     
     // Update parent state if callback provided
     if (onToggleConnection) {
-      console.log("QR code escaneado com sucesso, atualizando status de conexão do agente");
+      console.log("QR code scanned successfully, updating agent connection status");
       onToggleConnection(agent.id, true);
     }
     
@@ -165,7 +153,6 @@ export const AgentPanel: React.FC<AgentPanelProps> = ({
         onDisconnect={handleDisconnectClick}
         isGeneratingQR={isGeneratingQRCode}
         isDisconnecting={isDisconnecting}
-        connectionCheckFailed={connectionCheckFailed}
       />
       
       {/* Delete Dialog */}

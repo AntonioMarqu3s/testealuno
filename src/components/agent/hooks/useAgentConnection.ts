@@ -1,72 +1,70 @@
 
-import { useState } from "react";
-import { toast } from "sonner";
-import { checkInstanceStatus, disconnectInstance } from "./api/agentConnectionApi";
+import { useState } from 'react';
+import { disconnectInstance, checkInstanceStatus } from './api/agentConnectionApi';
+import { updateAgentConnectionStatus, getAgentConnectionStatus } from '@/services/agent/supabaseAgentService';
 
+/**
+ * Hook to manage agent connection operations
+ */
 export const useAgentConnection = () => {
   const [isDisconnecting, setIsDisconnecting] = useState(false);
   const [isCheckingStatus, setIsCheckingStatus] = useState(false);
-
+  
   /**
    * Disconnect an agent instance
    */
-  const handleDisconnect = async (instanceId: string, agentId: string): Promise<boolean> => {
-    if (!instanceId) {
-      console.error("Cannot disconnect: No instance ID provided");
-      return false;
-    }
+  const handleDisconnect = async (instanceId?: string, agentId?: string) => {
+    if (!instanceId) return false;
     
     setIsDisconnecting(true);
-    
     try {
-      console.log(`Attempting to disconnect instance: ${instanceId}`);
-      
       const success = await disconnectInstance(instanceId);
-      if (success) {
-        console.log(`Successfully disconnected instance: ${instanceId}`);
-        toast.success("Agente desconectado com sucesso");
-        return true;
-      } else {
-        console.error(`Failed to disconnect instance: ${instanceId}`);
-        toast.error("Não foi possível desconectar o agente");
-        return false;
+      
+      // If agentId is provided, update connection status in Supabase
+      if (success && agentId) {
+        await updateAgentConnectionStatus(agentId, false);
       }
-    } catch (error) {
-      console.error(`Error disconnecting instance ${instanceId}:`, error);
-      toast.error("Erro ao desconectar o agente. O status será atualizado como desconectado de qualquer forma.");
-      // Even if API fails, we'll update the UI to show disconnected
-      return true;
+      
+      return success;
     } finally {
       setIsDisconnecting(false);
     }
   };
   
   /**
-   * Check the status of an agent instance connection
+   * Check connection status of an agent instance
    */
-  const checkConnectionStatus = async (instanceId: string, agentId: string): Promise<boolean> => {
-    if (!instanceId) {
-      console.error("Cannot check status: No instance ID provided");
-      return false;
-    }
+  const checkConnectionStatus = async (instanceId?: string, agentId?: string): Promise<boolean> => {
+    if (!instanceId) return false;
     
     setIsCheckingStatus(true);
-    
     try {
-      console.log(`Checking status for instance: ${instanceId}`);
-      const isConnected = await checkInstanceStatus(instanceId);
-      console.log(`Instance ${instanceId} status: ${isConnected ? 'connected' : 'disconnected'}`);
-      return isConnected;
+      // First check in Supabase if we have the agent ID
+      if (agentId) {
+        const dbStatus = await getAgentConnectionStatus(agentId);
+        if (dbStatus) {
+          return true;
+        }
+      }
+      
+      // If not found in DB or not connected, check the instance status from API
+      const result = await checkInstanceStatus(instanceId);
+      
+      // If agent is connected and we have the agent ID, update in Supabase
+      if (result.connected && agentId) {
+        await updateAgentConnectionStatus(agentId, true);
+      }
+      
+      // Return the connected status from the response object
+      return result.connected;
     } catch (error) {
-      console.error(`Error checking instance ${instanceId} status:`, error);
-      // Se houver erro ao verificar o status, assumimos que está desconectado
-      // mas não mostramos mensagem para não assustar o usuário
+      console.error("Error checking connection status:", error);
       return false;
     } finally {
       setIsCheckingStatus(false);
     }
   };
-  
+
   return {
     isDisconnecting,
     isCheckingStatus,
