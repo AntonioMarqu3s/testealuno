@@ -7,9 +7,11 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Shield, AlertTriangle, Info } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { toast } from "sonner";
 
 export default function AdminLogin() {
-  const [email, setEmail] = useState("admin@example.com");
+  // Email is fixed as admin@example.com
+  const fixedEmail = "admin@example.com";
   const [password, setPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [loginError, setLoginError] = useState<string | null>(null);
@@ -21,23 +23,27 @@ export default function AdminLogin() {
     setLoginError(null);
     
     try {
-      console.log("Attempting admin login with:", { email, password: "***" });
+      console.log("Attempting admin login with:", { email: fixedEmail, password: "***" });
       
-      if (!email || !password) {
-        setLoginError("Email e senha são obrigatórios.");
+      if (!password) {
+        setLoginError("A senha é obrigatória.");
         setIsSubmitting(false);
         return;
       }
       
-      // Always use the fixed admin email
-      const success = await adminLogin("admin@example.com", password);
+      // Use the fixed admin email
+      const success = await adminLogin(fixedEmail, password);
       
       if (!success) {
         setLoginError("Falha na autenticação. Verifique sua senha.");
+        toast.error("Falha no login administrativo");
+      } else {
+        toast.success("Login administrativo bem-sucedido");
       }
     } catch (error) {
       console.error("Admin login error:", error);
       setLoginError(`Erro ao autenticar: ${error instanceof Error ? error.message : 'erro desconhecido'}`);
+      toast.error("Erro no sistema de autenticação");
     } finally {
       setIsSubmitting(false);
     }
@@ -62,8 +68,7 @@ export default function AdminLogin() {
               <Input
                 id="email"
                 type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                value={fixedEmail}
                 placeholder="admin@example.com"
                 required
                 readOnly

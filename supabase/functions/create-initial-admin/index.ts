@@ -27,13 +27,14 @@ Deno.serve(async (req) => {
     const adminEmail = 'admin@example.com'
     const adminPassword = '@admin123456'
 
-    // Try to get the user by email first
+    // Check if the user exists first
     const { data: { users }, error: getUserError } = await supabaseClient.auth.admin.listUsers();
     
     let adminUser = users?.find(user => user.email === adminEmail);
     
     if (getUserError) {
-      console.error('Error checking existing users:', getUserError)
+      console.error('Error checking existing users:', getUserError);
+      throw getUserError;
     }
     
     // If user doesn't exist, create it
@@ -42,16 +43,17 @@ Deno.serve(async (req) => {
       const { data: userData, error: authError } = await supabaseClient.auth.admin.createUser({
         email: adminEmail,
         password: adminPassword,
-        email_confirm: true
+        email_confirm: true,
+        user_metadata: { role: 'admin' }
       });
 
       if (authError) {
-        console.error('Error creating admin user:', authError)
-        throw authError
+        console.error('Error creating admin user:', authError);
+        throw authError;
       }
 
       if (!userData.user) {
-        throw new Error('Failed to create administrative user')
+        throw new Error('Failed to create administrative user');
       }
       
       adminUser = userData.user;
@@ -61,7 +63,11 @@ Deno.serve(async (req) => {
       // Update password for existing user
       const { error: updateError } = await supabaseClient.auth.admin.updateUserById(
         adminUser.id,
-        { password: adminPassword, email_confirm: true }
+        { 
+          password: adminPassword, 
+          email_confirm: true,
+          user_metadata: { role: 'admin' }
+        }
       );
       
       if (updateError) {
@@ -72,35 +78,29 @@ Deno.serve(async (req) => {
       console.log('Admin password updated successfully');
     }
 
-    // Add user to admin_users table if not already there
-    const { data: existingAdminRecord, error: checkAdminError } = await supabaseClient
+    // Add user to admin_users table directly with SQL to bypass RLS policies
+    const { error: adminTableError } = await supabaseClient
       .from('admin_users')
-      .select('*')
-      .eq('user_id', adminUser.id)
-      .maybeSingle();
+      .upsert({
+        user_id: adminUser.id,
+        email: adminEmail
+      }, {
+        onConflict: 'user_id'
+      });
     
-    if (checkAdminError) {
-      console.error('Error checking admin record:', checkAdminError);
-      throw checkAdminError;
-    }
-    
-    if (!existingAdminRecord) {
-      console.log('Adding user to admin_users table:', adminUser.id);
-      const { error: adminError } = await supabaseClient
-        .from('admin_users')
-        .insert({
-          user_id: adminUser.id,
-          email: adminEmail
-        });
-
-      if (adminError) {
-        console.error('Error adding user as administrator:', adminError);
-        throw adminError;
-      }
+    if (adminTableError) {
+      console.error('Error updating admin_users table:', adminTableError);
       
-      console.log('User added as administrator successfully');
-    } else {
-      console.log('Admin record already exists');
+      // Try a direct SQL approach if RLS is causing issues
+      const { error: sqlError } = await supabaseClient.rpc('add_admin_user', {
+        admin_user_id: adminUser.id,
+        admin_email: adminEmail
+      });
+      
+      if (sqlError) {
+        console.error('Error with RPC call:', sqlError);
+        throw sqlError;
+      }
     }
 
     // Return success message
