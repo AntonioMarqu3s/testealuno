@@ -2,6 +2,7 @@
 import { supabase } from '@/lib/supabase';
 import { AgentFormValues } from '@/components/agent/form/agentSchema';
 import { saveExtendedAgentData } from './extended';
+import { getCurrentUser } from '@/services/auth/supabaseAuth';
 
 /**
  * Delete agent from Supabase
@@ -44,7 +45,7 @@ export const deleteAgentFromSupabase = async (agentId: string): Promise<boolean>
  */
 export const saveAgentToSupabase = async (
   agentId: string, 
-  userId: string, 
+  userEmail: string, 
   values: AgentFormValues,
   agentType: string,
   instanceId: string,
@@ -52,10 +53,18 @@ export const saveAgentToSupabase = async (
   isConnected: boolean = false
 ): Promise<boolean> => {
   try {
+    // Get the actual user ID from Supabase auth
+    const user = await getCurrentUser();
+    if (!user) {
+      console.error('Cannot save agent: No authenticated user found');
+      return false;
+    }
+    const userId = user.id;
+
     // Create an agent object with all values to be saved in Supabase
     const agentData = {
       id: agentId,
-      user_id: userId,
+      user_id: userId, // Use UUID, not email
       name: values.agentName,
       type: agentType,
       is_connected: isConnected,
@@ -114,7 +123,7 @@ export const saveAgentToSupabase = async (
     }, {
       startDate,
       trialEndDate,
-      email: userId, // Use userId as email temporarily
+      email: userEmail, // Use email for the email field
       instance_name: instanceId
     });
     

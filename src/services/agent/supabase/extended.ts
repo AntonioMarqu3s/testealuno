@@ -2,6 +2,7 @@
 import { supabase } from '@/lib/supabase';
 import { Agent, AgentExtended } from '@/components/agent/AgentTypes';
 import { toast } from 'sonner';
+import { getCurrentUser } from '@/services/auth/supabaseAuth';
 
 /**
  * Fetch extended agent data from Supabase
@@ -34,10 +35,25 @@ export const saveExtendedAgentData = async (
   extendedData: Partial<AgentExtended>
 ): Promise<boolean> => {
   try {
+    // Make sure we have a valid UUID for user_id, not an email
+    let userId = agent.userId || '';
+    
+    // If it's an email, we need to get the actual UUID
+    if (userId.includes('@')) {
+      // Try to get the user ID from Supabase auth
+      const user = await getCurrentUser();
+      if (user) {
+        userId = user.id; // Use the authenticated user's ID
+      } else {
+        console.error('Cannot save extended data: No authenticated user found');
+        return false;
+      }
+    }
+
     // Create extended data object with required fields
     const extendedAgentData = {
       id: agent.id,
-      user_id: agent.userId || '',
+      user_id: userId,
       name: agent.name,
       is_connected: agent.isConnected,
       instance_name: agent.instanceId,
@@ -50,6 +66,8 @@ export const saveExtendedAgentData = async (
       discount_coupon: extendedData.discountCoupon
     };
 
+    console.log('Saving extended agent data:', extendedAgentData);
+
     // Use upsert to create or update the extended data
     const { error } = await supabase
       .from('agents_extended')
@@ -60,6 +78,7 @@ export const saveExtendedAgentData = async (
       return false;
     }
     
+    toast.success('Dados do agente salvos com sucesso');
     return true;
   } catch (error) {
     console.error('Exception saving extended agent data:', error);

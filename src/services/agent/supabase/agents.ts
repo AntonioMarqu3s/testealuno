@@ -3,12 +3,29 @@ import { supabase } from '@/lib/supabase';
 import { Agent } from '@/components/agent/AgentTypes';
 import { toast } from 'sonner';
 import { fetchExtendedAgentData } from './extended';
+import { getCurrentUser } from '@/services/auth/supabaseAuth';
 
 /**
  * Fetches all agents for a specific user from Supabase
  */
-export const fetchUserAgents = async (userId: string): Promise<Agent[]> => {
+export const fetchUserAgents = async (userIdentifier: string): Promise<Agent[]> => {
   try {
+    // First check if we received a UUID or an email
+    let userId = userIdentifier;
+    
+    // If it's an email, we need to get the actual UUID
+    if (userIdentifier.includes('@')) {
+      // Try to get the user ID from Supabase auth
+      const user = await getCurrentUser();
+      if (user) {
+        userId = user.id; // Use the authenticated user's ID
+      } else {
+        console.error('Cannot fetch agents: No authenticated user found');
+        return [];
+      }
+    }
+    
+    // Now we can use the proper UUID for the query
     const { data, error } = await supabase
       .from('agents')
       .select('*')
