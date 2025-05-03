@@ -18,9 +18,19 @@ export default function Settings() {
   const [plan, setPlan] = useState<any>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isSyncing, setIsSyncing] = useState(false);
+  const [lastSyncTime, setLastSyncTime] = useState<number>(0);
 
   const loadUserData = async () => {
+    // Evitar chamadas repetitivas em períodos curtos
+    const now = Date.now();
+    if (now - lastSyncTime < 2000) { // Limita para no máximo uma chamada a cada 2 segundos
+      console.log("Ignorando chamada repetitiva para loadUserData");
+      return;
+    }
+    
+    setLastSyncTime(now);
     setIsLoading(true);
+    
     try {
       // Get current user email
       const email = user?.email || await getCurrentUserEmail();
@@ -70,7 +80,9 @@ export default function Settings() {
   };
 
   useEffect(() => {
-    loadUserData();
+    if (user?.email || user?.id) {
+      loadUserData();
+    }
   }, [user?.email, user?.id]);
 
   // Handle manual sync of user plan data
@@ -88,7 +100,7 @@ export default function Settings() {
         // Reload user data after sync
         await loadUserData();
       } else {
-        toast.error("Erro ao sincronizar dados");
+        toast.info("Não houve alterações para sincronizar");
       }
     } catch (error) {
       console.error("Error syncing user plan data:", error);

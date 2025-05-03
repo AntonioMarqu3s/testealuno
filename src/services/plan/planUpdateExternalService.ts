@@ -106,58 +106,6 @@ export const updateUserPlanExternal = async (
 };
 
 /**
- * Verifica e atualiza plano após confirmação de pagamento externo
- * @param userId ID do usuário no Supabase
- * @param userEmail Email do usuário
- * @param referenceCode Código de referência do pagamento
- * @param planType Tipo do plano adquirido
- */
-export const verifyAndUpdatePlanAfterPayment = async (
-  userId: string,
-  userEmail: string,
-  referenceCode: string,
-  planType: PlanType
-): Promise<PlanUpdateResult> => {
-  try {
-    // Aqui você poderia verificar o pagamento com um serviço externo
-    // Assumindo que o pagamento foi bem-sucedido para este exemplo
-    const paymentConfirmed = true;
-    
-    if (paymentConfirmed) {
-      console.log(`Pagamento confirmado para referência ${referenceCode}, atualizando plano para ${PlanType[planType]}`);
-      
-      const result = await updateUserPlanExternal(
-        userId,
-        userEmail,
-        planType,
-        new Date(),
-        undefined // desconto
-      );
-      
-      if (result.success) {
-        toast.success("Plano atualizado com sucesso!", {
-          description: `Seu plano foi atualizado para ${PLAN_DETAILS[planType].name}.`,
-        });
-      }
-      
-      return result;
-    }
-    
-    return {
-      success: false,
-      error: 'Pagamento não confirmado'
-    };
-  } catch (error) {
-    console.error('Erro ao verificar pagamento:', error);
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Erro desconhecido'
-    };
-  }
-};
-
-/**
  * Obter os detalhes de um plano pelo ID
  */
 export const getPlanDetails = (planType: PlanType) => PLAN_DETAILS[planType];
-

@@ -2,12 +2,35 @@
 import { supabase } from "@/lib/supabase";
 import { getCurrentUser } from "@/services/auth/supabaseAuth";
 import { getUserPlan, PlanType, updateUserPlan } from "@/services/plan/userPlanService";
-import { getUserPlanFromSupabase, updateUserPlanInSupabase } from "@/services/plan/supabsePlanService";
+import { getUserPlanFromSupabase } from "@/services/plan/supabsePlanService";
 import { toast } from "sonner";
 import { Location as RouterLocation } from "react-router-dom";
 
 /**
  * Força uma sincronização do plano do usuário entre o Supabase e o localStorage
+ * Útil após um pagamento para garantir que o plano foi atualizado
+ */
+export const forceSyncUserPlanWithSupabase = async (): Promise<boolean> => {
+  try {
+    console.log("Forçando sincronização de plano com o Supabase");
+    
+    // Obter o usuário atual do Supabase
+    const user = await getCurrentUser();
+    
+    if (!user || !user.email) {
+      console.log("Usuário não autenticado ou sem email");
+      return false;
+    }
+    
+    return await syncUserPlan(user.email);
+  } catch (error) {
+    console.error("Erro ao sincronizar plano:", error);
+    return false;
+  }
+};
+
+/**
+ * Sincroniza o plano do usuário entre o Supabase e o localStorage
  * Útil após um pagamento para garantir que o plano foi atualizado
  */
 export const syncUserPlan = async (userEmail: string): Promise<boolean> => {
@@ -30,17 +53,21 @@ export const syncUserPlan = async (userEmail: string): Promise<boolean> => {
     const localPlan = getUserPlan(userEmail);
     console.log("Plano local:", localPlan);
     
-    // Se não tiver plano no Supabase, enviar o plano local para o Supabase
+    // Se não tiver plano no Supabase, não há nada a sincronizar
     if (!supabasePlan) {
-      console.log("Plano não encontrado no Supabase, enviando plano local");
-      await updateUserPlanInSupabase(user.id, localPlan.plan);
-      return true;
+      console.log("Plano não encontrado no Supabase");
+      return false;
     }
     
-    // Sempre usar o plano do Supabase como fonte da verdade
-    if (supabasePlan.plan !== localPlan.plan || 
-        supabasePlan.name !== localPlan.name || 
-        supabasePlan.agentLimit !== localPlan.agentLimit) {
+    // Verificar se os planos são diferentes para evitar loops infinitos
+    const planChanged = 
+      supabasePlan.plan !== localPlan.plan || 
+      supabasePlan.name !== localPlan.name || 
+      supabasePlan.agentLimit !== localPlan.agentLimit ||
+      supabasePlan.paymentStatus !== localPlan.paymentStatus;
+    
+    // Sempre usar o plano do Supabase como fonte da verdade, mas só atualizar se houver mudança
+    if (planChanged) {
       console.log("Planos diferentes detectados, atualizando localmente com dados do Supabase");
       
       // Atualizar localmente com dados do Supabase
@@ -59,6 +86,8 @@ export const syncUserPlan = async (userEmail: string): Promise<boolean> => {
       });
       
       return true;
+    } else {
+      console.log("Planos já estão sincronizados, nenhuma ação necessária");
     }
     
     return false;
@@ -89,15 +118,15 @@ export const checkPaymentConfirmation = async (location: RouterLocation, userEma
         // Atualizar plano no Supabase
         const user = await getCurrentUser();
         if (user) {
-          await updateUserPlanInSupabase(user.id, planTypeNumber);
+          await updateUserPlan(userEmail, planTypeNumber, new Date().toISOString());
+          
+          toast.success("Pagamento confirmado!", {
+            description: `Seu plano foi atualizado para ${PlanType[planTypeNumber]}.`,
+            duration: 5000,
+          });
+          
+          return true;
         }
-        
-        toast.success("Pagamento confirmado!", {
-          description: `Seu plano foi atualizado para ${PlanType[planTypeNumber]}.`,
-          duration: 5000,
-        });
-        
-        return true;
       }
     } catch (error) {
       console.error("Erro ao processar confirmação de pagamento:", error);
