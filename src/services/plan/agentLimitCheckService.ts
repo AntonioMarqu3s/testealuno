@@ -21,7 +21,7 @@ export const canCreateAgent = async (email: string): Promise<boolean> => {
   const supabasePlan = await getUserPlanFromSupabase(user.id);
   
   if (supabasePlan) {
-    console.log('Using Supabase plan data');
+    console.log('Using Supabase plan data:', supabasePlan);
     // If plan is FREE_TRIAL, check if trial is active
     if (supabasePlan.plan === PlanType.FREE_TRIAL) {
       // Check if trial is active by comparing trial_ends_at with current date
@@ -30,30 +30,45 @@ export const canCreateAgent = async (email: string): Promise<boolean> => {
         const trialEnds = new Date(supabasePlan.trialEndsAt);
         const isTrialActive = now < trialEnds;
         console.log(`Trial active: ${isTrialActive}, ends: ${trialEnds}`);
-        return isTrialActive;
+        
+        // Check agent limit even for trial
+        const userAgents = getUserAgents(email);
+        const withinLimit = userAgents.length < supabasePlan.agentLimit;
+        console.log(`Within agent limit: ${withinLimit}, current: ${userAgents.length}, limit: ${supabasePlan.agentLimit}`);
+        
+        return isTrialActive && withinLimit;
       }
       return false;
     }
     
     // For paid plans, check agent limit
     const userAgents = getUserAgents(email);
-    return userAgents.length < supabasePlan.agentLimit;
+    const withinLimit = userAgents.length < supabasePlan.agentLimit;
+    console.log(`Within agent limit: ${withinLimit}, current: ${userAgents.length}, limit: ${supabasePlan.agentLimit}`);
+    return withinLimit;
   }
   
   // Fallback to local storage if Supabase data is not available
   console.log('Falling back to local storage plan data');
   const userPlan = getUserPlan(email);
+  console.log('Local storage plan data:', userPlan);
   const userAgents = getUserAgents(email);
   
   // If FREE_TRIAL, check if trial is still active
   if (userPlan.plan === PlanType.FREE_TRIAL) {
-    if (hasTrialExpired(email)) {
-      console.log('Trial has expired');
+    const trialExpired = hasTrialExpired(email);
+    console.log('Trial has expired:', trialExpired);
+    if (trialExpired) {
       return false;
     }
-    return userPlan.trialEndsAt ? true : false;
+    
+    const withinLimit = userAgents.length < userPlan.agentLimit;
+    console.log(`Within agent limit: ${withinLimit}, current: ${userAgents.length}, limit: ${userPlan.agentLimit}`);
+    return withinLimit;
   }
   
   // For paid plans, check agent limit
-  return userAgents.length < userPlan.agentLimit;
+  const withinLimit = userAgents.length < userPlan.agentLimit;
+  console.log(`Within agent limit: ${withinLimit}, current: ${userAgents.length}, limit: ${userPlan.agentLimit}`);
+  return withinLimit;
 };

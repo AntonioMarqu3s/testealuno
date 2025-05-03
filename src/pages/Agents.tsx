@@ -5,13 +5,14 @@ import { AgentsHeader } from "@/components/agent/AgentsHeader";
 import { AgentsList } from "@/components/agent/AgentsList";
 import { EmptyAgentState } from "@/components/agent/EmptyAgentState";
 import { getCurrentUserEmail } from "@/services/user/userService";
-import { getUserPlan, hasTrialExpired } from "@/services/plan/userPlanService";
+import { getUserPlan, hasTrialExpired, PlanType } from "@/services/plan/userPlanService";
 import { deleteUserAgent, getUserAgents, updateUserAgent } from "@/services/agent/agentStorageService";
 import { updateAgentConnectionStatus } from "@/services/agent/supabaseAgentService";
 import { UpgradeModal } from "@/components/agent/UpgradeModal";
 import { useToast } from "@/hooks/use-toast";
 import { Agent } from "@/components/agent/AgentTypes";
 import { AgentPanel } from "@/components/agent/AgentPanel";
+import { canCreateAgent } from "@/services";
 
 const Agents = () => {
   const navigate = useNavigate();
@@ -30,6 +31,16 @@ const Agents = () => {
   const [userAgents, setUserAgents] = useState<Agent[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [qrAgentId, setQrAgentId] = useState<string | null>(null);
+  const [canCreate, setCanCreate] = useState(false);
+  
+  // Check if user can create agents
+  useEffect(() => {
+    const checkCanCreate = async () => {
+      const result = await canCreateAgent(userEmail);
+      setCanCreate(result);
+    };
+    checkCanCreate();
+  }, [userEmail]);
   
   // Check for URL parameter to show upgrade modal
   useEffect(() => {
@@ -49,12 +60,28 @@ const Agents = () => {
     }
   }, [userEmail]);
   
-  const handleCreateAgent = () => {
-    // If trial expired, show upgrade modal
-    if (isTrialExpired) {
-      setShowUpgradeModal(true);
+  const handleCreateAgent = async () => {
+    // Verify again if user can create more agents
+    const canCreateMore = await canCreateAgent(userEmail);
+    
+    if (!canCreateMore) {
+      if (userPlan.plan === PlanType.FREE_TRIAL) {
+        toast({
+          title: "Limite do plano gratuito atingido",
+          description: "Seu plano gratuito não permite a criação de mais agentes. Por favor, faça upgrade para um plano pago.",
+          variant: "destructive"
+        });
+        setShowUpgradeModal(true);
+      } else {
+        toast({
+          title: "Limite de agentes atingido",
+          description: `Seu plano ${userPlan.name} permite até ${userPlan.agentLimit} agentes. Por favor, faça upgrade para um plano superior.`,
+          variant: "destructive"
+        });
+        setShowUpgradeModal(true);
+      }
     } else {
-      navigate('/create-agent'); // Navigate to create agent page directly
+      navigate('/create-agent');
     }
   };
   
@@ -64,7 +91,7 @@ const Agents = () => {
   
   const handleUpgradeConfirm = () => {
     setShowUpgradeModal(false);
-    navigate('/plan-checkout');
+    navigate('/plans');
   };
 
   const handleDeleteAgent = (agentId: string) => {
