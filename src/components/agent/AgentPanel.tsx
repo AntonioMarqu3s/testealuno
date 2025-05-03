@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
@@ -21,15 +20,13 @@ interface AgentPanelProps {
   onDelete?: (agentId: string) => void;
   onToggleConnection?: (agentId: string, isConnected: boolean) => void;
   autoShowQR?: boolean;
-  isDeleting?: boolean; // Add this prop to the interface
 }
 
 export const AgentPanel: React.FC<AgentPanelProps> = ({ 
   agent, 
   onDelete, 
   onToggleConnection,
-  autoShowQR = false,
-  isDeleting = false // Set default value
+  autoShowQR = false
 }) => {
   const navigate = useNavigate();
   const userEmail = getCurrentUserEmail();
@@ -50,7 +47,7 @@ export const AgentPanel: React.FC<AgentPanelProps> = ({
   } = useQRCodeGeneration(agent.instanceId, agent.clientIdentifier);
   
   const { isDisconnecting, isCheckingStatus, handleDisconnect, checkConnectionStatus } = useAgentConnection();
-  const { isDeleting: isDeletingFromHook, handleDeleteAgent } = useAgentSubmission(agent.type || "");
+  const { isDeleting, handleDeleteAgent } = useAgentSubmission(agent.type || "");
 
   // Check connection status when component mounts
   useEffect(() => {
@@ -166,7 +163,6 @@ export const AgentPanel: React.FC<AgentPanelProps> = ({
         <DeleteAgentDialog 
           agentName={agent.name}
           onDelete={confirmDelete}
-          isDeleting={isDeleting || isDeletingFromHook}
         />
       </AlertDialog>
       
