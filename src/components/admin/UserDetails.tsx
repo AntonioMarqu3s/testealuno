@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -218,9 +217,10 @@ export function UserDetails({ userId }: UserDetailsProps) {
       </div>
       
       <Tabs defaultValue="plan">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="plan">Plano</TabsTrigger>
           <TabsTrigger value="agents">Agentes</TabsTrigger>
+          <TabsTrigger value="admin">Admin</TabsTrigger>
           <TabsTrigger value="actions">Ações</TabsTrigger>
         </TabsList>
         
@@ -347,6 +347,66 @@ export function UserDetails({ userId }: UserDetailsProps) {
                   ))}
                 </div>
               )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+        
+        <TabsContent value="admin">
+          <Card>
+            <CardHeader>
+              <CardTitle>Permissões de Administrador</CardTitle>
+              <CardDescription>
+                Gerenciar acesso administrativo para este usuário
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="font-medium">Tornar Administrador</p>
+                    <p className="text-sm text-muted-foreground">
+                      Conceder acesso administrativo completo a este usuário
+                    </p>
+                  </div>
+                  <Button variant="outline" onClick={async () => {
+                    try {
+                      const { data, error } = await supabase
+                        .from('admin_users')
+                        .select('*')
+                        .eq('user_id', userId)
+                        .single();
+                        
+                      if (error && error.code !== 'PGRST116') {
+                        throw error;
+                      }
+                      
+                      if (!data) {
+                        // User is not admin, make them admin
+                        const { error: insertError } = await supabase
+                          .from('admin_users')
+                          .insert({ user_id: userId });
+                          
+                        if (insertError) throw insertError;
+                        toast.success("Usuário promovido a administrador");
+                      } else {
+                        // User is admin, remove admin rights
+                        const { error: deleteError } = await supabase
+                          .from('admin_users')
+                          .delete()
+                          .eq('user_id', userId);
+                          
+                        if (deleteError) throw deleteError;
+                        toast.success("Permissões de administrador removidas");
+                      }
+                    } catch (err) {
+                      console.error("Error toggling admin status:", err);
+                      toast.error("Erro ao alterar status de administrador");
+                    }
+                  }}>
+                    Alternar Status Admin
+                  </Button>
+                </div>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>

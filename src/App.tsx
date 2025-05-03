@@ -27,6 +27,7 @@ import AdminUsers from "./pages/admin/AdminUsers";
 import AdminAgents from "./pages/admin/AdminAgents";
 import AdminPlans from "./pages/admin/AdminPlans";
 import AdminPayments from "./pages/admin/AdminPayments";
+import AdminAdministrators from "./pages/admin/AdminAdministrators";
 import { initializeUserEmail } from "./services/user/userService";
 import { initializeUserPlan } from "./services/plan/userPlanService";
 import WhatsAppFloatingButton from "./components/ui/WhatsAppFloatingButton";
@@ -86,6 +87,7 @@ function App() {
                   <Route path="/admin/agents" element={<AdminGuard><AdminAgents /></AdminGuard>} />
                   <Route path="/admin/plans" element={<AdminGuard><AdminPlans /></AdminGuard>} />
                   <Route path="/admin/payments" element={<AdminGuard><AdminPayments /></AdminGuard>} />
+                  <Route path="/admin/administrators" element={<AdminGuard><AdminAdministrators /></AdminGuard>} />
                   
                   {/* 404 route */}
                   <Route path="*" element={<NotFound />} />
