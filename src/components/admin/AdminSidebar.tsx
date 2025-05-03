@@ -8,11 +8,17 @@ import {
   Calendar,
   CreditCard,
   Shield,
-  User
+  User,
+  UserCog,
+  FolderKanban
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useAdminAuth } from "@/context/AdminAuthContext";
 
 export function AdminSidebar() {
+  const { currentUserAdminLevel } = useAdminAuth();
+  const isMasterAdmin = currentUserAdminLevel === 'master';
+
   return (
     <aside className="w-64 bg-card border-r h-screen flex flex-col">
       <div className="p-6 border-b flex items-center gap-2">
@@ -34,11 +40,23 @@ export function AdminSidebar() {
             label="Usuários"
           />
           
-          <SidebarItem 
-            to="/admin/administrators" 
-            icon={<User className="h-5 w-5" />}
-            label="Administradores"
-          />
+          {/* Only visible to master admin */}
+          {isMasterAdmin && (
+            <SidebarItem 
+              to="/admin/administrators" 
+              icon={<UserCog className="h-5 w-5" />}
+              label="Administradores"
+            />
+          )}
+          
+          {/* Only visible to master admin */}
+          {isMasterAdmin && (
+            <SidebarItem 
+              to="/admin/groups" 
+              icon={<FolderKanban className="h-5 w-5" />}
+              label="Grupos"
+            />
+          )}
           
           <SidebarItem 
             to="/admin/plans" 
@@ -51,6 +69,15 @@ export function AdminSidebar() {
             icon={<CreditCard className="h-5 w-5" />}
             label="Pagamentos"
           />
+          
+          {/* Only visible to master admin */}
+          {isMasterAdmin && (
+            <SidebarItem 
+              to="/admin/settings" 
+              icon={<Settings className="h-5 w-5" />}
+              label="Configurações"
+            />
+          )}
         </ul>
       </nav>
       

@@ -1,7 +1,7 @@
 
 import React from "react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
-import { AdminUserManagement } from "@/components/admin/AdminUserManagement";
+import { AdminUsersManagement } from "@/components/admin/AdminUsersManagement";
 
 export default function AdminAdministrators() {
   return (
@@ -15,7 +15,7 @@ export default function AdminAdministrators() {
         </div>
         
         <div className="space-y-6">
-          <AdminUserManagement />
+          <AdminUsersManagement />
         </div>
       </div>
     </AdminLayout>

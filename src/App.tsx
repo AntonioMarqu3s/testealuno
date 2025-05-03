@@ -1,4 +1,3 @@
-
 import { useEffect } from "react";
 import { Toaster as ShadcnToaster } from "@/components/ui/toaster";
 import { Toaster as SonnerToaster } from "@/components/ui/sonner";
@@ -29,6 +28,8 @@ import AdminUsers from "./pages/admin/AdminUsers";
 import AdminPlans from "./pages/admin/AdminPlans";
 import AdminPayments from "./pages/admin/AdminPayments";
 import AdminAdministrators from "./pages/admin/AdminAdministrators";
+import AdminGroups from "./pages/admin/AdminGroups";
+import AdminSettings from "./pages/admin/AdminSettings";
 import { initializeUserEmail } from "./services/user/userService";
 import { initializeUserPlan } from "./services/plan/userPlanService";
 import WhatsAppFloatingButton from "./components/ui/WhatsAppFloatingButton";
@@ -93,6 +94,8 @@ function App() {
                   <Route path="/admin/plans" element={<AdminGuard><AdminPlans /></AdminGuard>} />
                   <Route path="/admin/payments" element={<AdminGuard><AdminPayments /></AdminGuard>} />
                   <Route path="/admin/administrators" element={<AdminGuard><AdminAdministrators /></AdminGuard>} />
+                  <Route path="/admin/groups" element={<AdminGuard><AdminGroups /></AdminGuard>} />
+                  <Route path="/admin/settings" element={<AdminGuard><AdminSettings /></AdminGuard>} />
                   
                   {/* 404 route */}
                   <Route path="*" element={<NotFound />} />
