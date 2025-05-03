@@ -42,8 +42,8 @@ export const signOut = async (): Promise<void> => {
   }
 };
 
-// Get current user email
-export const getCurrentUserEmail = async (): Promise<string | null> => {
+// Get current user email from Supabase
+export const getCurrentUserEmailFromSupabase = async (): Promise<string | null> => {
   const user = await getCurrentUser();
   return user?.email || null;
 };

@@ -9,7 +9,7 @@ const USER_EMAIL_KEY = 'user_email';
 const DEFAULT_EMAIL = 'usuario@exemplo.com';
 
 /**
- * Get the current user's email
+ * Get the current user's email - Synchronous version
  */
 export const getCurrentUserEmail = (): string => {
   return getStorageItem<string>(USER_EMAIL_KEY, DEFAULT_EMAIL);
