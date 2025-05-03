@@ -82,8 +82,7 @@ export const AgentsPageList = ({
       // Update connection status in Supabase
       await updateAgentConnectionStatus(agentId, isConnected);
       
-      toast({
-        title: isConnected ? "Agente conectado" : "Agente desconectado",
+      toast.success(isConnected ? "Agente conectado" : "Agente desconectado", {
         description: isConnected ? 
           "O agente foi conectado com sucesso." : 
           "O agente foi desconectado com sucesso.",
@@ -91,9 +90,7 @@ export const AgentsPageList = ({
       
       return true;
     } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Erro",
+      toast.error("Erro", {
         description: `Não foi possível ${isConnected ? 'conectar' : 'desconectar'} o agente.`,
       });
       
