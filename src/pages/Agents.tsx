@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import MainLayout from "@/components/layout/MainLayout";
@@ -17,6 +16,7 @@ import { canCreateAgent } from "@/services";
 import { Button } from "@/components/ui/button";
 
 const Agents = () => {
+  
   const navigate = useNavigate();
   const location = useLocation();
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);

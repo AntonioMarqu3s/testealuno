@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
@@ -14,6 +15,7 @@ import { QRCodeDialog } from "./panels/QRCodeDialog";
 import { useQRCodeGeneration } from "./hooks/useQRCodeGeneration";
 import { useAgentConnection } from "./hooks/useAgentConnection";
 import { useAgentSubmission } from "@/hooks/useAgentSubmission";
+import { deleteAgentFromSupabase } from "@/services/agent/supabaseAgentService";
 
 interface AgentPanelProps {
   agent: Agent;
@@ -106,6 +108,12 @@ export const AgentPanel: React.FC<AgentPanelProps> = ({
         await onDelete(agent.id);
       } else {
         await handleDeleteAgent(agent.id);
+      }
+      
+      // Additionally, make sure to delete from Supabase database directly
+      // This is a fallback in case the parent's onDelete doesn't handle Supabase deletion
+      if (!onDelete) {
+        await deleteAgentFromSupabase(agent.id);
       }
     } catch (error) {
       console.error("Error during agent deletion:", error);
