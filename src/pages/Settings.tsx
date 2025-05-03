@@ -1,158 +1,21 @@
 
-import { useEffect, useState } from "react";
+import React from "react";
 import MainLayout from "@/components/layout/MainLayout";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { getCurrentUserEmail, forceSyncUserPlanWithSupabase } from "@/services";
-import { getUserPlan, getTrialDaysRemaining, getSubscriptionDaysRemaining, PlanType } from "@/services/plan/userPlanService";
-import { useAuth } from "@/context/AuthContext";
-import { supabase } from "@/lib/supabase";
-import { toast } from "sonner";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
-import { Loader2, RefreshCw } from "lucide-react";
+import { UserProfileCard } from "@/components/settings/UserProfileCard";
+import { SubscriptionInfoCard } from "@/components/settings/SubscriptionInfoCard";
+import { useUserSettings } from "@/hooks/settings/useUserSettings";
 
 export default function Settings() {
-  const { user } = useAuth();
-  const [userEmail, setUserEmail] = useState<string>("");
-  const [plan, setPlan] = useState<any>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [isSyncing, setIsSyncing] = useState(false);
-  const [lastSyncTime, setLastSyncTime] = useState<number>(0);
-
-  const loadUserData = async () => {
-    // Evitar chamadas repetitivas em períodos curtos
-    const now = Date.now();
-    if (now - lastSyncTime < 2000) { // Limita para no máximo uma chamada a cada 2 segundos
-      console.log("Ignorando chamada repetitiva para loadUserData");
-      return;
-    }
-    
-    setLastSyncTime(now);
-    setIsLoading(true);
-    
-    try {
-      // Get current user email
-      const email = user?.email || await getCurrentUserEmail();
-      setUserEmail(email || "");
-
-      if (email) {
-        // Try to get user plan from Supabase first
-        if (user?.id) {
-          const { data, error } = await supabase
-            .from('user_plans')
-            .select('*')
-            .eq('user_id', user.id)
-            .single();
-
-          if (data) {
-            // Convert Supabase data to match our local format
-            setPlan({
-              plan: data.plan,
-              name: data.name,
-              agentLimit: data.agent_limit,
-              trialEndsAt: data.trial_ends_at,
-              subscriptionEndsAt: data.subscription_ends_at,
-              paymentDate: data.payment_date,
-              paymentStatus: data.payment_status,
-              connectInstancia: data.connect_instancia,
-              updatedAt: data.updated_at
-            });
-            console.log("Loaded plan data from Supabase:", data);
-            setIsLoading(false);
-            return;
-          } else if (error && !error.message.includes('No rows found')) {
-            console.error("Error loading user plan from Supabase:", error);
-          }
-        }
-        
-        // Fallback to local storage if no Supabase data
-        const userPlan = getUserPlan(email);
-        setPlan(userPlan);
-        console.log("Loaded plan data from localStorage:", userPlan);
-      }
-    } catch (error) {
-      console.error("Error loading user data:", error);
-      toast.error("Erro ao carregar dados do usuário");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    if (user?.email || user?.id) {
-      loadUserData();
-    }
-  }, [user?.email, user?.id]);
-
-  // Handle manual sync of user plan data
-  const handleSyncUserPlan = async () => {
-    if (!user?.id) {
-      toast.error("Você precisa estar logado para sincronizar os dados");
-      return;
-    }
-
-    setIsSyncing(true);
-    try {
-      const success = await forceSyncUserPlanWithSupabase();
-      if (success) {
-        toast.success("Dados sincronizados com sucesso");
-        // Reload user data after sync
-        await loadUserData();
-      } else {
-        toast.info("Não houve alterações para sincronizar");
-      }
-    } catch (error) {
-      console.error("Error syncing user plan data:", error);
-      toast.error("Erro ao sincronizar dados");
-    } finally {
-      setIsSyncing(false);
-    }
-  };
-
-  // Format dates for display
-  const formatDate = (dateString?: string) => {
-    if (!dateString) return "N/A";
-    return new Date(dateString).toLocaleDateString('pt-BR');
-  };
-
-  // Get days remaining (either trial or subscription)
-  const getDaysRemaining = () => {
-    if (!userEmail) return 0;
-    
-    if (plan?.plan === PlanType.FREE_TRIAL) {
-      return getTrialDaysRemaining(userEmail);
-    } else {
-      return getSubscriptionDaysRemaining(userEmail);
-    }
-  };
-
-  // Get plan expiration date
-  const getExpirationDate = () => {
-    if (!plan) return "N/A";
-    
-    if (plan.plan === PlanType.FREE_TRIAL && plan.trialEndsAt) {
-      return formatDate(plan.trialEndsAt);
-    } else if (plan.subscriptionEndsAt) {
-      return formatDate(plan.subscriptionEndsAt);
-    }
-    
-    return "N/A";
-  };
-
-  // Get plan start date
-  const getPlanStartDate = () => {
-    if (!plan) return "N/A";
-
-    if (plan.paymentDate) {
-      return formatDate(plan.paymentDate);
-    } else if (plan.updatedAt) {
-      // Use updatedAt as fallback for start date
-      return formatDate(plan.updatedAt);
-    }
-    
-    return "N/A";
-  };
+  const {
+    userEmail,
+    plan,
+    isLoading,
+    isSyncing,
+    handleSyncUserPlan,
+    getDaysRemaining,
+    getExpirationDate,
+    getPlanStartDate
+  } = useUserSettings();
 
   return (
     <MainLayout>
@@ -161,90 +24,18 @@ export default function Settings() {
         
         <div className="grid gap-6">
           {/* User Profile Section */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Perfil do Usuário</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email (Somente leitura)</Label>
-                  <Input 
-                    id="email"
-                    value={userEmail}
-                    readOnly
-                    disabled
-                    className="bg-muted"
-                  />
-                  <p className="text-sm text-muted-foreground">
-                    Este email está associado às suas instâncias de agente. 
-                    Não é possível alterá-lo, pois isso afetaria a identificação dos seus agentes.
-                    Para alterar, contate o administrador.
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <UserProfileCard userEmail={userEmail} />
           
           {/* Subscription Information */}
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle>Informações de Assinatura</CardTitle>
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={handleSyncUserPlan}
-                disabled={isSyncing || isLoading}
-                className="flex items-center gap-2"
-              >
-                {isSyncing ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <RefreshCw className="h-4 w-4" />
-                )}
-                Sincronizar Dados
-              </Button>
-            </CardHeader>
-            <CardContent>
-              {isLoading ? (
-                <div className="flex items-center justify-center p-8">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <div className="text-sm font-medium text-muted-foreground">Plano Atual</div>
-                    <div className="font-semibold text-lg">{plan?.name || "Não definido"}</div>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <div className="text-sm font-medium text-muted-foreground">Limite de Agentes</div>
-                    <div className="font-semibold text-lg">{plan?.agentLimit || "N/A"}</div>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <div className="text-sm font-medium text-muted-foreground">Data de Início</div>
-                    <div className="font-semibold">{getPlanStartDate()}</div>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <div className="text-sm font-medium text-muted-foreground">Data de Expiração</div>
-                    <div className="font-semibold">{getExpirationDate()}</div>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <div className="text-sm font-medium text-muted-foreground">Dias Restantes</div>
-                    <div className="font-semibold">{getDaysRemaining()}</div>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <div className="text-sm font-medium text-muted-foreground">Status do Pagamento</div>
-                    <div className="font-semibold">{plan?.paymentStatus ? (plan.paymentStatus === 'completed' ? 'Completo' : 'Pendente') : 'N/A'}</div>
-                  </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+          <SubscriptionInfoCard
+            plan={plan}
+            isLoading={isLoading}
+            isSyncing={isSyncing}
+            onSyncClick={handleSyncUserPlan}
+            getDaysRemaining={getDaysRemaining}
+            getExpirationDate={getExpirationDate}
+            getPlanStartDate={getPlanStartDate}
+          />
         </div>
       </div>
     </MainLayout>
