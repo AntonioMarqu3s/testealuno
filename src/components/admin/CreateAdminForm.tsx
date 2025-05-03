@@ -5,13 +5,22 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface CreateAdminFormProps {
   onSuccess: () => void;
+  enablePrivilegeSelection?: boolean;
 }
 
-export function CreateAdminForm({ onSuccess }: CreateAdminFormProps) {
+export function CreateAdminForm({ onSuccess, enablePrivilegeSelection = false }: CreateAdminFormProps) {
   const [email, setEmail] = useState("");
+  const [adminLevel, setAdminLevel] = useState<string>("standard");
   const [isLoading, setIsLoading] = useState(false);
   
   const handleSubmit = async (e: React.FormEvent) => {
@@ -57,10 +66,14 @@ export function CreateAdminForm({ onSuccess }: CreateAdminFormProps) {
         return;
       }
       
-      // Add user to admin_users table
+      // Add user to admin_users table with the selected admin level
       const { error: insertError } = await supabase
         .from('admin_users')
-        .insert([{ user_id: userData.id }]);
+        .insert([{ 
+          user_id: userData.id, 
+          email: email,
+          admin_level: adminLevel 
+        }]);
         
       if (insertError) {
         throw new Error("Erro ao adicionar administrador");
@@ -95,6 +108,28 @@ export function CreateAdminForm({ onSuccess }: CreateAdminFormProps) {
           O usuário deve já estar cadastrado no sistema.
         </p>
       </div>
+      
+      {enablePrivilegeSelection && (
+        <div className="space-y-2">
+          <Label htmlFor="adminLevel">Nível de Privilégio</Label>
+          <Select
+            value={adminLevel}
+            onValueChange={setAdminLevel}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Selecione um nível" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="standard">Administrador Padrão</SelectItem>
+              <SelectItem value="master">Administrador Master</SelectItem>
+            </SelectContent>
+          </Select>
+          <p className="text-sm text-muted-foreground">
+            Administradores Master podem gerenciar todos os usuários e outros administradores.
+            Administradores Padrão só podem gerenciar usuários regulares.
+          </p>
+        </div>
+      )}
       
       <div className="pt-2">
         <Button type="submit" disabled={isLoading}>
