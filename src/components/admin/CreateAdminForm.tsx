@@ -50,30 +50,27 @@ export function CreateAdminForm({ onSuccess, enablePrivilegeSelection = false }:
         return;
       }
       
-      // Check if user is already an admin
-      const { data: existingAdmin, error: adminCheckError } = await supabase
-        .from('admin_users')
-        .select('*')
-        .eq('user_id', userData.id)
-        .single();
-        
-      if (adminCheckError && adminCheckError.code !== "PGRST116") { // PGRST116 is "no rows returned" error
+      // Check if user is already an admin via edge function
+      const { data: adminCheck, error: adminCheckError } = await supabase.functions.invoke('is_admin_user', {
+        body: { user_id: userData.id }
+      });
+      
+      if (adminCheckError) {
         throw new Error("Erro ao verificar status de administrador");
       }
       
-      if (existingAdmin) {
+      if (adminCheck?.isAdmin) {
         toast.error("Este usuário já é administrador");
         return;
       }
       
-      // Add user to admin_users table with the selected admin level
-      const { error: insertError } = await supabase
-        .from('admin_users')
-        .insert([{ 
-          user_id: userData.id, 
-          email: email,
-          admin_level: adminLevel 
-        }]);
+      // Add user to admin_users table using RPC function
+      const { data: newAdmin, error: insertError } = await supabase
+        .rpc('add_admin_user', { 
+          admin_user_id: userData.id,
+          admin_email: email,
+          admin_level: adminLevel
+        });
         
       if (insertError) {
         throw new Error("Erro ao adicionar administrador");

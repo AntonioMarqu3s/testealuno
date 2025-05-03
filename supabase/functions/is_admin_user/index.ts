@@ -1,7 +1,6 @@
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
-// This function checks if a user is an admin and returns their admin level
 Deno.serve(async (req) => {
   // CORS headers
   const corsHeaders = {
@@ -11,51 +10,61 @@ Deno.serve(async (req) => {
 
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders })
+    return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { user_id } = await req.json()
-    
-    if (!user_id) {
-      throw new Error('User ID is required')
-    }
-    
-    // Initialize Supabase client using environment variables
+    // Initialize Supabase client
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
       { auth: { autoRefreshToken: false, persistSession: false } }
     )
+
+    // Get request body or query params
+    let userId;
     
-    // Check if user exists in admin_users table
-    const { data, error } = await supabaseClient
-      .from('admin_users')
-      .select('*')
-      .eq('user_id', user_id)
-      .single()
-    
-    if (error) {
-      console.error('Error checking admin status:', error)
-      return new Response(
-        JSON.stringify({ isAdmin: false, error: error.message }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
-      )
+    // Handle both POST with body and GET with query params
+    if (req.method === 'POST') {
+      const { user_id } = await req.json();
+      userId = user_id;
+    } else {
+      const url = new URL(req.url);
+      userId = url.searchParams.get('user_id');
     }
     
+    if (!userId) {
+      throw new Error('User ID is required');
+    }
+
+    // Direct SQL query to avoid RLS issues
+    const { data, error } = await supabaseClient.rpc(
+      'is_admin_user',
+      { user_id: userId }
+    );
+
+    if (error) {
+      throw error;
+    }
+
+    // Return admin info if found
     return new Response(
-      JSON.stringify({ 
-        isAdmin: !!data,
-        adminLevel: data?.admin_level || 'standard', 
-        adminId: data?.id 
+      JSON.stringify({
+        isAdmin: Boolean(data && data.length > 0),
+        adminLevel: data && data.length > 0 ? data[0].admin_level : null,
+        adminId: data && data.length > 0 ? data[0].admin_id : null,
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    )
+    );
   } catch (error) {
-    console.error('Error in is_admin_user function:', error)
+    console.error('Error checking admin status:', error);
+    
     return new Response(
-      JSON.stringify({ isAdmin: false, error: error.message }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
-    )
+      JSON.stringify({ error: error.message }),
+      { 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 400 
+      }
+    );
   }
 })

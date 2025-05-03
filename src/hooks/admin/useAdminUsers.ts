@@ -25,11 +25,11 @@ export function useAdminUsers() {
       setIsLoading(true);
       setError(null);
 
-      // Fetch users from auth.users via RPC (requires admin privileges)
-      const { data: authUsers, error: authError } = await supabase.rpc("get_all_users");
+      // Fetch users using our edge function
+      const { data: users, error: usersError } = await supabase.functions.invoke("get_all_users");
       
-      if (authError) {
-        throw new Error(authError.message);
+      if (usersError) {
+        throw new Error(usersError.message || "Error fetching users");
       }
 
       // Fetch user plans to enrich the data
@@ -42,13 +42,12 @@ export function useAdminUsers() {
       }
 
       // Map plans to users
-      const enrichedUsers = authUsers.map((user: any) => {
+      const enrichedUsers = users.map((user: any) => {
         const userPlan = plans?.find(plan => plan.user_id === user.id);
         return {
           ...user,
-          isActive: user.last_sign_in_at !== null,
           plan: userPlan ? {
-            name: userPlan.name,
+            name: userPlan.name || "Plano Básico",
             agent_limit: userPlan.agent_limit,
             plan: userPlan.plan
           } : undefined

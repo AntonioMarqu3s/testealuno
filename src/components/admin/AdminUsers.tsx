@@ -44,17 +44,17 @@ export function AdminUsers({ onEditAdmin }: AdminUsersProps) {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("User not found");
       
-      // Check current user's admin level
-      const { data: currentAdminData } = await supabase.functions.invoke("is_admin_user", {
+      // Check current user's admin level using edge function
+      const { data: adminCheck } = await supabase.functions.invoke('is_admin_user', {
         body: { user_id: user.id }
       });
       
-      if (currentAdminData?.isAdmin) {
-        setCurrentUserAdminId(currentAdminData.adminId);
-        setCurrentUserAdminLevel(currentAdminData.adminLevel);
+      if (adminCheck?.isAdmin) {
+        setCurrentUserAdminId(adminCheck.adminId);
+        setCurrentUserAdminLevel(adminCheck.adminLevel);
       }
       
-      // Fetch admin users
+      // Fetch admin users using direct SQL for reliability
       const { data: adminData, error: adminError } = await supabase
         .from('admin_users')
         .select('*')
