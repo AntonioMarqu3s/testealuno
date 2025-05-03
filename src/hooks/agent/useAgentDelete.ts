@@ -17,18 +17,15 @@ export const useAgentDelete = () => {
       const userEmail = getCurrentUserEmail() || "user@example.com";
       console.log("Attempting to delete agent:", agentId);
       
-      // Delete agent from localStorage and call webhook
-      const success = await deleteUserAgent(userEmail, agentId);
-      
-      // Delete agent from Supabase database using our enhanced function
+      // Delete agent from Supabase database first
       const dbDeleted = await deleteAgentFromSupabase(agentId);
       
       if (!dbDeleted) {
-        console.error("Error deleting agent from database");
-        toast.error("Erro na exclusão do banco de dados", {
-          description: "O agente foi removido localmente, mas ocorreu um erro ao excluí-lo do banco de dados.",
-        });
+        console.warn("Warning: Could not delete agent from database");
       }
+      
+      // Then delete agent from localStorage and call webhook
+      const success = await deleteUserAgent(userEmail, agentId);
       
       if (success) {
         toast.success("Agente removido com sucesso", {

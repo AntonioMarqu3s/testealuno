@@ -13,12 +13,11 @@ import { DeleteAgentDialog } from "./panels/DeleteAgentDialog";
 import { QRCodeDialog } from "./panels/QRCodeDialog";
 import { useQRCodeGeneration } from "./hooks/useQRCodeGeneration";
 import { useAgentConnection } from "./hooks/useAgentConnection";
-import { useAgentSubmission } from "@/hooks/useAgentSubmission";
-import { deleteAgentFromSupabase } from "@/services/agent/supabaseAgentService";
+import { useAgentDelete } from "@/hooks/agent/useAgentDelete";
 
 interface AgentPanelProps {
   agent: Agent;
-  onDelete?: (agentId: string) => void;
+  onDelete?: (agentId: string) => Promise<boolean>;
   onToggleConnection?: (agentId: string, isConnected: boolean) => void;
   autoShowQR?: boolean;
   isDeleting?: boolean;
@@ -72,14 +71,12 @@ export const AgentPanel: React.FC<AgentPanelProps> = ({
   } = useQRCodeGeneration(processedAgent.instanceId, processedAgent.clientIdentifier);
   
   const { isDisconnecting, isCheckingStatus, handleDisconnect } = useAgentConnection();
-  const { handleDeleteAgent } = useAgentSubmission(processedAgent.type || "");
+  const { handleDeleteAgent: defaultDeleteHandler } = useAgentDelete();
 
   // Keep local deleting state in sync with prop
   useEffect(() => {
     setLocalIsDeleting(isDeleting);
   }, [isDeleting]);
-
-  // Removed connection status check on mount that was causing loops
 
   // Handle auto show QR code when directed from agent creation - only trigger once
   useEffect(() => {
@@ -99,16 +96,18 @@ export const AgentPanel: React.FC<AgentPanelProps> = ({
   const confirmDelete = async () => {
     setLocalIsDeleting(true);
     try {
+      let success = false;
+      
       if (onDelete) {
-        await onDelete(processedAgent.id);
+        success = await onDelete(processedAgent.id);
       } else {
-        await handleDeleteAgent(processedAgent.id);
+        success = await defaultDeleteHandler(processedAgent.id);
       }
       
-      // Additionally, make sure to delete from Supabase database directly
-      // This is a fallback in case the parent's onDelete doesn't handle Supabase deletion
-      if (!onDelete) {
-        await deleteAgentFromSupabase(processedAgent.id);
+      if (success) {
+        toast.success("Agente excluído com sucesso");
+      } else {
+        toast.error("Erro ao excluir agente");
       }
     } catch (error) {
       console.error("Error during agent deletion:", error);
