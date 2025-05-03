@@ -7,7 +7,8 @@ import {
   Settings, 
   Calendar,
   CreditCard,
-  Shield
+  Shield,
+  User
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -34,9 +35,9 @@ export function AdminSidebar() {
           />
           
           <SidebarItem 
-            to="/admin/agents" 
-            icon={<Settings className="h-5 w-5" />}
-            label="Agentes"
+            to="/admin/administrators" 
+            icon={<User className="h-5 w-5" />}
+            label="Administradores"
           />
           
           <SidebarItem 

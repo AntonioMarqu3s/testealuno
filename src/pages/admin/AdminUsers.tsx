@@ -10,23 +10,40 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { UserPlus, Edit, Trash, Search } from "lucide-react";
+import { UserPlus, Edit, Trash, Search, Users } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { CreateUserForm } from "@/components/admin/CreateUserForm";
 import { UserDetails } from "@/components/admin/UserDetails";
 import { useAdminUsers } from "@/hooks/admin/useAdminUsers";
+import { useAdminAgents } from "@/hooks/admin/useAdminAgents";
+import { Badge } from "@/components/ui/badge";
 
 export default function AdminUsers() {
   const [searchTerm, setSearchTerm] = useState("");
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const { users, isLoading, error } = useAdminUsers();
+  const { agents } = useAdminAgents();
 
   const filteredUsers = users.filter(user => 
     user.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     user.id?.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  // Group agents by user ID
+  const agentsByUser = React.useMemo(() => {
+    const grouped: Record<string, number> = {};
+    agents.forEach(agent => {
+      if (agent.userId) {
+        if (!grouped[agent.userId]) {
+          grouped[agent.userId] = 0;
+        }
+        grouped[agent.userId]++;
+      }
+    });
+    return grouped;
+  }, [agents]);
 
   return (
     <AdminLayout>
@@ -78,6 +95,7 @@ export default function AdminUsers() {
                   <TableHead>ID</TableHead>
                   <TableHead>Email</TableHead>
                   <TableHead>Plano</TableHead>
+                  <TableHead>Agentes</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead className="text-right">Ações</TableHead>
                 </TableRow>
@@ -85,7 +103,7 @@ export default function AdminUsers() {
               <TableBody>
                 {filteredUsers.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={5} className="text-center h-24">
+                    <TableCell colSpan={6} className="text-center h-24">
                       Nenhum usuário encontrado
                     </TableCell>
                   </TableRow>
@@ -95,6 +113,16 @@ export default function AdminUsers() {
                       <TableCell className="font-mono text-xs">{user.id.substring(0, 8)}...</TableCell>
                       <TableCell>{user.email}</TableCell>
                       <TableCell>{user.plan?.name || "N/A"}</TableCell>
+                      <TableCell>
+                        {agentsByUser[user.id] ? (
+                          <Badge variant="secondary" className="flex items-center gap-1">
+                            <Users className="h-3 w-3" />
+                            {agentsByUser[user.id]}
+                          </Badge>
+                        ) : (
+                          <span className="text-muted-foreground text-sm">Nenhum</span>
+                        )}
+                      </TableCell>
                       <TableCell>
                         <span className={`px-2 py-1 rounded-full text-xs ${
                           user.isActive ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
