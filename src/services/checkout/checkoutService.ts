@@ -13,6 +13,12 @@ export interface Payment {
   status: string;
 }
 
+// Define the user data interface returned by get_user_by_email RPC function
+interface UserData {
+  id: string;
+  email: string;
+}
+
 /**
  * Upgrades the user to a specified plan
  * This is a local implementation for demonstration purposes
@@ -22,7 +28,7 @@ export async function upgradeToPlan(email: string, planType: PlanType): Promise<
     // Get user data by email to find their ID
     const { data: userData, error: userError } = await supabase
       .rpc('get_user_by_email', { p_email: email })
-      .maybeSingle();
+      .maybeSingle<UserData>();
       
     if (userError) {
       console.error("Error finding user:", userError.message);
