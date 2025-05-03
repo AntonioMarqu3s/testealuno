@@ -8,7 +8,7 @@ export interface Agent {
   instanceId: string;
   clientIdentifier?: string;
   connectInstancia?: boolean;
-  // Additional form data
+  // Form data fields
   personality?: string;
   customPersonality?: string;
   companyName?: string;
@@ -24,8 +24,24 @@ export interface Agent {
   problemsSolved?: string;
   benefits?: string;
   differentials?: string;
-  // For Supabase integration
-  agent_data?: Record<string, any>;
+  // For Supabase integration - contains all form fields
+  agent_data?: {
+    personality?: string;
+    customPersonality?: string;
+    companyName?: string;
+    companyDescription?: string;
+    segment?: string;
+    mission?: string;
+    vision?: string;
+    mainDifferentials?: string;
+    competitors?: string;
+    commonObjections?: string;
+    productName?: string;
+    productDescription?: string;
+    problemsSolved?: string;
+    benefits?: string;
+    differentials?: string;
+  };
 }
 
 // Adding this enum to standardize agent types across the application

@@ -118,7 +118,7 @@ export const useAgentSubmission = (agentType: string) => {
     }
   };
 
-  const handleUpdateAgent = (values: AgentFormValues, agentId: string) => {
+  const handleUpdateAgent = async (values: AgentFormValues, agentId: string) => {
     setIsSubmitting(true);
     
     try {
@@ -135,11 +135,27 @@ export const useAgentSubmission = (agentType: string) => {
       updateUserAgent(userEmail, agentId, {
         name: values.agentName,
         instanceId,
-        clientIdentifier // Add client identifier
+        clientIdentifier, // Add client identifier
+        // Update all form values
+        personality: values.personality,
+        customPersonality: values.customPersonality,
+        companyName: values.companyName,
+        companyDescription: values.companyDescription,
+        segment: values.segment,
+        mission: values.mission,
+        vision: values.vision,
+        mainDifferentials: values.mainDifferentials,
+        competitors: values.competitors,
+        commonObjections: values.commonObjections,
+        productName: values.productName,
+        productDescription: values.productDescription,
+        problemsSolved: values.problemsSolved,
+        benefits: values.benefits,
+        differentials: values.differentials
       });
       
       // Update agent in Supabase
-      saveAgentToSupabase(
+      await saveAgentToSupabase(
         agentId,
         userEmail,
         values,

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
@@ -32,10 +31,31 @@ export const AgentPanel: React.FC<AgentPanelProps> = ({
   autoShowQR = false,
   isDeleting = false
 }) => {
+  // Ensure agent data is properly accessed, handling both direct properties and agent_data object
+  const processedAgent: Agent = {
+    ...agent,
+    // Add fallback for legacy agents or direct fields vs agent_data field
+    personality: agent.personality || agent.agent_data?.personality,
+    customPersonality: agent.customPersonality || agent.agent_data?.customPersonality,
+    companyName: agent.companyName || agent.agent_data?.companyName,
+    companyDescription: agent.companyDescription || agent.agent_data?.companyDescription,
+    segment: agent.segment || agent.agent_data?.segment,
+    mission: agent.mission || agent.agent_data?.mission,
+    vision: agent.vision || agent.agent_data?.vision,
+    mainDifferentials: agent.mainDifferentials || agent.agent_data?.mainDifferentials,
+    competitors: agent.competitors || agent.agent_data?.competitors,
+    commonObjections: agent.commonObjections || agent.agent_data?.commonObjections,
+    productName: agent.productName || agent.agent_data?.productName,
+    productDescription: agent.productDescription || agent.agent_data?.productDescription,
+    problemsSolved: agent.problemsSolved || agent.agent_data?.problemsSolved,
+    benefits: agent.benefits || agent.agent_data?.benefits,
+    differentials: agent.differentials || agent.agent_data?.differentials
+  };
+
   const navigate = useNavigate();
   const userEmail = getCurrentUserEmail();
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const [isConnected, setIsConnected] = useState(agent.isConnected || agent.connectInstancia || false);
+  const [isConnected, setIsConnected] = useState(processedAgent.isConnected || processedAgent.connectInstancia || false);
   const [localIsDeleting, setLocalIsDeleting] = useState(false);
   const [hasAutoShowQRTriggered, setHasAutoShowQRTriggered] = useState(false);
   
@@ -49,10 +69,10 @@ export const AgentPanel: React.FC<AgentPanelProps> = ({
     connectionCheckAttempts,
     handleShowQRCode,
     handleCloseQRCode 
-  } = useQRCodeGeneration(agent.instanceId, agent.clientIdentifier);
+  } = useQRCodeGeneration(processedAgent.instanceId, processedAgent.clientIdentifier);
   
   const { isDisconnecting, isCheckingStatus, handleDisconnect, checkConnectionStatus } = useAgentConnection();
-  const { handleDeleteAgent } = useAgentSubmission(agent.type || "");
+  const { handleDeleteAgent } = useAgentSubmission(processedAgent.type || "");
 
   // Keep local deleting state in sync with prop
   useEffect(() => {
@@ -61,11 +81,11 @@ export const AgentPanel: React.FC<AgentPanelProps> = ({
 
   // Check connection status when component mounts
   useEffect(() => {
-    if (agent.instanceId) {
+    if (processedAgent.instanceId) {
       const verifyStatus = async () => {
         try {
-          console.log("Verifying agent connection status on mount:", agent.instanceId);
-          const connected = await checkConnectionStatus(agent.instanceId, agent.id);
+          console.log("Verifying agent connection status on mount:", processedAgent.instanceId);
+          const connected = await checkConnectionStatus(processedAgent.instanceId, processedAgent.id);
           
           // Only update if the connection status is different
           if (connected !== isConnected) {
@@ -73,7 +93,7 @@ export const AgentPanel: React.FC<AgentPanelProps> = ({
             
             // Update parent state if callback provided
             if (onToggleConnection) {
-              onToggleConnection(agent.id, connected);
+              onToggleConnection(processedAgent.id, connected);
             }
           }
         } catch (error) {
@@ -84,36 +104,36 @@ export const AgentPanel: React.FC<AgentPanelProps> = ({
       
       verifyStatus();
     }
-  }, [agent.instanceId, agent.id, checkConnectionStatus, isConnected, onToggleConnection]);
+  }, [processedAgent.instanceId, processedAgent.id, checkConnectionStatus, isConnected, onToggleConnection]);
 
   // Handle auto show QR code when directed from agent creation - only trigger once
   useEffect(() => {
     if (autoShowQR && !showQRCodeDialog && !hasAutoShowQRTriggered) {
-      console.log("Auto showing QR code for agent:", agent.name);
+      console.log("Auto showing QR code for agent:", processedAgent.name);
       setHasAutoShowQRTriggered(true);
       setTimeout(() => handleShowQRCode(), 300);
     }
-  }, [autoShowQR, agent.name, showQRCodeDialog, handleShowQRCode, hasAutoShowQRTriggered]);
+  }, [autoShowQR, processedAgent.name, showQRCodeDialog, handleShowQRCode, hasAutoShowQRTriggered]);
 
   const handleEdit = () => {
     // Prepare agent data for editing and navigate
-    sessionStorage.setItem('editingAgent', JSON.stringify(agent));
-    navigate(`/edit-agent/${agent.id}?type=${agent.type}`);
+    sessionStorage.setItem('editingAgent', JSON.stringify(processedAgent));
+    navigate(`/edit-agent/${processedAgent.id}?type=${processedAgent.type}`);
   };
 
   const confirmDelete = async () => {
     setLocalIsDeleting(true);
     try {
       if (onDelete) {
-        await onDelete(agent.id);
+        await onDelete(processedAgent.id);
       } else {
-        await handleDeleteAgent(agent.id);
+        await handleDeleteAgent(processedAgent.id);
       }
       
       // Additionally, make sure to delete from Supabase database directly
       // This is a fallback in case the parent's onDelete doesn't handle Supabase deletion
       if (!onDelete) {
-        await deleteAgentFromSupabase(agent.id);
+        await deleteAgentFromSupabase(processedAgent.id);
       }
     } catch (error) {
       console.error("Error during agent deletion:", error);
@@ -128,13 +148,13 @@ export const AgentPanel: React.FC<AgentPanelProps> = ({
   
   const handleDisconnectClick = async () => {
     try {
-      const success = await handleDisconnect(agent.instanceId, agent.id);
+      const success = await handleDisconnect(processedAgent.instanceId, processedAgent.id);
       if (success) {
         setIsConnected(false);
         
         // Update parent state if callback provided
         if (onToggleConnection) {
-          onToggleConnection(agent.id, false);
+          onToggleConnection(processedAgent.id, false);
         }
       }
     } catch (error) {
@@ -156,7 +176,7 @@ export const AgentPanel: React.FC<AgentPanelProps> = ({
     // Update parent state if callback provided
     if (onToggleConnection) {
       console.log("QR code scanned successfully, updating agent connection status");
-      onToggleConnection(agent.id, true);
+      onToggleConnection(processedAgent.id, true);
     }
     
     // Close QR dialog
@@ -166,18 +186,18 @@ export const AgentPanel: React.FC<AgentPanelProps> = ({
   return (
     <Card className="flex flex-col h-full overflow-hidden">
       <AgentHeader 
-        agent={{...agent, isConnected: isConnected}}
+        agent={{...processedAgent, isConnected: isConnected}}
         onEdit={handleEdit}
         onOpenDeleteDialog={() => setShowDeleteDialog(true)}
       />
       
       <AgentContent 
-        agent={agent}
+        agent={processedAgent}
         userEmail={userEmail}
       />
       
       <AgentFooter
-        agent={{...agent, isConnected: isConnected}}
+        agent={{...processedAgent, isConnected: isConnected}}
         onGenerateQR={handleConnectClick}
         onDisconnect={handleDisconnectClick}
         isGeneratingQR={isGeneratingQRCode}
@@ -187,7 +207,7 @@ export const AgentPanel: React.FC<AgentPanelProps> = ({
       {/* Delete Dialog */}
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <DeleteAgentDialog 
-          agentName={agent.name}
+          agentName={processedAgent.name}
           onDelete={confirmDelete}
           isDeleting={localIsDeleting}
         />
