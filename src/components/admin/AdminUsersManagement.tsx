@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 import { useAdminUsersManagement } from "@/hooks/admin/useAdminUsersManagement";
 import { Button } from "@/components/ui/button";
-import { UserPlus, Loader2 } from "lucide-react";
+import { UserPlus } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useAdminAuth } from "@/context/AdminAuthContext";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -12,6 +12,7 @@ import { CreateAdminForm } from "./CreateAdminForm";
 export function AdminUsersManagement() {
   const { currentUserAdminLevel } = useAdminAuth();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const { fetchAdminUsers } = useAdminUsersManagement();
   
   // If not master admin, don't show this component
   if (currentUserAdminLevel !== 'master') {
@@ -41,6 +42,7 @@ export function AdminUsersManagement() {
             <CreateAdminForm 
               onSuccess={() => {
                 setIsDialogOpen(false);
+                fetchAdminUsers();
               }} 
             />
           </DialogContent>
