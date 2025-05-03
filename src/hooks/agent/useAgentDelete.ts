@@ -5,7 +5,7 @@ import {
   getCurrentUserEmail,
   deleteUserAgent
 } from "@/services";
-import { deleteAgentFromSupabase } from "@/services/agent/supabase";
+import { deleteAgentFromSupabase } from "@/services/agent/supabaseAgentService";
 
 export const useAgentDelete = () => {
   const [isDeleting, setIsDeleting] = useState(false);
@@ -15,31 +15,37 @@ export const useAgentDelete = () => {
     
     try {
       const userEmail = getCurrentUserEmail() || "user@example.com";
-      console.log("Attempting to delete agent:", agentId);
+      console.log("Starting agent deletion process for agent:", agentId);
       
-      // Delete agent from Supabase database first
+      // First delete from Supabase
+      console.log("Deleting agent from Supabase database first");
       const dbDeleted = await deleteAgentFromSupabase(agentId);
       
       if (!dbDeleted) {
-        console.warn("Warning: Could not delete agent from database");
+        console.warn("Warning: Could not delete agent from Supabase database");
+      } else {
+        console.log("Successfully deleted agent from Supabase database");
       }
       
-      // Then delete agent from localStorage and call webhook
-      const success = await deleteUserAgent(userEmail, agentId);
+      // Then delete from localStorage
+      console.log("Now deleting agent from local storage");
+      const localDeleted = await deleteUserAgent(userEmail, agentId);
       
-      if (success) {
+      if (localDeleted) {
         toast.success("Agente removido com sucesso", {
           description: "O agente e todos os seus dados foram excluídos permanentemente.",
         });
+        console.log("Agent deletion completed successfully");
         return true;
       } else {
         toast.error("Erro ao remover agente", {
           description: "Ocorreu um erro ao remover o agente. Tente novamente.",
         });
+        console.error("Failed to delete agent from local storage");
         return false;
       }
     } catch (error) {
-      console.error("Error deleting agent:", error);
+      console.error("Error during agent deletion:", error);
       toast.error("Erro ao excluir agente", {
         description: "Ocorreu um erro ao excluir o agente. Por favor, tente novamente.",
       });

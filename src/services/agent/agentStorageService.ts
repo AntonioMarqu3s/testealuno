@@ -77,8 +77,7 @@ export const deleteUserAgent = async (email: string, agentId: string): Promise<b
       // Save back to storage
       setStorageItem(ALL_AGENTS_KEY, allAgentsData);
       
-      // Log that we would decrement the count here
-      console.log(`Would decrement agent count for user: ${email}`);
+      console.log(`Successfully deleted agent ${agentId} for user ${email}`);
       
       return true;
     } catch (error) {

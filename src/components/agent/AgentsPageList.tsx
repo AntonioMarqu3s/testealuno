@@ -1,12 +1,13 @@
 
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { AgentsList } from "@/components/agent/AgentsList";
 import { EmptyAgentState } from "@/components/agent/EmptyAgentState";
-import { deleteUserAgent, updateUserAgent } from "@/services/agent/agentStorageService";
+import { updateUserAgent } from "@/services/agent/agentStorageService";
 import { updateAgentConnectionStatus } from "@/services/agent/supabaseAgentService";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { Agent } from "@/components/agent/AgentTypes";
+import { AgentPanel } from "./AgentPanel"; 
+import { useAgentDelete } from "@/hooks/agent/useAgentDelete";
 
 interface AgentsPageListProps {
   userAgents: Agent[];
@@ -23,57 +24,47 @@ export const AgentsPageList = ({
   userEmail,
   onCreateAgent
 }: AgentsPageListProps) => {
-  const { toast } = useToast();
   const [isDeleting, setIsDeleting] = useState(false);
+  const { handleDeleteAgent } = useAgentDelete();
   
-  const handleDeleteAgent = async (agentId: string) => {
+  const handleAgentDelete = async (agentId: string) => {
     try {
       setIsDeleting(true);
-      console.log("Starting agent deletion process:", agentId);
+      console.log("AgentsPageList: Starting agent deletion process for:", agentId);
       
       // Get agent details before deletion
       const agentToDelete = userAgents.find(agent => agent.id === agentId);
       
       if (!agentToDelete) {
-        console.error("Agent not found for deletion:", agentId);
-        toast({
-          variant: "destructive",
-          title: "Erro",
+        console.error("AgentsPageList: Agent not found for deletion:", agentId);
+        toast.error("Erro", {
           description: "Agente não encontrado para exclusão.",
         });
         setIsDeleting(false);
         return false;
       }
       
-      console.log("Deleting agent:", agentToDelete.name, "with instance:", agentToDelete.instanceId);
+      console.log("AgentsPageList: Deleting agent:", agentToDelete.name, "with instance:", agentToDelete.instanceId);
       
-      // Delete agent from localStorage and call webhook API
-      const success = await deleteUserAgent(userEmail, agentId);
+      // Use the agent deletion hook
+      const success = await handleDeleteAgent(agentId);
       
       if (success) {
-        toast({
-          title: "Agente excluído",
+        toast.success("Agente excluído", {
           description: "O agente foi excluído permanentemente com sucesso.",
         });
-        
         return true;
       } else {
-        toast({
-          variant: "destructive",
-          title: "Erro",
+        toast.error("Erro", {
           description: "Não foi possível excluir o agente. Tente novamente.",
         });
-        
         return false;
       }
     } catch (error) {
-      console.error("Error deleting agent:", error);
-      toast({
-        variant: "destructive",
-        title: "Erro",
+      console.error("AgentsPageList: Error deleting agent:", error);
+      toast.error("Erro", {
         description: "Ocorreu um erro ao excluir o agente.",
       });
-      
       return false;
     } finally {
       setIsDeleting(false);
@@ -82,7 +73,7 @@ export const AgentsPageList = ({
   
   const handleToggleConnection = async (agentId: string, isConnected: boolean) => {
     try {
-      // Simplified: just update local state without additional API checks
+      // Update local state
       updateUserAgent(userEmail, agentId, {
         isConnected: isConnected,
         connectInstancia: isConnected
@@ -120,7 +111,7 @@ export const AgentsPageList = ({
         <AgentPanel 
           key={agent.id}
           agent={agent}
-          onDelete={handleDeleteAgent}
+          onDelete={handleAgentDelete}
           onToggleConnection={handleToggleConnection}
           autoShowQR={agent.id === qrAgentId}
           isDeleting={isDeleting}
@@ -129,6 +120,3 @@ export const AgentsPageList = ({
     </div>
   );
 };
-
-// Import AgentPanel to avoid circular dependency
-import { AgentPanel } from "./AgentPanel";

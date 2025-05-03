@@ -9,20 +9,22 @@ import { getCurrentUser } from '@/services/auth/supabaseAuth';
  */
 export const deleteAgentFromSupabase = async (agentId: string): Promise<boolean> => {
   try {
-    // Check if agent exists in Supabase first
-    const { data: checkData, error: checkError } = await supabase
-      .from('agents')
-      .select('id')
+    console.log('Starting Supabase agent deletion for ID:', agentId);
+    
+    // First delete the extended data
+    const { error: extendedError } = await supabase
+      .from('agents_extended')
+      .delete()
       .eq('id', agentId);
       
-    // If agent doesn't exist or we get an error, return success anyway
-    // This allows local deletion to proceed even if not in Supabase yet
-    if (checkError || !checkData || checkData.length === 0) {
-      console.log('Agent not found in database, skipping database deletion');
-      return true;
+    if (extendedError) {
+      console.error('Error deleting extended agent data from Supabase:', extendedError);
+      // Continue anyway to try deleting the main record
+    } else {
+      console.log('Successfully deleted agent extended data from Supabase');
     }
     
-    // Delete agent from Supabase (cascade will delete from agents_extended too)
+    // Delete agent from Supabase
     const { error } = await supabase
       .from('agents')
       .delete()
@@ -33,6 +35,7 @@ export const deleteAgentFromSupabase = async (agentId: string): Promise<boolean>
       return false;
     }
     
+    console.log('Successfully deleted agent from Supabase');
     return true;
   } catch (error) {
     console.error('Exception deleting agent from Supabase:', error);
