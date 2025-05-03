@@ -11,7 +11,7 @@ interface AgentsHeaderProps {
 
 export const AgentsHeader = ({ userPlanType, onCreateAgent, onUpgradeClick }: AgentsHeaderProps) => {
   // Get plan name and agent limit from PLAN_DETAILS
-  const planDetails = PLAN_DETAILS[userPlanType as PlanType];
+  const planDetails = PLAN_DETAILS[userPlanType as PlanType] || PLAN_DETAILS[PlanType.FREE_TRIAL];
   const planName = planDetails?.name || "Desconhecido";
   const agentLimit = planDetails?.agentLimit || 0;
   
@@ -26,7 +26,7 @@ export const AgentsHeader = ({ userPlanType, onCreateAgent, onUpgradeClick }: Ag
           Gerencie e monitore seus agentes de IA.
         </p>
         <p className="text-xs mt-1 font-medium">
-          Plano atual: <span className={isFreeTrial ? "text-amber-500" : "text-primary"}>
+          Plano atual: <span className={isFreeTrial ? "text-amber-500" : "text-primary font-semibold"}>
             {planName} ({agentLimit} {agentLimit === 1 ? "agente" : "agentes"})
           </span>
         </p>

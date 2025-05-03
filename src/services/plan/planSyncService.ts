@@ -37,29 +37,28 @@ export const syncUserPlan = async (userEmail: string): Promise<boolean> => {
       return true;
     }
     
-    // Se tiver planos diferentes, usar o mais alto entre eles
-    if (supabasePlan.plan !== localPlan.plan) {
-      console.log("Planos diferentes detectados");
+    // Sempre usar o plano do Supabase como fonte da verdade
+    if (supabasePlan.plan !== localPlan.plan || 
+        supabasePlan.name !== localPlan.name || 
+        supabasePlan.agentLimit !== localPlan.agentLimit) {
+      console.log("Planos diferentes detectados, atualizando localmente com dados do Supabase");
       
-      const highestPlan = Math.max(supabasePlan.plan, localPlan.plan);
-      console.log(`Usando o plano mais alto: ${highestPlan}`);
+      // Atualizar localmente com dados do Supabase
+      updateUserPlan(
+        userEmail, 
+        supabasePlan.plan, 
+        supabasePlan.paymentDate, 
+        supabasePlan.subscriptionEndsAt, 
+        supabasePlan.paymentStatus
+      );
       
-      // Atualizar localmente e no Supabase para o plano mais alto
-      if (highestPlan !== supabasePlan.plan) {
-        await updateUserPlanInSupabase(user.id, highestPlan);
-      }
+      // Mostrar toast de sucesso se o plano local foi atualizado
+      toast.success("Seu plano foi atualizado com sucesso!", {
+        description: `Agora você está no plano ${supabasePlan.name}.`,
+        duration: 5000,
+      });
       
-      if (highestPlan !== localPlan.plan) {
-        updateUserPlan(userEmail, highestPlan, new Date().toISOString());
-        
-        // Mostrar toast de sucesso se o plano local foi atualizado
-        toast.success("Seu plano foi atualizado com sucesso!", {
-          description: `Agora você está no plano ${PlanType[highestPlan]}.`,
-          duration: 5000,
-        });
-        
-        return true;
-      }
+      return true;
     }
     
     return false;
@@ -115,7 +114,7 @@ export const checkAndSyncPlan = async (location: RouterLocation, userEmail: stri
   // Primeiro verifica se há confirmação de pagamento na URL
   const paymentProcessed = await checkPaymentConfirmation(location, userEmail);
   
-  // Se não houver confirmação de pagamento, sincroniza os planos
+  // Sempre sincroniza os planos para garantir que estão atualizados
   if (!paymentProcessed) {
     await syncUserPlan(userEmail);
   }

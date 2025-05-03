@@ -9,6 +9,9 @@ import { useToast } from "@/hooks/use-toast";
 import { checkAndSyncPlan } from "@/services/plan/planSyncService";
 import { PlanType } from "@/services/plan/planTypes";
 import { Agent } from "@/components/agent/AgentTypes";
+import { getUserPlanFromSupabase } from "@/services/plan/supabsePlanService";
+import { supabase } from "@/lib/supabase";
+import { getCurrentUser } from "@/services/auth/supabaseAuth";
 
 export const useAgentsPage = () => {
   const navigate = useNavigate();
@@ -28,6 +31,26 @@ export const useAgentsPage = () => {
   const [qrAgentId, setQrAgentId] = useState<string | null>(null);
   const [canCreate, setCanCreate] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
+
+  // Force check Supabase for the latest plan on component mount
+  useEffect(() => {
+    const fetchSupabasePlan = async () => {
+      try {
+        const user = await getCurrentUser();
+        if (user) {
+          const supabasePlan = await getUserPlanFromSupabase(user.id);
+          if (supabasePlan) {
+            console.log("Plano recuperado do Supabase:", supabasePlan);
+            setUserPlan(supabasePlan);
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching Supabase plan:", error);
+      }
+    };
+
+    fetchSupabasePlan();
+  }, []);
 
   // Check for payment confirmation and sync plan on load
   useEffect(() => {
@@ -119,14 +142,47 @@ export const useAgentsPage = () => {
   // Função para forçar a atualização do plano e recarregar a página
   const handleRefreshPlan = async () => {
     setIsRefreshing(true);
-    await checkAndSyncPlan(location, userEmail);
-    // Recarregar plano após a sincronização
-    setUserPlan(getUserPlan(userEmail));
-    setIsRefreshing(false);
-    toast({
-      title: "Plano sincronizado",
-      description: `Seu plano atual é: ${userPlan.name}`,
-    });
+    
+    try {
+      // Get current user ID from Supabase
+      const user = await getCurrentUser();
+      
+      if (user) {
+        // Get the latest plan from Supabase
+        const supabasePlan = await getUserPlanFromSupabase(user.id);
+        
+        if (supabasePlan) {
+          // Update local state with Supabase data
+          setUserPlan(supabasePlan);
+          
+          // Show toast with success message
+          toast({
+            title: "Plano sincronizado",
+            description: `Seu plano atual é: ${supabasePlan.name}`,
+          });
+        } else {
+          // Fall back to local sync if no Supabase data
+          await checkAndSyncPlan(location, userEmail);
+          setUserPlan(getUserPlan(userEmail));
+          
+          toast({
+            title: "Plano sincronizado",
+            description: `Seu plano atual é: ${userPlan.name}`,
+          });
+        }
+      } else {
+        throw new Error("Usuário não encontrado");
+      }
+    } catch (error) {
+      console.error("Error refreshing plan:", error);
+      toast({
+        title: "Erro ao atualizar plano",
+        description: "Não foi possível atualizar seu plano. Tente novamente.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsRefreshing(false);
+    }
   };
   
   return {

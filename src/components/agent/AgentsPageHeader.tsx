@@ -1,6 +1,7 @@
 
 import { Button } from "@/components/ui/button";
 import { AgentsHeader } from "@/components/agent/AgentsHeader";
+import { RefreshCw } from "lucide-react";
 
 interface AgentsPageHeaderProps {
   userPlan: {
@@ -29,10 +30,12 @@ export const AgentsPageHeader = ({
       />
       <Button 
         variant="outline" 
-        size="sm" 
+        size="sm"
         onClick={onRefreshPlan} 
         disabled={isRefreshing}
+        className="flex items-center gap-1"
       >
+        <RefreshCw className={`h-4 w-4 mr-1 ${isRefreshing ? 'animate-spin' : ''}`} />
         {isRefreshing ? "Atualizando..." : "Atualizar Plano"}
       </Button>
     </div>
