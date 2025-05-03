@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useAdminAuth } from "@/context/AdminAuthContext";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -18,6 +18,20 @@ export default function AdminLogin() {
   const [isCreatingInitialAdmin, setIsCreatingInitialAdmin] = useState(false);
   const { adminLogin } = useAdminAuth();
   const [initialAdminMessage, setInitialAdminMessage] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<string>("login");
+
+  // Switch to login tab when admin credentials are created
+  useEffect(() => {
+    if (initialAdminMessage) {
+      setActiveTab("login");
+      
+      // Extract email from credentials message
+      const emailMatch = initialAdminMessage.match(/Email:\s*([^\s]+)/);
+      if (emailMatch && emailMatch[1]) {
+        setEmail(emailMatch[1]);
+      }
+    }
+  }, [initialAdminMessage]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -42,13 +56,15 @@ export default function AdminLogin() {
       }
       
       if (data.success) {
-        setInitialAdminMessage(`
+        const credentialMessage = `
           Credencial inicial criada com sucesso!
           Email: ${data.credentials.email}
           Senha: ${data.credentials.password}
-        `);
+        `;
+        setInitialAdminMessage(credentialMessage);
         setEmail(data.credentials.email);
         toast.success("Administrador inicial criado com sucesso!");
+        setActiveTab("login");
       } else {
         toast.error("Erro ao criar administrador inicial");
       }
@@ -73,7 +89,7 @@ export default function AdminLogin() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Tabs defaultValue="login">
+          <Tabs value={activeTab} onValueChange={setActiveTab}>
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="login">Login</TabsTrigger>
               <TabsTrigger value="setup">Configuração Inicial</TabsTrigger>
@@ -118,6 +134,14 @@ export default function AdminLogin() {
                   )}
                 </Button>
               </form>
+              
+              {initialAdminMessage && (
+                <Alert className="bg-green-50 border-green-200 mt-4">
+                  <AlertDescription className="whitespace-pre-line">
+                    {initialAdminMessage}
+                  </AlertDescription>
+                </Alert>
+              )}
             </TabsContent>
             
             <TabsContent value="setup" className="space-y-4 pt-4">
