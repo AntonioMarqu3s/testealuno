@@ -1,433 +1,317 @@
+
 import React, { useEffect, useState } from "react";
-import { Button } from "@/components/ui/button";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { supabase } from "@/lib/supabase";
-import { PlanType, PLAN_DETAILS } from "@/services/plan/planTypes";
-import { toast } from "sonner";
+import { Button } from "../ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Alert, AlertDescription } from "../ui/alert";
+import { AlertCircle, Calendar, CheckCircle, Clock, X, AlertTriangle } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
+import { cn } from "@/lib/utils";
+import { PlanType } from "@/services/plan/userPlanService";
+
+interface UserPlan {
+  id: string;
+  user_id: string;
+  plan: PlanType;
+  name: string;
+  agent_limit: number;
+  trial_ends_at: string | null;
+  payment_date: string | null;
+  subscription_ends_at: string | null;
+  payment_status: string | null;
+  connect_instancia: boolean;
+  updated_at: string;
+  trial_init: string | null;
+}
+
+interface UserData {
+  id: string;
+  email: string;
+  created_at: string;
+  last_sign_in_at: string | null;
+  user_metadata: Record<string, any>;
+  plan?: UserPlan;
+}
 
 interface UserDetailsProps {
   userId: string;
 }
 
-interface UserInfo {
-  id: string;
-  email: string;
-  created_at: string;
-  plan?: {
-    id: string;
-    plan: PlanType;
-    name: string;
-    agent_limit: number;
-    trial_ends_at?: string;
-    subscription_ends_at?: string;
-    payment_date?: string;
-    payment_status?: string;
-  };
-  agents: any[];
-}
-
 export function UserDetails({ userId }: UserDetailsProps) {
-  const [user, setUser] = useState<UserInfo | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [selectedPlan, setSelectedPlan] = useState<string>("");
-  const [agentLimit, setAgentLimit] = useState<string>("1");
-  const [paymentDate, setPaymentDate] = useState<string>("");
-  const [expirationDate, setExpirationDate] = useState<string>("");
-  const [paymentStatus, setPaymentStatus] = useState<string>("completed");
-  const [savingPlan, setSavingPlan] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [userData, setUserData] = useState<UserData | null>(null);
 
-  useEffect(() => {
-    async function fetchUserDetails() {
-      try {
-        setLoading(true);
-        
-        // Fetch user from auth.users via RPC
-        const { data: userData, error: userError } = await supabase.rpc("get_user_by_id", {
-          p_user_id: userId
-        });
-        
-        if (userError) throw userError;
-        
-        // Fetch user plan
-        const { data: planData, error: planError } = await supabase
-          .from("user_plans")
-          .select("*")
-          .eq("user_id", userId)
-          .single();
-          
-        if (planError && planError.code !== "PGRST116") {
-          console.error("Error fetching user plan:", planError);
-        }
-        
-        // Fetch user agents
-        const { data: agentsData, error: agentsError } = await supabase
-          .from("agents")
-          .select("*")
-          .eq("user_id", userId);
-          
-        if (agentsError) {
-          console.error("Error fetching user agents:", agentsError);
-        }
-        
-        const userInfo: UserInfo = {
-          ...userData,
-          plan: planData || undefined,
-          agents: agentsData || []
-        };
-        
-        setUser(userInfo);
-        
-        if (planData) {
-          setSelectedPlan(planData.plan.toString());
-          setAgentLimit(planData.agent_limit.toString());
-          
-          if (planData.payment_date) {
-            setPaymentDate(new Date(planData.payment_date).toISOString().split('T')[0]);
-          }
-          
-          if (planData.subscription_ends_at) {
-            setExpirationDate(new Date(planData.subscription_ends_at).toISOString().split('T')[0]);
-          }
-          
-          if (planData.payment_status) {
-            setPaymentStatus(planData.payment_status);
-          }
-        }
-      } catch (error) {
-        console.error("Error fetching user details:", error);
-        toast.error("Erro ao carregar detalhes do usuário");
-      } finally {
-        setLoading(false);
-      }
-    }
+  const fetchUserData = async () => {
+    setIsLoading(true);
+    setError(null);
     
-    fetchUserDetails();
-  }, [userId]);
-
-  const handleSavePlan = async () => {
     try {
-      setSavingPlan(true);
+      // Fetch user data from auth
+      const { data: authData, error: authError } = await supabase.auth.admin.getUserById(userId);
       
-      const planTypeInt = parseInt(selectedPlan);
-      const agentLimitInt = parseInt(agentLimit);
-      
-      // Validate inputs
-      if (isNaN(planTypeInt) || isNaN(agentLimitInt)) {
-        toast.error("Valores de plano ou limite de agentes inválidos");
-        return;
+      if (authError) {
+        throw new Error(`Erro ao buscar dados do usuário: ${authError.message}`);
       }
       
-      // Call function to update plan
-      const { error } = await supabase.functions.invoke("admin-update-plan", {
-        body: {
-          userId,
-          planType: planTypeInt,
-          agentLimit: agentLimitInt,
-          paymentDate: paymentDate || undefined,
-          expirationDate: expirationDate || undefined,
-          paymentStatus: paymentStatus || "completed"
-        }
-      });
-      
-      if (error) {
-        toast.error("Erro ao atualizar plano", {
-          description: error.message
-        });
-        return;
+      if (!authData?.user) {
+        throw new Error("Usuário não encontrado");
       }
       
-      toast.success("Plano atualizado com sucesso");
-      
-      // Refresh user details
-      const { data: planData } = await supabase
+      // Fetch user plan data
+      const { data: planData, error: planError } = await supabase
         .from("user_plans")
         .select("*")
         .eq("user_id", userId)
         .single();
         
-      if (planData && user) {
-        setUser({ ...user, plan: planData });
+      if (planError && planError.code !== 'PGRST116') { // Not found error
+        console.error("Erro ao buscar plano:", planError);
       }
+      
+      // Set combined user data
+      setUserData({
+        id: authData.user.id,
+        email: authData.user.email || "",
+        created_at: authData.user.created_at,
+        last_sign_in_at: authData.user.last_sign_in_at,
+        user_metadata: authData.user.user_metadata || {},
+        plan: planData || undefined
+      });
+      
     } catch (err) {
-      console.error("Error updating user plan:", err);
-      toast.error("Erro ao atualizar plano");
+      console.error("Error fetching user data:", err);
+      setError(err instanceof Error ? err.message : "Erro desconhecido ao buscar dados");
     } finally {
-      setSavingPlan(false);
+      setIsLoading(false);
     }
   };
-
-  if (loading) {
+  
+  useEffect(() => {
+    if (userId) {
+      fetchUserData();
+    }
+  }, [userId]);
+  
+  // Format date for display
+  const formatDate = (dateString: string | null) => {
+    if (!dateString) return "N/A";
+    return new Date(dateString).toLocaleDateString('pt-BR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+  
+  const renderPlanStatus = () => {
+    if (!userData?.plan) return null;
+    
+    const now = new Date();
+    const trialEndsAt = userData.plan.trial_ends_at ? new Date(userData.plan.trial_ends_at) : null;
+    const subscriptionEndsAt = userData.plan.subscription_ends_at ? new Date(userData.plan.subscription_ends_at) : null;
+    
+    if (trialEndsAt && trialEndsAt > now) {
+      const daysLeft = Math.ceil((trialEndsAt.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+      return (
+        <div className="flex items-center gap-1 text-amber-600 text-sm font-medium">
+          <Clock className="h-4 w-4" />
+          <span>Período de teste ({daysLeft} dias restantes)</span>
+        </div>
+      );
+    }
+    
+    if (userData.plan.payment_status === "completed" && subscriptionEndsAt && subscriptionEndsAt > now) {
+      return (
+        <div className="flex items-center gap-1 text-green-600 text-sm font-medium">
+          <CheckCircle className="h-4 w-4" />
+          <span>Assinatura ativa</span>
+        </div>
+      );
+    }
+    
+    if (userData.plan.payment_status === "pending") {
+      return (
+        <div className="flex items-center gap-1 text-amber-600 text-sm font-medium">
+          <AlertTriangle className="h-4 w-4" />
+          <span>Pagamento pendente</span>
+        </div>
+      );
+    }
+    
     return (
-      <div className="flex justify-center p-8">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      <div className="flex items-center gap-1 text-red-600 text-sm font-medium">
+        <X className="h-4 w-4" />
+        <span>Assinatura expirada</span>
       </div>
     );
-  }
-
-  if (!user) {
+  };
+  
+  if (isLoading) {
     return (
-      <div className="text-center p-8">
-        <p>Usuário não encontrado</p>
-      </div>
-    );
-  }
-
-  return (
-    <div className="space-y-4">
-      <div className="bg-muted p-4 rounded-md">
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <p className="text-sm text-muted-foreground">ID do Usuário</p>
-            <p className="font-mono text-sm">{user.id}</p>
-          </div>
-          <div>
-            <p className="text-sm text-muted-foreground">Email</p>
-            <p>{user.email}</p>
-          </div>
-          <div>
-            <p className="text-sm text-muted-foreground">Data de Criação</p>
-            <p>{new Date(user.created_at).toLocaleString()}</p>
-          </div>
-          <div>
-            <p className="text-sm text-muted-foreground">Agentes</p>
-            <p>{user.agents.length}</p>
-          </div>
+      <div className="space-y-4 p-4">
+        <Skeleton className="h-6 w-48" />
+        <div className="space-y-2">
+          <Skeleton className="h-4 w-full" />
+          <Skeleton className="h-4 w-full" />
+          <Skeleton className="h-4 w-2/3" />
         </div>
       </div>
-      
-      <Tabs defaultValue="plan">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="plan">Plano</TabsTrigger>
-          <TabsTrigger value="agents">Agentes</TabsTrigger>
-          <TabsTrigger value="admin">Admin</TabsTrigger>
-          <TabsTrigger value="actions">Ações</TabsTrigger>
+    );
+  }
+  
+  if (error) {
+    return (
+      <Alert variant="destructive" className="my-4">
+        <AlertCircle className="h-4 w-4" />
+        <AlertDescription>{error}</AlertDescription>
+      </Alert>
+    );
+  }
+  
+  if (!userData) {
+    return (
+      <Alert variant="destructive" className="my-4">
+        <AlertCircle className="h-4 w-4" />
+        <AlertDescription>Dados do usuário não encontrados</AlertDescription>
+      </Alert>
+    );
+  }
+  
+  return (
+    <div className="space-y-6 py-2">
+      <Tabs defaultValue="general">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="general">Informações Gerais</TabsTrigger>
+          <TabsTrigger value="plan">Dados do Plano</TabsTrigger>
         </TabsList>
         
-        <TabsContent value="plan">
-          <Card>
-            <CardHeader>
-              <CardTitle>Gerenciar Plano</CardTitle>
-              <CardDescription>
-                Atualize o plano e as configurações de assinatura do usuário
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="plan-type">Tipo de Plano</Label>
-                  <Select value={selectedPlan} onValueChange={setSelectedPlan}>
-                    <SelectTrigger id="plan-type">
-                      <SelectValue placeholder="Selecione um plano" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value={PlanType.FREE_TRIAL.toString()}>Teste Gratuito</SelectItem>
-                      <SelectItem value={PlanType.BASIC.toString()}>Inicial</SelectItem>
-                      <SelectItem value={PlanType.STANDARD.toString()}>Padrão</SelectItem>
-                      <SelectItem value={PlanType.PREMIUM.toString()}>Premium</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="agent-limit">Limite de Agentes</Label>
-                  <Input
-                    id="agent-limit"
-                    type="number"
-                    min="1"
-                    value={agentLimit}
-                    onChange={(e) => setAgentLimit(e.target.value)}
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="payment-date">Data de Pagamento</Label>
-                  <Input
-                    id="payment-date"
-                    type="date"
-                    value={paymentDate}
-                    onChange={(e) => setPaymentDate(e.target.value)}
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="expiration-date">Data de Expiração</Label>
-                  <Input
-                    id="expiration-date"
-                    type="date"
-                    value={expirationDate}
-                    onChange={(e) => setExpirationDate(e.target.value)}
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="payment-status">Status do Pagamento</Label>
-                  <Select value={paymentStatus} onValueChange={setPaymentStatus}>
-                    <SelectTrigger id="payment-status">
-                      <SelectValue placeholder="Status do pagamento" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="completed">Completo</SelectItem>
-                      <SelectItem value="pending">Pendente</SelectItem>
-                      <SelectItem value="failed">Falhou</SelectItem>
-                    </SelectContent>
-                  </Select>
+        <TabsContent value="general" className="space-y-4 mt-4">
+          <div className="space-y-2">
+            <h3 className="text-sm font-medium text-muted-foreground">ID</h3>
+            <p className="font-mono text-sm">{userData.id}</p>
+          </div>
+          
+          <div className="space-y-2">
+            <h3 className="text-sm font-medium text-muted-foreground">Email</h3>
+            <p>{userData.email}</p>
+          </div>
+          
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <h3 className="text-sm font-medium text-muted-foreground">Data de criação</h3>
+              <div className="flex items-center gap-1">
+                <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
+                <p className="text-sm">{formatDate(userData.created_at)}</p>
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              <h3 className="text-sm font-medium text-muted-foreground">Último login</h3>
+              <div className="flex items-center gap-1">
+                <Clock className="h-3.5 w-3.5 text-muted-foreground" />
+                <p className="text-sm">{formatDate(userData.last_sign_in_at)}</p>
+              </div>
+            </div>
+          </div>
+          
+          <div className="space-y-2">
+            <h3 className="text-sm font-medium text-muted-foreground">Status</h3>
+            <div className={cn(
+              "px-2.5 py-0.5 rounded-full text-xs inline-block",
+              userData.last_sign_in_at ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
+            )}>
+              {userData.last_sign_in_at ? "Ativo" : "Inativo"}
+            </div>
+          </div>
+          
+          <div className="space-y-2">
+            <h3 className="text-sm font-medium text-muted-foreground">Metadados</h3>
+            <pre className="bg-muted p-2 rounded text-xs overflow-auto max-h-40">
+              {JSON.stringify(userData.user_metadata, null, 2)}
+            </pre>
+          </div>
+        </TabsContent>
+        
+        <TabsContent value="plan" className="space-y-4 mt-4">
+          {userData.plan ? (
+            <>
+              <div className="border p-4 rounded-md bg-muted/50">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <h3 className="font-medium">{userData.plan.name}</h3>
+                    {renderPlanStatus()}
+                  </div>
+                  <div className="text-right">
+                    <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold">
+                      {userData.plan.plan === 0 ? "Free Trial" : 
+                       userData.plan.plan === 1 ? "Básico" :
+                       userData.plan.plan === 2 ? "Standard" :
+                       userData.plan.plan === 3 ? "Premium" : "Desconhecido"}
+                    </span>
+                  </div>
                 </div>
               </div>
               
-              <div className="flex justify-end">
-                <Button onClick={handleSavePlan} disabled={savingPlan}>
-                  {savingPlan ? (
-                    <span className="flex items-center">
-                      <span className="animate-spin mr-2 h-4 w-4 border-2 border-current border-t-transparent rounded-full"></span>
-                      Salvando...
-                    </span>
-                  ) : (
-                    "Salvar Alterações"
-                  )}
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-        
-        <TabsContent value="agents">
-          <Card>
-            <CardHeader>
-              <CardTitle>Agentes do Usuário</CardTitle>
-              <CardDescription>
-                Visualize e gerencie os agentes deste usuário
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {user.agents.length === 0 ? (
-                <p className="text-center py-8 text-muted-foreground">
-                  Este usuário não possui agentes
-                </p>
-              ) : (
-                <div className="space-y-4">
-                  {user.agents.map((agent) => (
-                    <div key={agent.id} className="border rounded-md p-4">
-                      <div className="flex justify-between items-center">
-                        <div>
-                          <p className="font-medium">{agent.name}</p>
-                          <p className="text-sm text-muted-foreground">
-                            ID: {agent.id.substring(0, 8)}... • Tipo: {agent.type}
-                          </p>
-                        </div>
-                        <div>
-                          <span className={`px-2 py-1 rounded-full text-xs ${
-                            agent.is_connected ? "bg-green-100 text-green-800" : "bg-amber-100 text-amber-800"
-                          }`}>
-                            {agent.is_connected ? "Conectado" : "Desconectado"}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-        
-        <TabsContent value="admin">
-          <Card>
-            <CardHeader>
-              <CardTitle>Permissões de Administrador</CardTitle>
-              <CardDescription>
-                Gerenciar acesso administrativo para este usuário
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium">Tornar Administrador</p>
-                    <p className="text-sm text-muted-foreground">
-                      Conceder acesso administrativo completo a este usuário
-                    </p>
-                  </div>
-                  <Button variant="outline" onClick={async () => {
-                    try {
-                      const { data, error } = await supabase
-                        .from('admin_users')
-                        .select('*')
-                        .eq('user_id', userId)
-                        .single();
-                        
-                      if (error && error.code !== 'PGRST116') {
-                        throw error;
-                      }
-                      
-                      if (!data) {
-                        // User is not admin, make them admin
-                        const { error: insertError } = await supabase
-                          .from('admin_users')
-                          .insert({ user_id: userId });
-                          
-                        if (insertError) throw insertError;
-                        toast.success("Usuário promovido a administrador");
-                      } else {
-                        // User is admin, remove admin rights
-                        const { error: deleteError } = await supabase
-                          .from('admin_users')
-                          .delete()
-                          .eq('user_id', userId);
-                          
-                        if (deleteError) throw deleteError;
-                        toast.success("Permissões de administrador removidas");
-                      }
-                    } catch (err) {
-                      console.error("Error toggling admin status:", err);
-                      toast.error("Erro ao alterar status de administrador");
-                    }
-                  }}>
-                    Alternar Status Admin
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-        
-        <TabsContent value="actions">
-          <Card>
-            <CardHeader>
-              <CardTitle>Ações do Usuário</CardTitle>
-              <CardDescription>
-                Realize ações administrativas para este usuário
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
-                <Button variant="outline">Redefinir Senha</Button>
-                <Button variant="outline">Enviar Email</Button>
-                <Button variant="destructive">Desativar Conta</Button>
-                <Button variant="destructive">Excluir Conta</Button>
+                <div className="space-y-1.5">
+                  <h3 className="text-sm font-medium text-muted-foreground">Limite de Agentes</h3>
+                  <p className="text-sm">{userData.plan.agent_limit}</p>
+                </div>
+                
+                <div className="space-y-1.5">
+                  <h3 className="text-sm font-medium text-muted-foreground">Status de Pagamento</h3>
+                  <p className="text-sm capitalize">{userData.plan.payment_status || "N/A"}</p>
+                </div>
               </div>
-            </CardContent>
-          </Card>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <h3 className="text-sm font-medium text-muted-foreground">Data de Pagamento</h3>
+                  <p className="text-sm">{userData.plan.payment_date ? formatDate(userData.plan.payment_date) : "N/A"}</p>
+                </div>
+                
+                <div className="space-y-1.5">
+                  <h3 className="text-sm font-medium text-muted-foreground">Expiração da Assinatura</h3>
+                  <p className="text-sm">{userData.plan.subscription_ends_at ? formatDate(userData.plan.subscription_ends_at) : "N/A"}</p>
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <h3 className="text-sm font-medium text-muted-foreground">Início do Trial</h3>
+                  <p className="text-sm">{userData.plan.trial_init ? formatDate(userData.plan.trial_init) : "N/A"}</p>
+                </div>
+                
+                <div className="space-y-1.5">
+                  <h3 className="text-sm font-medium text-muted-foreground">Fim do Trial</h3>
+                  <p className="text-sm">{userData.plan.trial_ends_at ? formatDate(userData.plan.trial_ends_at) : "N/A"}</p>
+                </div>
+              </div>
+              
+              <div className="space-y-1.5">
+                <h3 className="text-sm font-medium text-muted-foreground">Connect Instancia</h3>
+                <p className="text-sm">{userData.plan.connect_instancia ? "Sim" : "Não"}</p>
+              </div>
+              
+              <div className="space-y-1.5">
+                <h3 className="text-sm font-medium text-muted-foreground">Última Atualização</h3>
+                <p className="text-sm">{formatDate(userData.plan.updated_at)}</p>
+              </div>
+            </>
+          ) : (
+            <Alert>
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>Este usuário não possui um plano cadastrado.</AlertDescription>
+            </Alert>
+          )}
+          
+          <div className="flex justify-end">
+            <Button variant="outline" size="sm">
+              Editar Plano
+            </Button>
+          </div>
         </TabsContent>
       </Tabs>
     </div>

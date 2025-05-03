@@ -10,7 +10,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { UserPlus, Edit, Trash, Search, Users, RefreshCw } from "lucide-react";
+import { UserPlus, Edit, Trash, Search, Users, RefreshCw, Calendar } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { CreateUserForm } from "@/components/admin/CreateUserForm";
@@ -20,6 +20,8 @@ import { useAdminAgents } from "@/hooks/admin/useAdminAgents";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
+import { formatDistanceToNow } from "date-fns";
+import { ptBR } from "date-fns/locale";
 
 export default function AdminUsers() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -29,7 +31,7 @@ export default function AdminUsers() {
   const { users, isLoading, error, fetchUsers } = useAdminUsers();
   const { agents } = useAdminAgents();
 
-  // Apply search only when button is clicked
+  // Apply search only when button is clicked or Enter is pressed
   const filteredUsers = users.filter(user => 
     searchApplied ? (
       user.email?.toLowerCase().includes(searchApplied.toLowerCase()) ||
@@ -61,6 +63,12 @@ export default function AdminUsers() {
   // Handle search
   const handleSearch = () => {
     setSearchApplied(searchTerm);
+  };
+
+  // Format date for display
+  const formatDate = (dateString: string | null | undefined) => {
+    if (!dateString) return "N/A";
+    return new Date(dateString).toLocaleDateString('pt-BR');
   };
 
   return (
@@ -136,18 +144,20 @@ export default function AdminUsers() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>ID</TableHead>
+                  <TableHead className="w-[50px]">ID</TableHead>
                   <TableHead>Email</TableHead>
                   <TableHead>Plano</TableHead>
-                  <TableHead>Agentes</TableHead>
                   <TableHead>Status</TableHead>
+                  <TableHead>Pagamento</TableHead>
+                  <TableHead>Expiração</TableHead>
+                  <TableHead>Agentes</TableHead>
                   <TableHead className="text-right">Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredUsers.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={6} className="text-center h-24">
+                    <TableCell colSpan={8} className="text-center h-24">
                       {users.length === 0 ? "Nenhum usuário encontrado" : "Nenhum resultado para a busca"}
                     </TableCell>
                   </TableRow>
@@ -156,7 +166,52 @@ export default function AdminUsers() {
                     <TableRow key={user.id}>
                       <TableCell className="font-mono text-xs">{user.id.substring(0, 8)}...</TableCell>
                       <TableCell>{user.email}</TableCell>
-                      <TableCell>{user.plan?.name || "N/A"}</TableCell>
+                      <TableCell>
+                        {user.plan ? (
+                          <Badge variant="outline" className="bg-primary/10">
+                            {user.plan.name}
+                          </Badge>
+                        ) : (
+                          <span className="text-muted-foreground text-sm">N/A</span>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <span className={`px-2 py-1 rounded-full text-xs ${
+                          user.isActive ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
+                        }`}>
+                          {user.isActive ? "Ativo" : "Inativo"}
+                        </span>
+                      </TableCell>
+                      <TableCell>
+                        {user.plan?.payment_status ? (
+                          <span className={`px-2 py-1 rounded-full text-xs ${
+                            user.plan.payment_status === 'completed' ? "bg-green-100 text-green-800" : 
+                            user.plan.payment_status === 'pending' ? "bg-yellow-100 text-yellow-800" : 
+                            "bg-gray-100 text-gray-800"
+                          }`}>
+                            {user.plan.payment_status === 'completed' ? "Pago" : 
+                             user.plan.payment_status === 'pending' ? "Pendente" : 
+                             user.plan.payment_status}
+                          </span>
+                        ) : (
+                          <span className="text-muted-foreground text-sm">N/A</span>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {user.plan?.subscription_ends_at ? (
+                          <div className="flex items-center">
+                            <Calendar className="h-3 w-3 mr-1 text-muted-foreground" />
+                            <span className="text-xs">{formatDate(user.plan.subscription_ends_at)}</span>
+                          </div>
+                        ) : user.plan?.trial_ends_at ? (
+                          <div className="flex items-center">
+                            <Calendar className="h-3 w-3 mr-1 text-amber-500" />
+                            <span className="text-xs text-amber-600">Trial: {formatDate(user.plan.trial_ends_at)}</span>
+                          </div>
+                        ) : (
+                          <span className="text-muted-foreground text-sm">N/A</span>
+                        )}
+                      </TableCell>
                       <TableCell>
                         {agentsByUser[user.id] ? (
                           <Badge variant="secondary" className="flex items-center gap-1">
@@ -166,13 +221,6 @@ export default function AdminUsers() {
                         ) : (
                           <span className="text-muted-foreground text-sm">Nenhum</span>
                         )}
-                      </TableCell>
-                      <TableCell>
-                        <span className={`px-2 py-1 rounded-full text-xs ${
-                          user.isActive ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
-                        }`}>
-                          {user.isActive ? "Ativo" : "Inativo"}
-                        </span>
                       </TableCell>
                       <TableCell className="text-right">
                         <Dialog>

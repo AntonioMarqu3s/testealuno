@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
@@ -11,6 +12,10 @@ interface User {
     name: string;
     agent_limit: number;
     plan: number;
+    payment_date?: string;
+    subscription_ends_at?: string;
+    payment_status?: string;
+    trial_ends_at?: string;
   };
 }
 
@@ -24,7 +29,7 @@ export function useAdminUsers() {
       setIsLoading(true);
       setError(null);
 
-      console.log("Fetching users from edge function");
+      console.log("Fetching all users from edge function");
       
       // Fetch sample mock data instead of calling the edge function immediately
       // This prevents the error on initial load
@@ -42,13 +47,26 @@ export function useAdminUsers() {
       
       // In background, try to fetch real data but don't fail if it doesn't work
       try {
-        const { data, error } = await supabase.functions.invoke("get_all_users");
+        // Get all users from auth system
+        const { data: authUsers, error: authUsersError } = await supabase.auth.admin.listUsers();
         
-        if (error) {
-          console.error("Edge function error:", error);
-          // Don't throw here, just log it
-        } else if (data && Array.isArray(data)) {
-          console.log(`Successfully fetched ${data.length} users`);
+        if (authUsersError) {
+          console.error("Error fetching auth users:", authUsersError);
+          throw new Error(`Error fetching users: ${authUsersError.message}`);
+        }
+        
+        if (authUsers) {
+          console.log(`Successfully fetched ${authUsers.users.length} users from auth`);
+
+          // Format user data
+          let formattedUsers = authUsers.users.map(user => ({
+            id: user.id,
+            email: user.email,
+            created_at: user.created_at,
+            last_sign_in_at: user.last_sign_in_at,
+            isActive: user.last_sign_in_at !== null,
+            metadata: user.user_metadata
+          }));
 
           // Fetch user plans to enrich the data
           const { data: plans, error: plansError } = await supabase
@@ -61,19 +79,23 @@ export function useAdminUsers() {
           }
 
           // Map plans to users
-          const enrichedUsers = data.map((user: any) => {
+          formattedUsers = formattedUsers.map(user => {
             const userPlan = plans?.find(plan => plan.user_id === user.id);
             return {
               ...user,
               plan: userPlan ? {
                 name: userPlan.name || "Plano Básico",
                 agent_limit: userPlan.agent_limit,
-                plan: userPlan.plan
+                plan: userPlan.plan,
+                payment_date: userPlan.payment_date,
+                subscription_ends_at: userPlan.subscription_ends_at,
+                payment_status: userPlan.payment_status,
+                trial_ends_at: userPlan.trial_ends_at
               } : undefined
             };
           });
 
-          setUsers(enrichedUsers);
+          setUsers(formattedUsers);
         }
       } catch (fetchError) {
         console.error("Background fetch error:", fetchError);
