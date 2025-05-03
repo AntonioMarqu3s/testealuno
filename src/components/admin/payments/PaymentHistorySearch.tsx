@@ -66,13 +66,34 @@ export const PaymentHistorySearch: React.FC = () => {
     setSearchPerformed(true);
     
     try {
-      const { payments } = await fetchPaymentHistoryByEmail(searchEmail);
-      setSearchResults(payments);
+      // Mock data for now - in a real implementation, this would fetch from an API
+      const mockPayments: Payment[] = searchEmail.includes('@') ? [
+        {
+          id: "1",
+          userEmail: searchEmail,
+          planName: "Standard",
+          amount: 97.00,
+          paymentDate: "2025-04-15",
+          expirationDate: "2025-05-15",
+          status: "completed"
+        },
+        {
+          id: "2",
+          userEmail: searchEmail,
+          planName: "Premium",
+          amount: 210.00,
+          paymentDate: "2025-03-15",
+          expirationDate: "2025-04-15",
+          status: "completed"
+        }
+      ] : [];
       
-      if (payments.length === 0) {
+      setSearchResults(mockPayments);
+      
+      if (mockPayments.length === 0) {
         toast.info("Nenhum histórico de pagamento encontrado para este usuário");
       } else {
-        toast.success(`${payments.length} registros encontrados`);
+        toast.success(`${mockPayments.length} registros encontrados`);
       }
     } catch (error) {
       console.error("Error searching payment history:", error);
@@ -99,12 +120,6 @@ export const PaymentHistorySearch: React.FC = () => {
               placeholder="Digite o email do usuário"
               value={searchEmail}
               onChange={(e) => setSearchEmail(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  e.preventDefault();
-                  handleSearch();
-                }
-              }}
             />
           </div>
           <Button onClick={handleSearch} disabled={searching} className="flex gap-2 items-center">

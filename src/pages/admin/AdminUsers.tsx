@@ -23,14 +23,18 @@ import { AlertCircle } from "lucide-react";
 
 export default function AdminUsers() {
   const [searchTerm, setSearchTerm] = useState("");
+  const [searchApplied, setSearchApplied] = useState("");
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const { users, isLoading, error, fetchUsers } = useAdminUsers();
   const { agents } = useAdminAgents();
 
+  // Apply search only when button is clicked
   const filteredUsers = users.filter(user => 
-    user.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.id?.toLowerCase().includes(searchTerm.toLowerCase())
+    searchApplied ? (
+      user.email?.toLowerCase().includes(searchApplied.toLowerCase()) ||
+      user.id?.toLowerCase().includes(searchApplied.toLowerCase())
+    ) : true
   );
 
   // Group agents by user ID
@@ -50,6 +54,13 @@ export default function AdminUsers() {
   // Handle manual refresh
   const handleRefresh = () => {
     fetchUsers();
+    setSearchApplied("");
+    setSearchTerm("");
+  };
+  
+  // Handle search
+  const handleSearch = () => {
+    setSearchApplied(searchTerm);
   };
 
   return (
@@ -83,14 +94,22 @@ export default function AdminUsers() {
 
         <div className="flex items-center space-x-2">
           <div className="relative flex-1">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder="Buscar usuários por email ou ID..."
               className="pl-8"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  handleSearch();
+                }
+              }}
             />
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground pointer-events-none" />
           </div>
+          <Button onClick={handleSearch} type="button">
+            Buscar
+          </Button>
         </div>
         
         {error && (
