@@ -41,8 +41,10 @@ Deno.serve(async (req) => {
     
     console.log('User verified:', user.id)
 
-    // Verify user is an admin using our database function instead of making another edge function call
+    // Check if the user is an admin
     console.log('Checking if user is admin')
+    
+    // Use the database function to check admin status
     const { data: isAdminData, error: adminCheckError } = await supabaseClient.rpc('is_admin', {
       checking_user_id: user.id
     })
