@@ -30,7 +30,7 @@ Deno.serve(async (req) => {
     
     console.log('Checking admin status for user:', user_id)
 
-    // Query admin_users table
+    // Query admin_users table 
     const { data: adminUser, error: queryError } = await supabaseClient
       .from('admin_users')
       .select('id, admin_level, email')
@@ -59,7 +59,7 @@ Deno.serve(async (req) => {
         JSON.stringify({ 
           isAdmin: true, 
           adminId: adminUser.id,
-          adminLevel: adminUser.admin_level,
+          adminLevel: adminUser.admin_level || 'standard',
           email: adminUser.email
         }), 
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

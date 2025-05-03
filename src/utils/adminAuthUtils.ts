@@ -18,23 +18,53 @@ export async function checkAdminStatus(userId: string): Promise<{
       return { isAdmin: true, adminLevel: user.user_metadata?.adminLevel || 'standard' };
     }
     
-    // Fallback to admin_users table check using edge function
-    const { data, error } = await supabase.functions.invoke('is_admin_user', { 
-      body: { user_id: userId } 
-    });
-    
-    if (error) {
-      console.error("Error checking admin status:", error);
+    // Direct query check for admin users
+    try {
+      const { data, error } = await supabase
+        .from('admin_users')
+        .select('id, admin_level')
+        .eq('user_id', userId)
+        .single();
+          
+      if (error) {
+        if (error.code === 'PGRST116') {
+          // Not found error, which means user is not an admin
+          return { isAdmin: false };
+        }
+        throw error;
+      }
+      
+      if (data) {
+        console.log("User confirmed as admin via database, level:", data.admin_level);
+        return { 
+          isAdmin: true,
+          adminLevel: data.admin_level,
+          adminId: data.id
+        };
+      }
+      
       return { isAdmin: false };
+    } catch (dbError) {
+      console.error("Database check error:", dbError);
+      
+      // Fall back to edge function as last resort
+      const { data, error } = await supabase.functions.invoke('is_admin_user', { 
+        body: { user_id: userId } 
+      });
+      
+      if (error) {
+        console.error("Error checking admin status via function:", error);
+        return { isAdmin: false };
+      }
+      
+      console.log("Admin status check via function result:", data);
+      
+      return { 
+        isAdmin: Boolean(data?.isAdmin), 
+        adminLevel: data?.adminLevel || null,
+        adminId: data?.adminId || null
+      };
     }
-    
-    console.log("Admin status check result:", data);
-    
-    return { 
-      isAdmin: Boolean(data?.isAdmin), 
-      adminLevel: data?.adminLevel || null,
-      adminId: data?.adminId || null
-    };
   } catch (err) {
     console.error("Error verifying admin status:", err);
     return { isAdmin: false };

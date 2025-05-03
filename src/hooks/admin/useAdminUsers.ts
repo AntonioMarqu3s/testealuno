@@ -29,30 +29,21 @@ export function useAdminUsers() {
       setIsLoading(true);
       setError(null);
 
-      console.log("Fetching all users from edge function");
+      console.log("Fetching users with admin access");
       
-      // Fetch sample mock data instead of calling the edge function immediately
-      // This prevents the error on initial load
-      const mockUsers = [
-        {
-          id: "d6ef66ca-d0f0-4884-89e2-9173b91fd987",
-          email: "admin@example.com",
-          created_at: "2025-04-01T10:00:00Z",
-          isActive: true,
-          metadata: { name: "Admin User" }
-        }
-      ];
-      
-      setUsers(mockUsers);
-      
-      // In background, try to fetch real data but don't fail if it doesn't work
       try {
-        // Get all users from auth system
-        const { data: authUsers, error: authUsersError } = await supabase.auth.admin.listUsers();
+        // First get the current user's authentication token
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) {
+          throw new Error("No authenticated session found");
+        }
         
-        if (authUsersError) {
-          console.error("Error fetching auth users:", authUsersError);
-          throw new Error(`Error fetching users: ${authUsersError.message}`);
+        // Get all users using Supabase Admin API
+        const { data: authUsers, error: authError } = await supabase.auth.admin.listUsers();
+        
+        if (authError) {
+          console.error("Error fetching auth users:", authError);
+          throw new Error(`Error fetching users: ${authError.message}`);
         }
         
         if (authUsers) {
@@ -76,6 +67,8 @@ export function useAdminUsers() {
           if (plansError) {
             console.error("Error fetching user plans:", plansError);
             // Continue without plans data
+          } else if (plans) {
+            console.log(`Successfully fetched ${plans.length} user plans`);
           }
 
           // Map plans to users
@@ -98,10 +91,22 @@ export function useAdminUsers() {
           setUsers(formattedUsers);
         }
       } catch (fetchError) {
-        console.error("Background fetch error:", fetchError);
-        // Don't update state, keep the mock data
+        console.error("Error fetching users:", fetchError);
+        
+        // Add fallback mock data for development/demo
+        const mockUsers = [
+          {
+            id: "d6ef66ca-d0f0-4884-89e2-9173b91fd987",
+            email: "admin@example.com",
+            created_at: "2025-04-01T10:00:00Z",
+            isActive: true,
+            metadata: { name: "Admin User" }
+          }
+        ];
+        
+        setUsers(mockUsers);
+        throw fetchError;
       }
-      
     } catch (err) {
       console.error("Error in fetchUsers:", err);
       setError(err instanceof Error ? err : new Error("Failed to fetch users"));
@@ -119,8 +124,10 @@ export function useAdminUsers() {
 
   const createUser = async (email: string, password: string, planType: number): Promise<boolean> => {
     try {
-      // Call an admin function to create a user
-      const { data, error } = await supabase.functions.invoke("admin-create-user", {
+      console.log("Creating new user with plan type:", planType);
+      
+      // Try to create the user directly
+      const { error } = await supabase.functions.invoke("admin-create-user", {
         body: { email, password, planType }
       });
       
@@ -143,6 +150,8 @@ export function useAdminUsers() {
 
   const updateUserPlan = async (userId: string, planType: number, agentLimit: number): Promise<boolean> => {
     try {
+      console.log("Updating user plan:", { userId, planType, agentLimit });
+      
       const { error } = await supabase.functions.invoke("admin-update-plan", {
         body: { userId, planType, agentLimit }
       });
