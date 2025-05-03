@@ -100,9 +100,23 @@ const Agents = () => {
   const handleDeleteAgent = async (agentId: string) => {
     try {
       setIsDeleting(true);
+      console.log("Starting agent deletion process:", agentId);
       
       // Get agent details before deletion
       const agentToDelete = userAgents.find(agent => agent.id === agentId);
+      
+      if (!agentToDelete) {
+        console.error("Agent not found for deletion:", agentId);
+        toast({
+          variant: "destructive",
+          title: "Erro",
+          description: "Agente não encontrado para exclusão.",
+        });
+        setIsDeleting(false);
+        return;
+      }
+      
+      console.log("Deleting agent:", agentToDelete.name, "with instance:", agentToDelete.instanceId);
       
       // Delete agent from localStorage and call webhook API
       const success = await deleteUserAgent(userEmail, agentId);
@@ -196,6 +210,7 @@ const Agents = () => {
                 onDelete={handleDeleteAgent}
                 onToggleConnection={handleToggleConnection}
                 autoShowQR={agent.id === qrAgentId}
+                isDeleting={isDeleting}
               />
             ))}
           </div>

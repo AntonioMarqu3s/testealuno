@@ -125,6 +125,7 @@ export const useAgentSubmission = (agentType: string) => {
     
     try {
       const userEmail = getCurrentUserEmail() || "user@example.com";
+      console.log("Attempting to delete agent:", agentId);
       
       // Delete agent from localStorage and call webhook
       const success = await deleteUserAgent(userEmail, agentId);
@@ -133,6 +134,9 @@ export const useAgentSubmission = (agentType: string) => {
         toast.success("Agente removido com sucesso", {
           description: "O agente e todos os seus dados foram excluídos permanentemente.",
         });
+        
+        // Navigate back to agents page after deletion
+        navigate('/agents');
       } else {
         toast.error("Erro ao remover agente", {
           description: "Ocorreu um erro ao remover o agente. Tente novamente.",
@@ -145,8 +149,6 @@ export const useAgentSubmission = (agentType: string) => {
       });
     } finally {
       setIsDeleting(false);
-      // Navigate back to agents page after deletion
-      navigate('/agents');
     }
   };
 

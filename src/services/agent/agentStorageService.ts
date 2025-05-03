@@ -62,30 +62,30 @@ export const deleteUserAgent = async (email: string, agentId: string): Promise<b
   const allAgentsData = getStorageItem<Record<string, Agent[]>>(ALL_AGENTS_KEY, {});
   
   if (allAgentsData[email]) {
-    // Get the agent being deleted
-    const agentToDelete = allAgentsData[email].find(agent => agent.id === agentId);
-    
-    if (agentToDelete?.instanceId) {
-      try {
+    try {
+      // Get the agent being deleted
+      const agentToDelete = allAgentsData[email].find(agent => agent.id === agentId);
+      
+      if (agentToDelete?.instanceId) {
         // Call webhook to delete instance
         await deleteAgentInstance(agentToDelete.instanceId);
-      } catch (error) {
-        console.error("Error deleting agent instance:", error);
-        // Continue with deletion even if API call fails
       }
+      
+      // Filter out deleted agent
+      allAgentsData[email] = allAgentsData[email].filter(agent => agent.id !== agentId);
+      
+      // Save back to storage
+      setStorageItem(ALL_AGENTS_KEY, allAgentsData);
+      
+      // Decrement the agent count in the user's plan
+      const decrementAgentCount = require('../plan/userPlanService').decrementAgentCount;
+      decrementAgentCount(email);
+      
+      return true;
+    } catch (error) {
+      console.error("Error in deleteUserAgent:", error);
+      return false;
     }
-    
-    // Filter out deleted agent
-    allAgentsData[email] = allAgentsData[email].filter(agent => agent.id !== agentId);
-    
-    // Save back to storage
-    setStorageItem(ALL_AGENTS_KEY, allAgentsData);
-    
-    // Decrement the agent count in the user's plan
-    const decrementAgentCount = require('../plan/userPlanService').decrementAgentCount;
-    decrementAgentCount(email);
-    
-    return true;
   }
   
   return false;
@@ -96,6 +96,8 @@ export const deleteUserAgent = async (email: string, agentId: string): Promise<b
  */
 const deleteAgentInstance = async (instanceId: string): Promise<boolean> => {
   try {
+    console.log(`Deleting agent instance: ${instanceId}`);
+    
     const response = await fetch('https://n8n-n8n.31kvca.easypanel.host/webhook/delete-instancia', {
       method: 'POST',
       headers: {
@@ -105,13 +107,16 @@ const deleteAgentInstance = async (instanceId: string): Promise<boolean> => {
     });
     
     if (!response.ok) {
+      console.error(`Failed to delete instance: ${response.status}`);
       throw new Error(`Failed to delete instance: ${response.status}`);
     }
     
-    console.log("Agent instance deleted successfully:", instanceId);
+    const data = await response.json();
+    console.log("Agent instance deleted successfully:", data);
     return true;
   } catch (error) {
     console.error("Error calling delete instance webhook:", error);
+    // Continue with deletion even if API call fails
     return false;
   }
 };
