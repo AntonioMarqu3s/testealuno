@@ -6,6 +6,8 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
+import { AdminAuthProvider } from "./context/AdminAuthContext";
+import { AdminGuard } from "./components/admin/AdminGuard";
 import AuthCallback from "./pages/AuthCallback";
 import ResetPassword from "./pages/ResetPassword";
 import Index from "./pages/Index";
@@ -19,6 +21,12 @@ import Checkout from "./pages/Checkout";
 import PlanCheckout from "./pages/PlanCheckout";
 import Plans from "./pages/Plans";
 import Settings from "./pages/Settings";
+import AdminLogin from "./pages/admin/AdminLogin";
+import AdminDashboard from "./pages/admin/AdminDashboard";
+import AdminUsers from "./pages/admin/AdminUsers";
+import AdminAgents from "./pages/admin/AdminAgents";
+import AdminPlans from "./pages/admin/AdminPlans";
+import AdminPayments from "./pages/admin/AdminPayments";
 import { initializeUserEmail } from "./services/user/userService";
 import { initializeUserPlan } from "./services/plan/userPlanService";
 import WhatsAppFloatingButton from "./components/ui/WhatsAppFloatingButton";
@@ -45,28 +53,44 @@ function App() {
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
           <AuthProvider>
-            {/* Add both toast providers */}
-            <ShadcnToaster />
-            <SonnerToaster />
             <BrowserRouter>
-              <Routes>
-                <Route path="/" element={<Index />} />
-                <Route path="/auth" element={<Auth />} />
-                <Route path="/auth-callback" element={<AuthCallback />} />
-                <Route path="/reset-password" element={<ResetPassword />} />
-                <Route path="/dashboard" element={<Dashboard />} />
-                <Route path="/create-agent" element={<CreateAgent />} />
-                <Route path="/edit-agent/:agentId" element={<CreateAgent />} />
-                <Route path="/agents" element={<Agents />} />
-                <Route path="/my-agents" element={<Navigate to="/agents" replace />} />
-                <Route path="/agent-analytics/:agentId" element={<AgentAnalytics />} />
-                <Route path="/checkout" element={<Checkout />} />
-                <Route path="/plan-checkout" element={<PlanCheckout />} />
-                <Route path="/plans" element={<Plans />} />
-                <Route path="/settings" element={<Settings />} />
-                <Route path="/update-email" element={<Dashboard />} />
-                <Route path="*" element={<NotFound />} />
-              </Routes>
+              <AdminAuthProvider>
+                {/* Add both toast providers */}
+                <ShadcnToaster />
+                <SonnerToaster />
+                
+                <Routes>
+                  {/* Public routes */}
+                  <Route path="/" element={<Index />} />
+                  <Route path="/auth" element={<Auth />} />
+                  <Route path="/auth-callback" element={<AuthCallback />} />
+                  <Route path="/reset-password" element={<ResetPassword />} />
+                  
+                  {/* User routes */}
+                  <Route path="/dashboard" element={<Dashboard />} />
+                  <Route path="/create-agent" element={<CreateAgent />} />
+                  <Route path="/edit-agent/:agentId" element={<CreateAgent />} />
+                  <Route path="/agents" element={<Agents />} />
+                  <Route path="/my-agents" element={<Navigate to="/agents" replace />} />
+                  <Route path="/agent-analytics/:agentId" element={<AgentAnalytics />} />
+                  <Route path="/checkout" element={<Checkout />} />
+                  <Route path="/plan-checkout" element={<PlanCheckout />} />
+                  <Route path="/plans" element={<Plans />} />
+                  <Route path="/settings" element={<Settings />} />
+                  <Route path="/update-email" element={<Dashboard />} />
+                  
+                  {/* Admin routes */}
+                  <Route path="/admin" element={<AdminLogin />} />
+                  <Route path="/admin/dashboard" element={<AdminGuard><AdminDashboard /></AdminGuard>} />
+                  <Route path="/admin/users" element={<AdminGuard><AdminUsers /></AdminGuard>} />
+                  <Route path="/admin/agents" element={<AdminGuard><AdminAgents /></AdminGuard>} />
+                  <Route path="/admin/plans" element={<AdminGuard><AdminPlans /></AdminGuard>} />
+                  <Route path="/admin/payments" element={<AdminGuard><AdminPayments /></AdminGuard>} />
+                  
+                  {/* 404 route */}
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </AdminAuthProvider>
               <WhatsAppFloatingButton />
             </BrowserRouter>
           </AuthProvider>
