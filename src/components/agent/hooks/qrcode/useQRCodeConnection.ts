@@ -6,8 +6,6 @@ type ConnectionCallbackFunction = () => void;
 export const useQRCodeConnection = () => {
   const [connectionCheckAttempts, setConnectionCheckAttempts] = useState(0);
   const connectionCheckIntervalRef = useRef<number | null>(null);
-  const MAX_CONNECTION_CHECKS = 15; // Reduced to 15 attempts
-  const CONNECTION_CHECK_INTERVAL = 10000; // Increased to 10 seconds to reduce request frequency
   const connectionTimeoutRef = useRef<number | null>(null);
 
   // Clean up interval on unmount

@@ -31,7 +31,7 @@ export const useAgentConnection = () => {
     }
   };
 
-  // Remove checkAgentConnectionStatus function that was causing the loop
+  // We've removed the checkAgentConnectionStatus function that was causing the loop
 
   return {
     isDisconnecting,
