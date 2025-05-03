@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import MainLayout from "@/components/layout/MainLayout";
@@ -143,12 +144,13 @@ const Agents = () => {
     }
   };
 
-  // Handle QR code display from URL parameter
+  // Handle QR code display from URL parameter - only show if from create-agent flow
   useEffect(() => {
     const searchParams = new URLSearchParams(location.search);
     const showQRParam = searchParams.get('showQR');
+    const fromCreate = searchParams.get('fromCreate');
     
-    if (showQRParam) {
+    if (showQRParam && fromCreate === 'true') {
       setQrAgentId(showQRParam);
     } else {
       setQrAgentId(null);

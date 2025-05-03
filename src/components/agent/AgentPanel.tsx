@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
@@ -32,6 +31,7 @@ export const AgentPanel: React.FC<AgentPanelProps> = ({
   const userEmail = getCurrentUserEmail();
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [isConnected, setIsConnected] = useState(agent.isConnected || agent.connectInstancia || false);
+  const [hasAutoShowQRTriggered, setHasAutoShowQRTriggered] = useState(false);
   
   // Custom hooks for QR code and connection
   const { 
@@ -72,15 +72,16 @@ export const AgentPanel: React.FC<AgentPanelProps> = ({
       
       verifyStatus();
     }
-  }, [agent.instanceId, agent.id, checkConnectionStatus, isConnected, agent.id, onToggleConnection]);
+  }, [agent.instanceId, agent.id, checkConnectionStatus, isConnected, onToggleConnection]);
 
-  // Handle auto show QR code when directed from agent creation
+  // Handle auto show QR code when directed from agent creation - only trigger once
   useEffect(() => {
-    if (autoShowQR && !showQRCodeDialog) {
+    if (autoShowQR && !showQRCodeDialog && !hasAutoShowQRTriggered) {
       console.log("Auto showing QR code for agent:", agent.name);
+      setHasAutoShowQRTriggered(true);
       setTimeout(() => handleShowQRCode(), 300);
     }
-  }, [autoShowQR, agent.name, showQRCodeDialog, handleShowQRCode]);
+  }, [autoShowQR, agent.name, showQRCodeDialog, handleShowQRCode, hasAutoShowQRTriggered]);
 
   const handleEdit = () => {
     // Prepare agent data for editing and navigate
@@ -175,6 +176,7 @@ export const AgentPanel: React.FC<AgentPanelProps> = ({
         timerCount={timerCount}
         connectionCheckAttempts={connectionCheckAttempts}
         isGeneratingQRCode={isGeneratingQRCode}
+        onRefresh={handleShowQRCode}
       />
     </Card>
   );
