@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { getCurrentUserEmail } from "@/services/user/userService";
@@ -10,8 +9,9 @@ import { checkAndSyncPlan } from "@/services/plan/planSyncService";
 import { PlanType } from "@/services/plan/planTypes";
 import { Agent } from "@/components/agent/AgentTypes";
 import { getUserPlanFromSupabase } from "@/services/plan/supabsePlanService";
-import { supabase } from "@/lib/supabase";
+import { fetchUserAgents, testAgentsTableAccess } from "@/services/agent/supabase/agents";
 import { getCurrentUser } from "@/services/auth/supabaseAuth";
+import { supabase } from "@/lib/supabase";
 
 export const useAgentsPage = () => {
   const navigate = useNavigate();
@@ -50,6 +50,14 @@ export const useAgentsPage = () => {
     };
 
     fetchSupabasePlan();
+    
+    // Test agents table access on mount
+    testAgentsTableAccess()
+      .then(success => {
+        if (!success) {
+          console.warn("Potential issues accessing agents table");
+        }
+      });
   }, []);
 
   // Check for payment confirmation and sync plan on load
@@ -74,13 +82,31 @@ export const useAgentsPage = () => {
     checkCanCreate();
   }, [userEmail, userPlan]);
   
-  // Load agents on component mount and when email changes
+  // Load agents from both localStorage and Supabase when email changes
   useEffect(() => {
     if (userEmail) {
       setIsLoading(true);
-      const agents = getUserAgents(userEmail);
-      setUserAgents(agents);
-      setIsLoading(false);
+      
+      // First load agents from localStorage for immediate display
+      const localAgents = getUserAgents(userEmail);
+      setUserAgents(localAgents);
+      
+      // Then try to fetch from Supabase for the most up-to-date data
+      const loadSupabaseAgents = async () => {
+        try {
+          const agents = await fetchUserAgents(userEmail);
+          if (agents && agents.length > 0) {
+            setUserAgents(agents);
+          }
+        } catch (error) {
+          console.error("Error loading agents from Supabase:", error);
+          // Keep using localStorage agents if Supabase fails
+        } finally {
+          setIsLoading(false);
+        }
+      };
+      
+      loadSupabaseAgents();
     }
   }, [userEmail]);
   
@@ -160,6 +186,12 @@ export const useAgentsPage = () => {
             title: "Plano sincronizado",
             description: `Seu plano atual é: ${supabasePlan.name}`,
           });
+          
+          // Also refresh agents list from Supabase
+          const agents = await fetchUserAgents(user.id);
+          if (agents && agents.length > 0) {
+            setUserAgents(agents);
+          }
         } else {
           // Fall back to local sync if no Supabase data
           await checkAndSyncPlan(location, userEmail);
