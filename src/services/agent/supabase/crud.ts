@@ -1,0 +1,94 @@
+
+import { supabase } from '@/lib/supabase';
+import { AgentFormValues } from '@/components/agent/form/agentSchema';
+
+/**
+ * Delete agent from Supabase
+ */
+export const deleteAgentFromSupabase = async (agentId: string): Promise<boolean> => {
+  try {
+    // Check if agent exists in Supabase first
+    const { data: checkData, error: checkError } = await supabase
+      .from('agents')
+      .select('id')
+      .eq('id', agentId);
+      
+    // If agent doesn't exist or we get an error, return success anyway
+    // This allows local deletion to proceed even if not in Supabase yet
+    if (checkError || !checkData || checkData.length === 0) {
+      console.log('Agent not found in database, skipping database deletion');
+      return true;
+    }
+    
+    // Delete agent from Supabase
+    const { error } = await supabase
+      .from('agents')
+      .delete()
+      .eq('id', agentId);
+      
+    if (error) {
+      console.error('Error deleting agent from Supabase:', error);
+      return false;
+    }
+    
+    return true;
+  } catch (error) {
+    console.error('Exception deleting agent from Supabase:', error);
+    return false;
+  }
+};
+
+/**
+ * Save agent form data to Supabase
+ */
+export const saveAgentToSupabase = async (
+  agentId: string, 
+  userId: string, 
+  values: AgentFormValues,
+  agentType: string,
+  instanceId: string,
+  clientIdentifier: string,
+  isConnected: boolean = false
+): Promise<boolean> => {
+  try {
+    const { error } = await supabase
+      .from('agents')
+      .upsert({
+        id: agentId,
+        user_id: userId,
+        name: values.agentName,
+        type: agentType,
+        is_connected: isConnected,
+        connect_instancia: isConnected,
+        instance_id: instanceId,
+        client_identifier: clientIdentifier,
+        agent_data: {
+          personality: values.personality,
+          customPersonality: values.customPersonality,
+          companyName: values.companyName,
+          companyDescription: values.companyDescription,
+          segment: values.segment,
+          mission: values.mission,
+          vision: values.vision,
+          mainDifferentials: values.mainDifferentials,
+          competitors: values.competitors,
+          commonObjections: values.commonObjections,
+          productName: values.productName,
+          productDescription: values.productDescription,
+          problemsSolved: values.problemsSolved,
+          benefits: values.benefits,
+          differentials: values.differentials
+        }
+      });
+      
+    if (error) {
+      console.error('Error saving agent to Supabase:', error);
+      return false;
+    }
+    
+    return true;
+  } catch (error) {
+    console.error('Exception saving agent to Supabase:', error);
+    return false;
+  }
+};
