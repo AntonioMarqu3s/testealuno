@@ -10,67 +10,77 @@ Deno.serve(async (req) => {
 
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
+    return new Response(null, { headers: corsHeaders })
   }
 
   try {
-    // Initialize Supabase client
+    // Initialize Supabase client with service role key
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
       { auth: { autoRefreshToken: false, persistSession: false } }
     )
 
-    // Get request body or query params
-    let userId;
+    // Parse request body
+    const { user_id } = await req.json()
     
-    // Handle both POST with body and GET with query params
-    if (req.method === 'POST') {
-      const body = await req.json();
-      userId = body.user_id;
-      console.log("Received user_id in POST body:", userId);
-    } else {
-      const url = new URL(req.url);
-      userId = url.searchParams.get('user_id');
-      console.log("Received user_id in query params:", userId);
+    if (!user_id) {
+      throw new Error('Missing user_id in request body')
     }
     
-    if (!userId) {
-      console.error("No user_id provided in request");
-      throw new Error('User ID is required');
-    }
+    console.log('Checking admin status for user:', user_id)
 
-    // Direct SQL query to avoid RLS issues
-    const { data, error } = await supabaseClient.rpc(
-      'is_admin_user',
-      { user_id: userId }
-    );
+    // Query admin_users table
+    const { data: adminUser, error: queryError } = await supabaseClient
+      .from('admin_users')
+      .select('id, admin_level, email')
+      .eq('user_id', user_id)
+      .single()
 
-    if (error) {
-      console.error("RPC error:", error);
-      throw error;
-    }
-
-    console.log("Admin check result:", data);
-
-    // Return admin info if found
-    return new Response(
-      JSON.stringify({
-        isAdmin: Boolean(data && data.length > 0),
-        adminLevel: data && data.length > 0 ? data[0].admin_level : null,
-        adminId: data && data.length > 0 ? data[0].admin_id : null,
-      }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
-  } catch (error) {
-    console.error('Error checking admin status:', error);
-    
-    return new Response(
-      JSON.stringify({ error: error.message }),
-      { 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 400 
+    if (queryError) {
+      // Log the error but don't expose details to client
+      console.error('Database query error:', queryError)
+      
+      // If it's a not-found error, return false but don't treat it as a system error
+      if (queryError.code === 'PGRST116') {
+        return new Response(
+          JSON.stringify({ isAdmin: false }), 
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        )
       }
-    );
+      
+      throw new Error('Error checking admin status')
+    }
+
+    // If found in admin_users, user is an admin
+    if (adminUser) {
+      console.log('User is an admin with level:', adminUser.admin_level)
+      return new Response(
+        JSON.stringify({ 
+          isAdmin: true, 
+          adminId: adminUser.id,
+          adminLevel: adminUser.admin_level,
+          email: adminUser.email
+        }), 
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    // If not found, user is not an admin
+    console.log('User is not an admin')
+    return new Response(
+      JSON.stringify({ isAdmin: false }), 
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    )
+  } catch (error) {
+    console.error('Error in is_admin_user:', error)
+    
+    return new Response(
+      JSON.stringify({ error: error.message, isAdmin: false }), 
+      { 
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+      }
+    )
   }
 })

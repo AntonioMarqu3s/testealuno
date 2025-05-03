@@ -15,23 +15,13 @@ export function useAdminAuthentication() {
       setIsLoading(true);
       console.log("Attempting admin login with:", { email });
       
-      // Use fixed credentials for admin
-      const fixedEmail = "admin@example.com";
-      
       // Normalize email (lowercase)
       const normalizedEmail = email.toLowerCase().trim();
       
-      // Check if using the fixed admin credentials
-      if (normalizedEmail !== fixedEmail) {
-        console.error("Invalid admin email");
-        toast.error("Email de administrador inválido");
-        return false;
-      }
-      
       // Sign in with Supabase auth
       const { data, error } = await supabase.auth.signInWithPassword({
-        email: fixedEmail, // Always use the fixed email
-        password: password  // Use the provided password
+        email: normalizedEmail,
+        password: password
       });
       
       if (error) {
@@ -63,28 +53,34 @@ export function useAdminAuthentication() {
         return true;
       }
       
-      // Skip checking the admin_users table directly
-      // Instead, use our edge function to verify or create the admin
+      // Check admin status using is_admin_user edge function
       try {
-        const { data: verifyData, error: verifyError } = 
-          await supabase.functions.invoke("create-initial-admin");
+        const { data: adminCheck, error: adminCheckError } = 
+          await supabase.functions.invoke("is_admin_user", {
+            body: { user_id: data.user.id }
+          });
         
-        if (verifyError) {
-          console.error("Error verifying admin status:", verifyError);
+        if (adminCheckError) {
+          console.error("Error verifying admin status:", adminCheckError);
+          await supabase.auth.signOut();
+          setIsAdmin(false);
           return false;
         }
         
-        if (verifyData?.success) {
+        if (adminCheck?.isAdmin) {
           localStorage.setItem(ADMIN_SESSION_KEY, "true");
           setIsAdmin(true);
           toast.success("Login administrativo bem-sucedido");
           navigate("/admin/dashboard");
           return true;
         } else {
-          console.error("Admin verification failed");
+          console.error("User is not an admin");
+          toast.error("Acesso negado", { 
+            description: "Este usuário não tem permissão de administrador" 
+          });
           await supabase.auth.signOut();
           setIsAdmin(false);
-          return false; 
+          return false;
         }
       } catch (err) {
         console.error("Error during admin verification:", err);

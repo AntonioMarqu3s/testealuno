@@ -10,8 +10,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { toast } from "sonner";
 
 export default function AdminLogin() {
-  // Email is fixed as admin@example.com but not shown to users
-  const fixedEmail = "admin@example.com";
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [loginError, setLoginError] = useState<string | null>(null);
@@ -23,19 +22,18 @@ export default function AdminLogin() {
     setLoginError(null);
     
     try {
-      console.log("Attempting admin login with:", { email: fixedEmail, password: "***" });
+      console.log("Attempting admin login with:", { email });
       
-      if (!password) {
-        setLoginError("A senha é obrigatória.");
+      if (!email || !password) {
+        setLoginError("Email e senha são obrigatórios.");
         setIsSubmitting(false);
         return;
       }
       
-      // Use the fixed admin email
-      const success = await adminLogin(fixedEmail, password);
+      const success = await adminLogin(email, password);
       
       if (!success) {
-        setLoginError("Falha na autenticação. Verifique sua senha.");
+        setLoginError("Falha na autenticação. Verifique suas credenciais.");
         toast.error("Falha no login administrativo");
       } else {
         toast.success("Login administrativo bem-sucedido");
@@ -63,6 +61,17 @@ export default function AdminLogin() {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="admin@example.com"
+                required
+              />
+            </div>
             <div className="space-y-2">
               <Label htmlFor="password">Senha</Label>
               <Input
