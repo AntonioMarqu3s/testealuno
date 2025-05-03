@@ -1,6 +1,7 @@
 
 import { supabase } from '@/lib/supabase';
 import { AgentFormValues } from '@/components/agent/form/agentSchema';
+import { saveExtendedAgentData } from './extended';
 
 /**
  * Delete agent from Supabase
@@ -20,7 +21,7 @@ export const deleteAgentFromSupabase = async (agentId: string): Promise<boolean>
       return true;
     }
     
-    // Delete agent from Supabase
+    // Delete agent from Supabase (cascade will delete from agents_extended too)
     const { error } = await supabase
       .from('agents')
       .delete()
@@ -94,6 +95,33 @@ export const saveAgentToSupabase = async (
       return false;
     }
     
+    // Now save extended agent data
+    // Calculate some default dates for extended info
+    const startDate = new Date();
+    const trialEndDate = new Date();
+    trialEndDate.setDate(trialEndDate.getDate() + 5); // 5 day trial period
+    
+    // Create extended data
+    const extendedSaved = await saveExtendedAgentData({
+      id: agentId,
+      name: values.agentName,
+      userId,
+      type: agentType,
+      isConnected,
+      createdAt: startDate,
+      instanceId,
+      clientIdentifier
+    }, {
+      startDate,
+      trialEndDate,
+      email: userId, // Use userId as email temporarily
+      instance_name: instanceId
+    });
+    
+    if (!extendedSaved) {
+      console.warn('Extended agent data could not be saved');
+    }
+    
     console.log('Successfully saved agent data to Supabase');
     return true;
   } catch (error) {
@@ -101,4 +129,3 @@ export const saveAgentToSupabase = async (
     return false;
   }
 };
-

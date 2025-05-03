@@ -2,7 +2,7 @@
 import React from "react";
 import { CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Mail, Timer } from "lucide-react";
+import { Calendar, Mail, Timer } from "lucide-react";
 import { Agent } from "../AgentTypes";
 import { getTrialDaysRemaining, hasTrialExpired } from "@/services/plan/userPlanService";
 
@@ -31,10 +31,21 @@ export const AgentContent: React.FC<AgentContentProps> = ({
   const displayInstanceId = agent.instanceId || 
     (userEmail ? `${userEmail}-${agent.name.replace(/\s+/g, '')}` : 'Instance ID not available');
 
-  // Trial period information
-  const trialDaysRemaining = userEmail ? getTrialDaysRemaining(userEmail) : 0;
-  const isTrialExpired = userEmail ? hasTrialExpired(userEmail) : false;
+  // Trial period information from agent.extended or fallback to function
+  const trialEndDate = agent.extended?.trialEndDate;
+  const trialDaysRemaining = trialEndDate 
+    ? Math.max(0, Math.ceil((trialEndDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24)))
+    : (userEmail ? getTrialDaysRemaining(userEmail) : 0);
+  
+  const isTrialExpired = trialEndDate
+    ? trialEndDate.getTime() < Date.now()
+    : (userEmail ? hasTrialExpired(userEmail) : false);
+  
   const isInTrialPeriod = trialDaysRemaining > 0 && !isTrialExpired;
+
+  // Plan end date information
+  const planEndDate = agent.extended?.planEndDate;
+  const hasPlan = !!planEndDate && planEndDate.getTime() > Date.now();
 
   return (
     <CardContent className="pb-2 flex-grow">
@@ -43,7 +54,7 @@ export const AgentContent: React.FC<AgentContentProps> = ({
       {userEmail && (
         <div className="flex items-center text-xs text-muted-foreground mb-2">
           <Mail className="h-3 w-3 mr-1" />
-          <span>{userEmail}</span>
+          <span>{agent.extended?.email || userEmail}</span>
         </div>
       )}
       
@@ -57,12 +68,39 @@ export const AgentContent: React.FC<AgentContentProps> = ({
         </p>
       )}
       
+      {/* Plan information if available */}
+      {agent.extended?.planId && (
+        <div className="mt-2 text-xs text-muted-foreground">
+          <p>Plano: <span className="font-medium">
+            {agent.extended.planId === 1 ? 'Inicial' : 
+             agent.extended.planId === 2 ? 'Padrão' : 
+             agent.extended.planId === 3 ? 'Premium' : 'Teste Gratuito'}
+          </span></p>
+          
+          {planEndDate && (
+            <div className="flex items-center gap-1 mt-1">
+              <Calendar className="h-3 w-3" />
+              <span>Validade: {planEndDate.toLocaleDateString('pt-BR')}</span>
+            </div>
+          )}
+        </div>
+      )}
+      
       {/* Trial period information */}
       {isInTrialPeriod && (
         <div className="mt-3 flex items-center gap-2">
           <Badge variant="outline" className="flex items-center gap-1 bg-amber-50 text-amber-700 border-amber-200">
             <Timer className="h-3 w-3" />
             <span>Período de teste: {trialDaysRemaining} {trialDaysRemaining === 1 ? 'dia' : 'dias'}</span>
+          </Badge>
+        </div>
+      )}
+      
+      {/* Discount coupon if available */}
+      {agent.extended?.discountCoupon && (
+        <div className="mt-2">
+          <Badge variant="outline" className="text-green-600 border-green-200 bg-green-50">
+            Cupom: {agent.extended.discountCoupon}
           </Badge>
         </div>
       )}

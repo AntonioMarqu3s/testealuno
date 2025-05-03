@@ -11,6 +11,7 @@ export type Database = {
     Tables: {
       agents: {
         Row: {
+          agent_data: Json | null
           client_identifier: string | null
           connect_instancia: boolean | null
           created_at: string | null
@@ -22,6 +23,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          agent_data?: Json | null
           client_identifier?: string | null
           connect_instancia?: boolean | null
           created_at?: string | null
@@ -33,6 +35,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          agent_data?: Json | null
           client_identifier?: string | null
           connect_instancia?: boolean | null
           created_at?: string | null
@@ -44,6 +47,59 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      agents_extended: {
+        Row: {
+          discount_coupon: string | null
+          email: string | null
+          id: string
+          instance_name: string | null
+          is_connected: boolean | null
+          name: string
+          payment_date: string | null
+          plan_end_date: string | null
+          plan_id: number | null
+          start_date: string | null
+          trial_end_date: string | null
+          user_id: string
+        }
+        Insert: {
+          discount_coupon?: string | null
+          email?: string | null
+          id: string
+          instance_name?: string | null
+          is_connected?: boolean | null
+          name: string
+          payment_date?: string | null
+          plan_end_date?: string | null
+          plan_id?: number | null
+          start_date?: string | null
+          trial_end_date?: string | null
+          user_id: string
+        }
+        Update: {
+          discount_coupon?: string | null
+          email?: string | null
+          id?: string
+          instance_name?: string | null
+          is_connected?: boolean | null
+          name?: string
+          payment_date?: string | null
+          plan_end_date?: string | null
+          plan_id?: number | null
+          start_date?: string | null
+          trial_end_date?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agents_extended_id_fkey"
+            columns: ["id"]
+            isOneToOne: true
+            referencedRelation: "agents"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       "instancias-agente-conecta": {
         Row: {

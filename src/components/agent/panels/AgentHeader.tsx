@@ -3,7 +3,7 @@ import React from "react";
 import { CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Edit, Trash2, Wifi, WifiOff } from "lucide-react";
+import { Edit, Trash2, Wifi, WifiOff, Calendar } from "lucide-react";
 import { Agent } from "../AgentTypes";
 
 interface AgentHeaderProps {
@@ -23,6 +23,15 @@ export const AgentHeader: React.FC<AgentHeaderProps> = ({
     month: '2-digit',
     year: 'numeric'
   });
+  
+  // Format payment date if available
+  const paymentDate = agent.extended?.paymentDate 
+    ? new Date(agent.extended.paymentDate).toLocaleDateString('pt-BR', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
+      })
+    : null;
 
   return (
     <CardHeader className="pb-2 pt-6 relative">
@@ -60,9 +69,18 @@ export const AgentHeader: React.FC<AgentHeaderProps> = ({
           )}
         </Badge>
       </div>
-      <p className="text-xs text-muted-foreground">
-        Criado em: {formattedDate}
-      </p>
+      <div className="flex items-center gap-4">
+        <p className="text-xs text-muted-foreground">
+          Criado em: {formattedDate}
+        </p>
+        
+        {paymentDate && (
+          <p className="text-xs text-muted-foreground flex items-center">
+            <Calendar className="h-3 w-3 mr-1" />
+            <span>Último pagamento: {paymentDate}</span>
+          </p>
+        )}
+      </div>
     </CardHeader>
   );
 };

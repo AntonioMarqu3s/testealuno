@@ -1,6 +1,8 @@
+
 import { supabase } from '@/lib/supabase';
 import { Agent } from '@/components/agent/AgentTypes';
 import { toast } from 'sonner';
+import { fetchExtendedAgentData } from './extended';
 
 /**
  * Fetches all agents for a specific user from Supabase
@@ -18,7 +20,7 @@ export const fetchUserAgents = async (userId: string): Promise<Agent[]> => {
     }
     
     // Map Supabase data to Agent type
-    return data.map(agent => ({
+    const agents = data.map(agent => ({
       id: agent.id,
       name: agent.name,
       type: agent.type,
@@ -27,11 +29,35 @@ export const fetchUserAgents = async (userId: string): Promise<Agent[]> => {
       instanceId: agent.instance_id,
       clientIdentifier: agent.client_identifier,
       connectInstancia: agent.connect_instancia || false,
+      userId: agent.user_id,
       // Copy all properties from agent_data if it exists
       ...(agent.agent_data || {}),
       // Keep reference to original agent_data
       agent_data: agent.agent_data || {},
     }));
+    
+    // Fetch extended data for each agent
+    const agentsWithExtended = await Promise.all(
+      agents.map(async (agent) => {
+        const extendedData = await fetchExtendedAgentData(agent.id);
+        if (extendedData) {
+          // Parse dates from strings to Date objects for convenience
+          const extended = {
+            ...extendedData,
+            startDate: extendedData.start_date ? new Date(extendedData.start_date) : undefined,
+            planEndDate: extendedData.plan_end_date ? new Date(extendedData.plan_end_date) : undefined,
+            trialEndDate: extendedData.trial_end_date ? new Date(extendedData.trial_end_date) : undefined,
+            paymentDate: extendedData.payment_date ? new Date(extendedData.payment_date) : undefined,
+            planId: extendedData.plan_id,
+            discountCoupon: extendedData.discount_coupon
+          };
+          return { ...agent, extended };
+        }
+        return agent;
+      })
+    );
+    
+    return agentsWithExtended;
   } catch (error) {
     console.error('Exception fetching agents:', error);
     toast.error("Erro ao carregar agentes do banco de dados");
@@ -58,7 +84,7 @@ export const fetchAgentById = async (agentId: string): Promise<Agent | null> => 
     if (!data) return null;
     
     // Map Supabase data to Agent type
-    return {
+    const agent: Agent = {
       id: data.id,
       name: data.name,
       type: data.type,
@@ -67,11 +93,29 @@ export const fetchAgentById = async (agentId: string): Promise<Agent | null> => 
       instanceId: data.instance_id,
       clientIdentifier: data.client_identifier,
       connectInstancia: data.connect_instancia || false,
+      userId: data.user_id,
       // Copy all properties from agent_data if it exists
       ...(data.agent_data || {}),
       // Keep reference to original agent_data
       agent_data: data.agent_data || {},
     };
+    
+    // Fetch extended data
+    const extendedData = await fetchExtendedAgentData(agentId);
+    if (extendedData) {
+      // Parse dates from strings to Date objects for convenience
+      agent.extended = {
+        ...extendedData,
+        startDate: extendedData.start_date ? new Date(extendedData.start_date) : undefined,
+        planEndDate: extendedData.plan_end_date ? new Date(extendedData.plan_end_date) : undefined,
+        trialEndDate: extendedData.trial_end_date ? new Date(extendedData.trial_end_date) : undefined,
+        paymentDate: extendedData.payment_date ? new Date(extendedData.payment_date) : undefined,
+        planId: extendedData.plan_id,
+        discountCoupon: extendedData.discount_coupon
+      };
+    }
+    
+    return agent;
   } catch (error) {
     console.error('Exception fetching agent by ID:', error);
     toast.error("Erro ao carregar dados do agente");

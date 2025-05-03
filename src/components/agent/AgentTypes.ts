@@ -8,6 +8,7 @@ export interface Agent {
   instanceId: string;
   clientIdentifier?: string;
   connectInstancia?: boolean;
+  userId?: string; // Add userId for better type safety
   // Form data fields
   personality?: string;
   customPersonality?: string;
@@ -42,6 +43,32 @@ export interface Agent {
     benefits?: string;
     differentials?: string;
   };
+  // Extended data (from agents_extended table)
+  extended?: AgentExtended;
+}
+
+// New interface for the agents_extended table
+export interface AgentExtended {
+  id: string;
+  user_id: string;
+  name: string;
+  plan_id?: number;
+  is_connected: boolean;
+  start_date?: string;
+  plan_end_date?: string;
+  discount_coupon?: string;
+  trial_end_date?: string;
+  instance_name?: string;
+  email?: string;
+  payment_date?: string;
+  
+  // Convenience properties with parsed dates
+  startDate?: Date;
+  planEndDate?: Date;
+  trialEndDate?: Date;
+  paymentDate?: Date;
+  planId?: number;
+  discountCoupon?: string;
 }
 
 // Adding this enum to standardize agent types across the application
