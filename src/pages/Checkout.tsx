@@ -22,14 +22,18 @@ const Checkout = () => {
       const email = getCurrentUserEmail();
       
       // Upgrade the user's plan
-      upgradeToPlan(email, planType);
+      const result = await upgradeToPlan(email, planType);
       
-      toast.success("Plano atualizado com sucesso!", {
-        description: "Seu plano foi atualizado. Agora você pode criar mais agentes.",
-      });
-      
-      // Redirect to agents page
-      navigate("/agents");
+      if (result) {
+        toast.success("Plano atualizado com sucesso!", {
+          description: "Seu plano foi atualizado. Agora você pode criar mais agentes.",
+        });
+        
+        // Redirect to agents page
+        navigate("/agents");
+      } else {
+        throw new Error("Falha ao atualizar plano");
+      }
     } catch (error) {
       console.error("Erro ao processar pagamento:", error);
       toast.error("Erro ao processar pagamento", {
