@@ -41,7 +41,7 @@ Deno.serve(async (req) => {
     
     console.log('User verified:', user.id)
 
-    // Check if the user is an admin
+    // Check if the user is an admin using the fixed is_admin function
     console.log('Checking if user is admin')
     
     // Use the database function to check admin status
@@ -73,7 +73,7 @@ Deno.serve(async (req) => {
     console.log(`Successfully fetched ${authUsers.users.length} users`)
 
     // Format the users data for the client
-    const formattedUsers = authUsers.users.map(user => ({
+    let formattedUsers = authUsers.users.map(user => ({
       id: user.id,
       email: user.email,
       created_at: user.created_at,
@@ -81,6 +81,36 @@ Deno.serve(async (req) => {
       isActive: user.last_sign_in_at !== null,
       metadata: user.user_metadata
     }))
+
+    // Fetch user plans to enrich the data
+    console.log('Fetching user plans data')
+    const { data: plans, error: plansError } = await supabaseClient
+      .from("user_plans")
+      .select("*")
+      
+    if (plansError) {
+      console.error("Error fetching user plans:", plansError)
+      // Continue without plans data
+    } else {
+      console.log(`Successfully fetched ${plans?.length || 0} user plans`)
+      
+      // Map plans to users
+      formattedUsers = formattedUsers.map(user => {
+        const userPlan = plans?.find(plan => plan.user_id === user.id)
+        return {
+          ...user,
+          plan: userPlan ? {
+            name: userPlan.name || "Plano Básico",
+            agent_limit: userPlan.agent_limit,
+            plan: userPlan.plan,
+            payment_date: userPlan.payment_date,
+            subscription_ends_at: userPlan.subscription_ends_at,
+            payment_status: userPlan.payment_status,
+            trial_ends_at: userPlan.trial_ends_at
+          } : undefined
+        }
+      })
+    }
 
     return new Response(
       JSON.stringify(formattedUsers), 

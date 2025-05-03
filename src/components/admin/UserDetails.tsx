@@ -24,22 +24,31 @@ export function UserDetails({ userId }: UserDetailsProps) {
     
     try {
       // Fetch user data from auth
-      const { data: authData, error: authError } = await supabase.auth.admin.getUserById(userId);
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
       
       if (authError) {
         throw new Error(`Erro ao buscar dados do usuário: ${authError.message}`);
       }
       
-      if (!authData?.user) {
+      if (!user) {
         throw new Error("Usuário não encontrado");
       }
       
-      // Fetch user plan data
+      // Use the functions API instead of direct admin API access
+      const { data: adminData, error: adminError } = await supabase.functions.invoke("get-user-details", {
+        body: { userId }
+      });
+      
+      if (adminError) {
+        throw new Error(`Erro ao buscar dados do administrador: ${adminError.message}`);
+      }
+      
+      // Fetch user plan data using the service role inside the edge function
       const { data: planData, error: planError } = await supabase
         .from("user_plans")
         .select("*")
         .eq("user_id", userId)
-        .single();
+        .maybeSingle();
         
       if (planError && planError.code !== 'PGRST116') { // Not found error
         console.error("Erro ao buscar plano:", planError);
@@ -47,11 +56,11 @@ export function UserDetails({ userId }: UserDetailsProps) {
       
       // Set combined user data
       setUserData({
-        id: authData.user.id,
-        email: authData.user.email || "",
-        created_at: authData.user.created_at,
-        last_sign_in_at: authData.user.last_sign_in_at,
-        user_metadata: authData.user.user_metadata || {},
+        id: user.id,
+        email: user.email || "",
+        created_at: user.created_at || "",
+        last_sign_in_at: user.last_sign_in_at || null,
+        user_metadata: user.user_metadata || {},
         plan: planData || undefined
       });
       

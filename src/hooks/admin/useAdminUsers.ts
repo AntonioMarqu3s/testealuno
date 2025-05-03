@@ -59,46 +59,9 @@ export function useAdminUsers() {
       }
       
       console.log(`Successfully fetched ${Array.isArray(usersData) ? usersData.length : 0} users`);
-
-      // Format user data
-      let formattedUsers = (Array.isArray(usersData) ? usersData : []).map(user => ({
-        id: user.id,
-        email: user.email,
-        created_at: user.created_at,
-        last_sign_in_at: user.last_sign_in_at,
-        isActive: user.last_sign_in_at !== null,
-        metadata: user.metadata
-      }));
-
-      // Fetch user plans to enrich the data
-      const { data: plans, error: plansError } = await supabase
-        .from("user_plans")
-        .select("*");
-        
-      if (plansError) {
-        console.error("Error fetching user plans:", plansError);
-        // Continue without plans data
-      } else if (plans) {
-        console.log(`Successfully fetched ${plans.length} user plans`);
-      }
-
-      // Map plans to users
-      formattedUsers = formattedUsers.map(user => {
-        const userPlan = plans?.find(plan => plan.user_id === user.id);
-        return {
-          ...user,
-          plan: userPlan ? {
-            name: userPlan.name || "Plano Básico",
-            agent_limit: userPlan.agent_limit,
-            plan: userPlan.plan,
-            payment_date: userPlan.payment_date,
-            subscription_ends_at: userPlan.subscription_ends_at,
-            payment_status: userPlan.payment_status,
-            trial_ends_at: userPlan.trial_ends_at
-          } : undefined
-        };
-      });
-
+      
+      // Format and set user data
+      const formattedUsers = Array.isArray(usersData) ? usersData : [];
       setUsers(formattedUsers);
     } catch (err) {
       console.error("Error in fetchUsers:", err);
