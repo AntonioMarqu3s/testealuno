@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Shield, Info } from "lucide-react";
+import { Shield, Info, AlertTriangle } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { supabase } from "@/lib/supabase";
@@ -40,15 +40,29 @@ export default function AdminLogin() {
     setLoginError(null);
     
     try {
-      console.log("Attempting admin login with:", { email, password });
-      const success = await adminLogin(email, password);
+      console.log("Attempting admin login with:", { email, password: "***" });
+      
+      if (!email || !password) {
+        setLoginError("Email e senha são obrigatórios.");
+        setIsSubmitting(false);
+        return;
+      }
+      
+      // Normalize email (lowercase)
+      const normalizedEmail = email.toLowerCase().trim();
+      
+      const success = await adminLogin(normalizedEmail, password);
       
       if (!success) {
         setLoginError("Falha na autenticação. Verifique seu email e senha.");
+        // For the specific admin credentials
+        if (normalizedEmail === "admin@example.com") {
+          setLoginError("Falha na autenticação do admin. Verifique se a senha é exatamente: admin123456");
+        }
       }
     } catch (error) {
       console.error("Admin login error:", error);
-      setLoginError(`Erro ao autenticar: ${error.message}`);
+      setLoginError(`Erro ao autenticar: ${error instanceof Error ? error.message : 'erro desconhecido'}`);
     } finally {
       setIsSubmitting(false);
     }
@@ -86,7 +100,7 @@ export default function AdminLogin() {
       }
     } catch (error) {
       console.error("Error creating initial admin:", error);
-      toast.error(`Erro ao criar administrador inicial: ${error.message}`);
+      toast.error(`Erro ao criar administrador inicial: ${error instanceof Error ? error.message : 'erro desconhecido'}`);
     } finally {
       setIsCreatingInitialAdmin(false);
     }
@@ -138,7 +152,8 @@ export default function AdminLogin() {
                 
                 {loginError && (
                   <Alert className="bg-red-50 border-red-200">
-                    <AlertDescription>{loginError}</AlertDescription>
+                    <AlertTriangle className="h-5 w-5 text-red-500" />
+                    <AlertDescription className="text-red-700">{loginError}</AlertDescription>
                   </Alert>
                 )}
                 
@@ -162,6 +177,15 @@ export default function AdminLogin() {
                 <Alert className="bg-green-50 border-green-200 mt-4">
                   <AlertDescription className="whitespace-pre-line">
                     {initialAdminMessage}
+                  </AlertDescription>
+                </Alert>
+              )}
+              
+              {email === "admin@example.com" && (
+                <Alert className="bg-blue-50 border-blue-200">
+                  <Info className="h-5 w-5 text-blue-500" />
+                  <AlertDescription>
+                    Utilize exatamente a senha fornecida: <strong>admin123456</strong>
                   </AlertDescription>
                 </Alert>
               )}

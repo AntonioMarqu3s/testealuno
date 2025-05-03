@@ -46,7 +46,7 @@ Deno.serve(async (req) => {
     const adminEmail = 'admin@example.com'
     const adminPassword = 'admin123456' // Será solicitada alteração no primeiro login
 
-    // Cria o usuário no auth
+    // Cria o usuário no auth com email confirmado
     const { data: userData, error: authError } = await supabaseClient.auth.admin.createUser({
       email: adminEmail,
       password: adminPassword,
@@ -62,11 +62,14 @@ Deno.serve(async (req) => {
       throw new Error('Falha ao criar usuário administrativo')
     }
 
+    console.log('Usuário criado com sucesso:', userData.user)
+
     // Adiciona o usuário à tabela de administradores
     const { error: adminError } = await supabaseClient
       .from('admin_users')
       .insert({
-        user_id: userData.user.id
+        user_id: userData.user.id,
+        email: adminEmail // Armazena o email para referência rápida
       })
 
     if (adminError) {

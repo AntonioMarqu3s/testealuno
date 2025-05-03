@@ -98,6 +98,26 @@ export const AdminAuthProvider = ({ children }: AdminAuthProviderProps) => {
   const adminLogin = async (email: string, password: string): Promise<boolean> => {
     try {
       setIsLoading(true);
+      console.log("Attempting admin login with:", { email });
+      
+      // First, check if the email matches the expected admin email
+      // This can help detect case-sensitivity issues or typos
+      const { data: adminCheck, error: adminCheckError } = await supabase
+        .from('admin_users')
+        .select('user_id')
+        .eq('email', email.toLowerCase())
+        .maybeSingle();
+        
+      if (adminCheckError) {
+        console.error("Error checking admin email:", adminCheckError);
+        // Continue with sign in attempt anyway
+      }
+      
+      if (!adminCheck) {
+        console.log("Admin email not found in database. Continuing with auth attempt anyway.");
+      } else {
+        console.log("Admin email found in database:", adminCheck);
+      }
       
       // Sign in with Supabase auth
       const { data, error } = await supabase.auth.signInWithPassword({
@@ -154,7 +174,7 @@ export const AdminAuthProvider = ({ children }: AdminAuthProviderProps) => {
       toast.success("Login administrativo bem-sucedido");
       navigate("/admin/dashboard");
       return true;
-    } catch (err) {
+    } catch (err: any) {
       console.error("Error during admin login:", err);
       toast.error(`Erro ao fazer login: ${err.message}`);
       return false;
@@ -170,7 +190,7 @@ export const AdminAuthProvider = ({ children }: AdminAuthProviderProps) => {
       setIsAdmin(false);
       toast.success("Logout administrativo bem-sucedido");
       navigate("/admin");
-    } catch (err) {
+    } catch (err: any) {
       console.error("Error during admin logout:", err);
       toast.error(`Erro ao fazer logout: ${err.message}`);
     }
