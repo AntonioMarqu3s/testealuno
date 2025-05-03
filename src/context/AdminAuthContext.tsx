@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
@@ -39,24 +40,27 @@ export const AdminAuthProvider = ({ children }: AdminAuthProviderProps) => {
         
         if (adminSession === "true") {
           // Verify with Supabase if session is valid
-          const { data: { user }, error: userError } = await supabase.auth.getUser();
+          const { data } = await supabase.auth.getSession();
+          const session = data.session;
           
-          if (userError) {
-            console.error("Error getting user:", userError);
+          if (!session) {
+            console.log("No valid session found");
             localStorage.removeItem(ADMIN_SESSION_KEY);
             setIsAdmin(false);
             setIsLoading(false);
             return;
           }
           
+          const user = session.user;
+          
           if (user) {
             console.log("Found user:", user.id);
             // Verify admin role
-            const { data, error: adminError } = await supabase
+            const { data: adminData, error: adminError } = await supabase
               .from('admin_users')
               .select('*')
               .eq('user_id', user.id)
-              .single();
+              .maybeSingle();
             
             if (adminError) {
               console.error("Error checking admin status:", adminError);
@@ -66,8 +70,8 @@ export const AdminAuthProvider = ({ children }: AdminAuthProviderProps) => {
               return;
             }
               
-            if (data) {
-              console.log("User is admin:", data);
+            if (adminData) {
+              console.log("User is admin:", adminData);
               setIsAdmin(true);
             } else {
               console.log("User is not admin");
@@ -94,38 +98,65 @@ export const AdminAuthProvider = ({ children }: AdminAuthProviderProps) => {
     checkAdminSession();
   }, []);
 
+  // Set up auth state listener
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        console.log("Auth state changed:", event, session?.user?.id);
+        
+        if (event === 'SIGNED_OUT') {
+          setIsAdmin(false);
+          localStorage.removeItem(ADMIN_SESSION_KEY);
+          return;
+        }
+        
+        if (session?.user) {
+          // Check if user is admin
+          setTimeout(async () => {
+            try {
+              const { data: adminData } = await supabase
+                .from('admin_users')
+                .select('*')
+                .eq('user_id', session.user.id)
+                .maybeSingle();
+                
+              if (adminData) {
+                console.log("User confirmed as admin via auth state change");
+                setIsAdmin(true);
+                localStorage.setItem(ADMIN_SESSION_KEY, "true");
+              }
+            } catch (err) {
+              console.error("Error checking admin status in auth state change:", err);
+            }
+          }, 0);
+        }
+      }
+    );
+    
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
+
   const adminLogin = async (email: string, password: string): Promise<boolean> => {
     try {
       setIsLoading(true);
       console.log("Attempting admin login with:", { email });
       
-      // Fixed admin credentials validation
-      const expectedEmail = "admin@example.com";
-      const expectedPassword = "@admin123456";
-      
-      if (email.toLowerCase() !== expectedEmail) {
-        console.error("Invalid admin email:", email);
-        toast.error("Email de administrador inválido");
-        return false;
-      }
+      // Normalize email (lowercase)
+      const normalizedEmail = email.toLowerCase().trim();
       
       // Sign in with Supabase auth
       const { data, error } = await supabase.auth.signInWithPassword({
-        email,
+        email: normalizedEmail,
         password
       });
       
       if (error) {
         console.error("Auth error:", error.message);
-        
-        // Special message for known admin
-        if (email.toLowerCase() === expectedEmail) {
-          toast.error("Senha de administrador incorreta");
-        } else {
-          toast.error("Falha na autenticação", {
-            description: error.message
-          });
-        }
+        toast.error("Falha na autenticação", {
+          description: error.message
+        });
         
         setIsAdmin(false);
         return false;
