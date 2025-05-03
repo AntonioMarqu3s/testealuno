@@ -2,7 +2,6 @@
 import { getStorageItem, setStorageItem, ALL_AGENTS_KEY } from '../storage/localStorageService';
 import { Agent } from '@/components/agent/AgentTypes';
 import { toast } from 'sonner';
-import { decrementAgentCount } from '../plan/userPlanService';
 
 /**
  * Get all agents for a user
@@ -78,8 +77,8 @@ export const deleteUserAgent = async (email: string, agentId: string): Promise<b
       // Save back to storage
       setStorageItem(ALL_AGENTS_KEY, allAgentsData);
       
-      // Decrement the agent count in the user's plan
-      decrementAgentCount(email);
+      // Log that we would decrement the count here
+      console.log(`Would decrement agent count for user: ${email}`);
       
       return true;
     } catch (error) {
