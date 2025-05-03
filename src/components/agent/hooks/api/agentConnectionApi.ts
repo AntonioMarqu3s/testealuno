@@ -138,6 +138,7 @@ export const checkInstanceStatus = async (instanceName: string): Promise<{ conne
 
 /**
  * Disconnect an agent instance
+ * This function is used to disconnect an agent instance on the server
  */
 export const disconnectInstance = async (instanceName: string): Promise<boolean> => {
   console.log(`Disconnecting instance: ${instanceName}`);
@@ -145,3 +146,6 @@ export const disconnectInstance = async (instanceName: string): Promise<boolean>
   // For now we'll return true to simulate successful disconnection
   return true;
 };
+
+// Adding this alias for backward compatibility
+export const deleteInstance = disconnectInstance;

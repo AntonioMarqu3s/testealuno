@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
-import { deleteInstance } from "@/components/agent/hooks/api/agentConnectionApi";
+import { disconnectInstance } from "@/components/agent/hooks/api/agentConnectionApi";
 import { checkConnectionStatus } from "@/components/agent/hooks/api/qrCodeApi";
 
 export const useAgentConnection = () => {
@@ -19,7 +19,7 @@ export const useAgentConnection = () => {
       console.log("Disconnecting agent:", instanceId);
       
       // Call API to disconnect instance
-      await deleteInstance(instanceId);
+      await disconnectInstance(instanceId);
       
       toast.success("Agente desconectado com sucesso");
       return true;
@@ -32,7 +32,7 @@ export const useAgentConnection = () => {
     }
   };
 
-  const checkConnectionStatus = async (instanceId: string, agentId: string) => {
+  const checkAgentConnectionStatus = async (instanceId: string, agentId: string) => {
     if (!instanceId) {
       console.error("No instance ID provided for connection check");
       return false;
@@ -59,6 +59,6 @@ export const useAgentConnection = () => {
     isDisconnecting,
     isCheckingStatus,
     handleDisconnect,
-    checkConnectionStatus
+    checkConnectionStatus: checkAgentConnectionStatus
   };
 };
