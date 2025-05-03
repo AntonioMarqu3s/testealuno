@@ -10,8 +10,8 @@ export { getUserAgents, saveAgent, deleteUserAgent, updateUserAgent } from './ag
 export { canCreateAgent, incrementAgentCount } from './plan/planLimitService';
 export { getCurrentUserEmail } from './user/userService';
 
-// Export plan connection service
-export { updatePlanConnectionStatus, getPlanConnectionStatus } from './plan/planConnectionService';
+// Export plan connection service - already exported via './plan' above
+// export { updatePlanConnectionStatus, getPlanConnectionStatus } from './plan/planConnectionService';
 
 // Re-export local storage functions for backward compatibility
 export { getStorageItem, setStorageItem } from './storage/localStorageService';
