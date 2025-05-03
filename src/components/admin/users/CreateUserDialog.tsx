@@ -14,9 +14,10 @@ import { CreateUserForm } from "@/components/admin/CreateUserForm";
 interface CreateUserDialogProps {
   isOpen: boolean;
   setIsOpen: (open: boolean) => void;
+  onSuccess?: () => void;
 }
 
-export function CreateUserDialog({ isOpen, setIsOpen }: CreateUserDialogProps) {
+export function CreateUserDialog({ isOpen, setIsOpen, onSuccess }: CreateUserDialogProps) {
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
@@ -29,7 +30,10 @@ export function CreateUserDialog({ isOpen, setIsOpen }: CreateUserDialogProps) {
         <DialogHeader>
           <DialogTitle>Criar Novo Usuário</DialogTitle>
         </DialogHeader>
-        <CreateUserForm onSuccess={() => setIsOpen(false)} />
+        <CreateUserForm onSuccess={() => {
+          setIsOpen(false);
+          if (onSuccess) onSuccess();
+        }} />
       </DialogContent>
     </Dialog>
   );
