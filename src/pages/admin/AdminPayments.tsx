@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import {
@@ -7,6 +6,7 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
+  CardFooter,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -27,7 +27,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, CalendarIcon } from "lucide-react";
+import { Calendar, CalendarIcon, Loader, Search } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
@@ -39,6 +39,8 @@ import {
 } from "@/components/ui/popover";
 import { PlanType } from "@/services/plan/planTypes";
 import { toast } from "sonner";
+import { fetchPaymentHistoryByEmail } from "@/services/checkout/checkoutService";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 export default function AdminPayments() {
   const [userEmail, setUserEmail] = useState("");
@@ -51,6 +53,13 @@ export default function AdminPayments() {
     return date;
   });
   const [submitting, setSubmitting] = useState(false);
+  
+  // Search related states
+  const [searchEmail, setSearchEmail] = useState("");
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [searching, setSearching] = useState(false);
+  const [searchPerformed, setSearchPerformed] = useState(false);
+  const [searchError, setSearchError] = useState<string | null>(null);
 
   // Mock payment data for the table
   const recentPayments = [
@@ -131,6 +140,46 @@ export default function AdminPayments() {
     }
     
     setPaymentAmount(amount);
+  };
+
+  // Handle search for user payment history
+  const handleSearch = async () => {
+    if (!searchEmail.trim()) {
+      toast.error("Digite um email para pesquisar");
+      return;
+    }
+    
+    setSearching(true);
+    setSearchError(null);
+    setSearchPerformed(true);
+    
+    try {
+      const { payments } = await fetchPaymentHistoryByEmail(searchEmail);
+      setSearchResults(payments);
+      
+      if (payments.length === 0) {
+        toast.info("Nenhum histórico de pagamento encontrado para este usuário");
+      } else {
+        toast.success(`${payments.length} registros encontrados`);
+      }
+    } catch (error) {
+      console.error("Error searching payment history:", error);
+      setSearchError("Erro ao buscar histórico de pagamento");
+      setSearchResults([]);
+      toast.error("Erro ao buscar histórico de pagamento");
+    } finally {
+      setSearching(false);
+    }
+  };
+
+  // Format date display
+  const formatDate = (dateString: string | null): string => {
+    if (!dateString) return "N/A";
+    try {
+      return format(new Date(dateString), "dd/MM/yyyy", { locale: ptBR });
+    } catch (e) {
+      return "Data inválida";
+    }
   };
 
   return (
@@ -293,6 +342,97 @@ export default function AdminPayments() {
             </CardContent>
           </Card>
         </div>
+        
+        {/* New section for payment history search */}
+        <Card className="w-full">
+          <CardHeader>
+            <CardTitle>Pesquisar Histórico de Pagamentos</CardTitle>
+            <CardDescription>
+              Busque o histórico de pagamentos de um usuário pelo email
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex space-x-2 mb-6">
+              <div className="flex-1">
+                <Input
+                  placeholder="Digite o email do usuário"
+                  value={searchEmail}
+                  onChange={(e) => setSearchEmail(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      handleSearch();
+                    }
+                  }}
+                />
+              </div>
+              <Button onClick={handleSearch} disabled={searching} className="flex gap-2 items-center">
+                {searching ? (
+                  <>
+                    <Loader className="h-4 w-4 animate-spin" />
+                    <span>Buscando...</span>
+                  </>
+                ) : (
+                  <>
+                    <Search className="h-4 w-4" />
+                    <span>Buscar</span>
+                  </>
+                )}
+              </Button>
+            </div>
+            
+            {searchError && (
+              <Alert className="mb-4 bg-red-50 text-red-800 border-red-200">
+                <AlertDescription>{searchError}</AlertDescription>
+              </Alert>
+            )}
+            
+            {searchPerformed && !searchError && (
+              <div className="bg-muted rounded-md p-4 mb-4">
+                <p className="font-medium">
+                  {searchResults.length === 0
+                    ? "Nenhum registro de pagamento encontrado para este email"
+                    : `${searchResults.length} ${searchResults.length === 1 ? 'registro encontrado' : 'registros encontrados'}`}
+                </p>
+              </div>
+            )}
+            
+            {searchResults.length > 0 && (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Data</TableHead>
+                    <TableHead>Plano</TableHead>
+                    <TableHead>Valor</TableHead>
+                    <TableHead>Expiração</TableHead>
+                    <TableHead>Status</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {searchResults.map((payment) => (
+                    <TableRow key={payment.id}>
+                      <TableCell>{formatDate(payment.paymentDate)}</TableCell>
+                      <TableCell>{payment.planName}</TableCell>
+                      <TableCell>R$ {payment.amount.toFixed(2)}</TableCell>
+                      <TableCell>{formatDate(payment.expirationDate)}</TableCell>
+                      <TableCell>
+                        <Badge variant={payment.status === 'completed' ? 'success' : payment.status === 'pending' ? 'warning' : 'destructive'}>
+                          {payment.status === 'completed' ? 'Pago' : 
+                           payment.status === 'pending' ? 'Pendente' : 'Falhou'}
+                        </Badge>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
+          </CardContent>
+          <CardFooter className="bg-muted/30 border-t px-6 py-4">
+            <p className="text-sm text-muted-foreground">
+              Os registros de pagamento são baseados nos dados de assinatura do usuário.
+            </p>
+          </CardFooter>
+        </Card>
       </div>
     </AdminLayout>
   );
