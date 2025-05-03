@@ -16,6 +16,7 @@ export default function AdminLogin() {
   const [password, setPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isCreatingInitialAdmin, setIsCreatingInitialAdmin] = useState(false);
+  const [loginError, setLoginError] = useState<string | null>(null);
   const { adminLogin } = useAdminAuth();
   const [initialAdminMessage, setInitialAdminMessage] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<string>("login");
@@ -36,9 +37,18 @@ export default function AdminLogin() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
+    setLoginError(null);
     
     try {
-      await adminLogin(email, password);
+      console.log("Attempting admin login with:", { email, password });
+      const success = await adminLogin(email, password);
+      
+      if (!success) {
+        setLoginError("Falha na autenticação. Verifique seu email e senha.");
+      }
+    } catch (error) {
+      console.error("Admin login error:", error);
+      setLoginError(`Erro ao autenticar: ${error.message}`);
     } finally {
       setIsSubmitting(false);
     }
@@ -47,13 +57,18 @@ export default function AdminLogin() {
   const createInitialAdmin = async () => {
     setIsCreatingInitialAdmin(true);
     setInitialAdminMessage(null);
+    setLoginError(null);
     
     try {
+      console.log("Creating initial admin...");
       const { data, error } = await supabase.functions.invoke("create-initial-admin");
       
       if (error) {
+        console.error("Error invoking create-initial-admin function:", error);
         throw error;
       }
+      
+      console.log("Create admin response:", data);
       
       if (data.success) {
         const credentialMessage = `
@@ -63,14 +78,15 @@ export default function AdminLogin() {
         `;
         setInitialAdminMessage(credentialMessage);
         setEmail(data.credentials.email);
+        setPassword(""); // Limpa a senha para que o usuário precise digitar
         toast.success("Administrador inicial criado com sucesso!");
         setActiveTab("login");
       } else {
-        toast.error("Erro ao criar administrador inicial");
+        toast.error(`Erro ao criar administrador inicial: ${data.message}`);
       }
     } catch (error) {
       console.error("Error creating initial admin:", error);
-      toast.error("Erro ao criar administrador inicial");
+      toast.error(`Erro ao criar administrador inicial: ${error.message}`);
     } finally {
       setIsCreatingInitialAdmin(false);
     }
@@ -119,6 +135,13 @@ export default function AdminLogin() {
                     required
                   />
                 </div>
+                
+                {loginError && (
+                  <Alert className="bg-red-50 border-red-200">
+                    <AlertDescription>{loginError}</AlertDescription>
+                  </Alert>
+                )}
+                
                 <Button
                   type="submit"
                   className="w-full"

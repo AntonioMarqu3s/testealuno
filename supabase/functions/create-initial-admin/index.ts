@@ -1,126 +1,102 @@
 
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.38.4'
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
-// Define CORS headers for browser requests
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
-
-// Handle CORS preflight requests
-const handleCors = (req: Request) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, {
-      headers: corsHeaders,
-      status: 204,
-    })
+Deno.serve(async (req) => {
+  // Configuração CORS
+  const corsHeaders = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
   }
-}
 
-// Handler for the function
-Deno.serve(async (req: Request) => {
-  // Handle CORS
-  const corsResponse = handleCors(req);
-  if (corsResponse) return corsResponse;
+  // Handle CORS preflight requests
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders })
+  }
 
   try {
-    // Create Supabase client using Supabase service role key
-    const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
-    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
-    
-    if (!supabaseUrl || !supabaseKey) {
-      throw new Error('Missing Supabase environment variables');
-    }
-    
-    const supabase = createClient(supabaseUrl, supabaseKey, {
-      auth: {
-        autoRefreshToken: false,
-        persistSession: false,
-      },
-    });
-    
-    // Create initial admin user
-    const adminEmail = 'admin@example.com';
-    const adminPassword = 'admin123456';
-    
-    // Check if the user already exists
-    const { data: existingUsers, error: checkError } = await supabase.auth.admin.listUsers({
-      filter: `email eq '${adminEmail}'`
-    });
-    
-    let userId;
-    
-    if (checkError) {
-      throw new Error(`Error checking for existing user: ${checkError.message}`);
-    }
-    
-    if (existingUsers && existingUsers.users.length > 0) {
-      // User already exists, use their ID
-      userId = existingUsers.users[0].id;
-      console.log(`Admin user already exists: ${userId}`);
-    } else {
-      // Create new user
-      const { data: userData, error: createError } = await supabase.auth.admin.createUser({
-        email: adminEmail,
-        password: adminPassword,
-        email_confirm: true,
-      });
-      
-      if (createError) {
-        throw new Error(`Error creating user: ${createError.message}`);
-      }
-      
-      userId = userData.user.id;
-      console.log(`Created new admin user: ${userId}`);
-    }
-    
-    // Check if this user is already in admin_users table
-    const { data: existingAdmin, error: adminCheckError } = await supabase
+    // Inicializa o cliente Supabase usando variáveis de ambiente
+    const supabaseClient = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+      { auth: { autoRefreshToken: false, persistSession: false } }
+    )
+
+    // Verifica se já existe um administrador
+    const { data: adminUsers, error: queryError } = await supabaseClient
       .from('admin_users')
       .select('*')
-      .eq('user_id', userId)
-      .single();
-      
-    if (adminCheckError && adminCheckError.code !== 'PGRST116') { // PGRST116 is "no rows returned" error
-      throw new Error(`Error checking admin status: ${adminCheckError.message}`);
+      .limit(1)
+    
+    if (queryError) {
+      console.error('Erro ao verificar administradores existentes:', queryError)
+      throw queryError
     }
     
-    if (!existingAdmin) {
-      // Add user to admin_users table
-      const { error: insertError } = await supabase
-        .from('admin_users')
-        .insert([{ user_id: userId }]);
-        
-      if (insertError) {
-        throw new Error(`Error setting admin privileges: ${insertError.message}`);
-      }
-      
-      console.log(`Added user to admin_users: ${userId}`);
-    } else {
-      console.log(`User already has admin privileges: ${userId}`);
+    if (adminUsers && adminUsers.length > 0) {
+      return new Response(JSON.stringify({
+        success: false,
+        message: 'Um administrador já foi criado anteriormente'
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 400
+      })
     }
-    
+
+    // Cria um email e senha para o administrador
+    const adminEmail = 'admin@example.com'
+    const adminPassword = 'admin123456' // Será solicitada alteração no primeiro login
+
+    // Cria o usuário no auth
+    const { data: userData, error: authError } = await supabaseClient.auth.admin.createUser({
+      email: adminEmail,
+      password: adminPassword,
+      email_confirm: true // Confirma o email automaticamente
+    })
+
+    if (authError) {
+      console.error('Erro ao criar usuário administrador:', authError)
+      throw authError
+    }
+
+    if (!userData.user) {
+      throw new Error('Falha ao criar usuário administrativo')
+    }
+
+    // Adiciona o usuário à tabela de administradores
+    const { error: adminError } = await supabaseClient
+      .from('admin_users')
+      .insert({
+        user_id: userData.user.id
+      })
+
+    if (adminError) {
+      console.error('Erro ao adicionar usuário como administrador:', adminError)
+      // Tenta remover o usuário criado para evitar inconsistências
+      await supabaseClient.auth.admin.deleteUser(userData.user.id)
+      throw adminError
+    }
+
+    // Retorna as credenciais criadas
     return new Response(JSON.stringify({
       success: true,
-      message: "Initial admin user created successfully",
+      message: 'Administrador inicial criado com sucesso',
       credentials: {
         email: adminEmail,
-        password: "admin123456 (change this after first login)"
+        password: adminPassword + ' (change this after first login)'
       }
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      status: 200,
-    });
-    
+      status: 200
+    })
   } catch (error) {
-    console.error('Error:', error.message);
+    console.error('Erro ao criar administrador inicial:', error)
     
     return new Response(JSON.stringify({
       success: false,
-      error: error.message,
+      message: `Erro ao criar administrador inicial: ${error.message}`
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      status: 500,
-    });
+      status: 500
+    })
   }
 })

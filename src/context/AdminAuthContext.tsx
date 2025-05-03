@@ -34,32 +34,62 @@ export const AdminAuthProvider = ({ children }: AdminAuthProviderProps) => {
   // Check for admin session on load
   useEffect(() => {
     const checkAdminSession = async () => {
-      const adminSession = localStorage.getItem(ADMIN_SESSION_KEY);
-      if (adminSession === "true") {
-        // Verify with Supabase if session is valid
-        const { data: { user } } = await supabase.auth.getUser();
+      try {
+        const adminSession = localStorage.getItem(ADMIN_SESSION_KEY);
+        console.log("Checking admin session:", adminSession);
         
-        if (user) {
-          // Verify admin role (this will be checked via RLS later)
-          const { data } = await supabase
-            .from('admin_users')
-            .select('*')
-            .eq('user_id', user.id)
-            .single();
+        if (adminSession === "true") {
+          // Verify with Supabase if session is valid
+          const { data: { user }, error: userError } = await supabase.auth.getUser();
+          
+          if (userError) {
+            console.error("Error getting user:", userError);
+            localStorage.removeItem(ADMIN_SESSION_KEY);
+            setIsAdmin(false);
+            setIsLoading(false);
+            return;
+          }
+          
+          if (user) {
+            console.log("Found user:", user.id);
+            // Verify admin role
+            const { data, error: adminError } = await supabase
+              .from('admin_users')
+              .select('*')
+              .eq('user_id', user.id)
+              .single();
             
-          if (data) {
-            setIsAdmin(true);
+            if (adminError) {
+              console.error("Error checking admin status:", adminError);
+              localStorage.removeItem(ADMIN_SESSION_KEY);
+              setIsAdmin(false);
+              setIsLoading(false);
+              return;
+            }
+              
+            if (data) {
+              console.log("User is admin:", data);
+              setIsAdmin(true);
+            } else {
+              console.log("User is not admin");
+              localStorage.removeItem(ADMIN_SESSION_KEY);
+              setIsAdmin(false);
+            }
           } else {
+            console.log("No user found");
             localStorage.removeItem(ADMIN_SESSION_KEY);
             setIsAdmin(false);
           }
         } else {
-          localStorage.removeItem(ADMIN_SESSION_KEY);
-          setIsAdmin(false);
+          console.log("No admin session found");
         }
+      } catch (err) {
+        console.error("Error checking admin session:", err);
+        localStorage.removeItem(ADMIN_SESSION_KEY);
+        setIsAdmin(false);
+      } finally {
+        setIsLoading(false);
       }
-      
-      setIsLoading(false);
     };
 
     checkAdminSession();
@@ -76,6 +106,7 @@ export const AdminAuthProvider = ({ children }: AdminAuthProviderProps) => {
       });
       
       if (error) {
+        console.error("Auth error:", error.message);
         toast.error("Falha na autenticação", {
           description: error.message
         });
@@ -84,24 +115,38 @@ export const AdminAuthProvider = ({ children }: AdminAuthProviderProps) => {
       }
       
       if (!data.user) {
+        console.error("No user returned from auth");
         toast.error("Usuário não encontrado");
         setIsAdmin(false);
         return false;
       }
+      
+      console.log("User authenticated:", data.user.id);
       
       // Check if the user is an admin
       const { data: adminData, error: adminError } = await supabase
         .from('admin_users')
         .select('*')
         .eq('user_id', data.user.id)
-        .single();
+        .maybeSingle();
       
-      if (adminError || !adminData) {
+      if (adminError) {
+        console.error("Error checking admin status:", adminError);
+        toast.error(`Erro ao verificar permissões: ${adminError.message}`);
+        await supabase.auth.signOut();
+        setIsAdmin(false);
+        return false;
+      }
+      
+      if (!adminData) {
+        console.error("User is not an admin");
         toast.error("Usuário não tem permissões administrativas");
         await supabase.auth.signOut();
         setIsAdmin(false);
         return false;
       }
+      
+      console.log("Admin verified:", adminData);
       
       // Set the admin session
       localStorage.setItem(ADMIN_SESSION_KEY, "true");
@@ -111,7 +156,7 @@ export const AdminAuthProvider = ({ children }: AdminAuthProviderProps) => {
       return true;
     } catch (err) {
       console.error("Error during admin login:", err);
-      toast.error("Erro ao fazer login");
+      toast.error(`Erro ao fazer login: ${err.message}`);
       return false;
     } finally {
       setIsLoading(false);
@@ -127,7 +172,7 @@ export const AdminAuthProvider = ({ children }: AdminAuthProviderProps) => {
       navigate("/admin");
     } catch (err) {
       console.error("Error during admin logout:", err);
-      toast.error("Erro ao fazer logout");
+      toast.error(`Erro ao fazer logout: ${err.message}`);
     }
   };
 
