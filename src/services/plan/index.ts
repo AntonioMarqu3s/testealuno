@@ -1,14 +1,6 @@
 
-// Export from all plan-related services
+// Re-export all plan-related functions from their specific service files
 export * from './userPlanService';
-export * from './planLimitService';
-export * from './planConnectionService';
-
-// Export from supabsePlanService
-export {
-  getUserPlanFromSupabase,
-  saveUserPlanToSupabase,
-  updateUserPlanInSupabase,
-  migratePlanToSupabase,
-  updatePlanPaymentInfo
-} from './supabsePlanService';
+export * from './planSyncService';
+export * from './supabsePlanService';
+export * from './planUpdateExternalService';

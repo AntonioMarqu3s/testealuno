@@ -13,6 +13,7 @@ import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { updatePlanConnectionStatus } from "@/services/plan/planConnectionService";
 import { Loader2, RefreshCw } from "lucide-react";
+import { ManualPlanUpdate } from "@/components/plan/ManualPlanUpdate";
 
 export default function Settings() {
   const { user } = useAuth();
@@ -227,6 +228,19 @@ export default function Settings() {
                   disabled={isUpdatingConnection || isLoading}
                 />
               </div>
+            </CardContent>
+          </Card>
+          
+          {/* Manual Plan Update */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Atualização Manual de Plano</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ManualPlanUpdate 
+                userEmail={userEmail} 
+                onUpdateComplete={loadUserData}
+              />
             </CardContent>
           </Card>
           
