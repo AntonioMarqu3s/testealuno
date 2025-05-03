@@ -8,6 +8,8 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
 import { AdminAuthProvider } from "./context/AdminAuthContext";
 import { AdminGuard } from "./components/admin/AdminGuard";
+import { supabase } from "@/lib/supabase";
+import { toast } from "sonner";
 import AuthCallback from "./pages/AuthCallback";
 import ResetPassword from "./pages/ResetPassword";
 import Index from "./pages/Index";
@@ -47,6 +49,35 @@ function App() {
   useEffect(() => {
     const userEmail = initializeUserEmail();
     initializeUserPlan(userEmail);
+  }, []);
+
+  // Initialize admin user
+  useEffect(() => {
+    const createAdminUser = async () => {
+      try {
+        // Check if admin exists
+        const { data: adminCheck } = await supabase
+          .from('admin_users')
+          .select('*')
+          .limit(1);
+        
+        // Only create admin if no admins exist
+        if (!adminCheck || adminCheck.length === 0) {
+          console.log('Creating initial admin user...');
+          const { data, error } = await supabase.functions.invoke("create-initial-admin");
+          
+          if (error) {
+            console.error("Error creating admin:", error);
+          } else if (data?.success) {
+            console.log("Admin created successfully:", data.credentials.email);
+          }
+        }
+      } catch (err) {
+        console.error("Error in admin initialization:", err);
+      }
+    };
+    
+    createAdminUser();
   }, []);
 
   return (

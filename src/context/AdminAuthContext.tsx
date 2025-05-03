@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
@@ -100,23 +99,14 @@ export const AdminAuthProvider = ({ children }: AdminAuthProviderProps) => {
       setIsLoading(true);
       console.log("Attempting admin login with:", { email });
       
-      // First, check if the email matches the expected admin email
-      // This can help detect case-sensitivity issues or typos
-      const { data: adminCheck, error: adminCheckError } = await supabase
-        .from('admin_users')
-        .select('user_id')
-        .eq('email', email.toLowerCase())
-        .maybeSingle();
-        
-      if (adminCheckError) {
-        console.error("Error checking admin email:", adminCheckError);
-        // Continue with sign in attempt anyway
-      }
+      // Fixed admin credentials validation
+      const expectedEmail = "admin@example.com";
+      const expectedPassword = "@admin123456";
       
-      if (!adminCheck) {
-        console.log("Admin email not found in database. Continuing with auth attempt anyway.");
-      } else {
-        console.log("Admin email found in database:", adminCheck);
+      if (email.toLowerCase() !== expectedEmail) {
+        console.error("Invalid admin email:", email);
+        toast.error("Email de administrador inválido");
+        return false;
       }
       
       // Sign in with Supabase auth
@@ -127,9 +117,16 @@ export const AdminAuthProvider = ({ children }: AdminAuthProviderProps) => {
       
       if (error) {
         console.error("Auth error:", error.message);
-        toast.error("Falha na autenticação", {
-          description: error.message
-        });
+        
+        // Special message for known admin
+        if (email.toLowerCase() === expectedEmail) {
+          toast.error("Senha de administrador incorreta");
+        } else {
+          toast.error("Falha na autenticação", {
+            description: error.message
+          });
+        }
+        
         setIsAdmin(false);
         return false;
       }

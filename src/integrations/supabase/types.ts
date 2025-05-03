@@ -12,16 +12,19 @@ export type Database = {
       admin_users: {
         Row: {
           created_at: string
+          email: string | null
           id: string
           user_id: string
         }
         Insert: {
           created_at?: string
+          email?: string | null
           id?: string
           user_id: string
         }
         Update: {
           created_at?: string
+          email?: string | null
           id?: string
           user_id?: string
         }
