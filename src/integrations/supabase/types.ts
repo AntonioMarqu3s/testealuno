@@ -14,18 +14,21 @@ export type Database = {
           created_at: string
           email: string | null
           id: string
+          role: Database["public"]["Enums"]["admin_role_type"]
           user_id: string
         }
         Insert: {
           created_at?: string
           email?: string | null
           id?: string
+          role?: Database["public"]["Enums"]["admin_role_type"]
           user_id: string
         }
         Update: {
           created_at?: string
           email?: string | null
           id?: string
+          role?: Database["public"]["Enums"]["admin_role_type"]
           user_id?: string
         }
         Relationships: []
@@ -122,6 +125,95 @@ export type Database = {
           },
         ]
       }
+      group_admins: {
+        Row: {
+          admin_id: string
+          created_at: string
+          created_by: string
+          group_id: string
+        }
+        Insert: {
+          admin_id: string
+          created_at?: string
+          created_by: string
+          group_id: string
+        }
+        Update: {
+          admin_id?: string
+          created_at?: string
+          created_by?: string
+          group_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "group_admins_admin_id_fkey"
+            columns: ["admin_id"]
+            isOneToOne: false
+            referencedRelation: "admin_users"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "group_admins_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      group_users: {
+        Row: {
+          created_at: string
+          group_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          group_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          group_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "group_users_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      groups: {
+        Row: {
+          created_at: string
+          created_by: string
+          description: string | null
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          description?: string | null
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       user_plans: {
         Row: {
           agent_limit: number
@@ -172,12 +264,71 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      get_emails_by_ids: {
-        Args: { user_ids: string[] }
+      admin_create_admin_user: {
+        Args: { p_email: string; p_password: string }
+        Returns: string
+      }
+      admin_create_group: {
+        Args: { p_name: string; p_description?: string }
+        Returns: string
+      }
+      admin_create_group_admin: {
+        Args: { p_email: string; p_password: string; p_group_ids: string[] }
+        Returns: string
+      }
+      admin_create_master_admin: {
+        Args: { p_email: string; p_password: string }
+        Returns: string
+      }
+      admin_create_user: {
+        Args: { p_email: string; p_password: string; p_plan_type: number }
+        Returns: string
+      }
+      admin_delete_user: {
+        Args: { p_user_id: string }
+        Returns: undefined
+      }
+      admin_list_group_users: {
+        Args: { p_group_id: string }
+        Returns: {
+          user_id: string
+          email: string
+          created_at: string
+        }[]
+      }
+      admin_list_groups: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          id: string
+          name: string
+          description: string
+          created_at: string
+          created_by: string
+          updated_at: string
+          total_users: number
+          total_admins: number
+        }[]
+      }
+      admin_list_users: {
+        Args: Record<PropertyKey, never>
         Returns: {
           id: string
           email: string
+          created_at: string
+          last_sign_in_at: string
+          plan_id: string
+          plan_name: string
+          plan_type: number
+          agent_limit: number
+          trial_ends_at: string
+          subscription_ends_at: string
+          payment_status: string
+          is_admin: boolean
         }[]
+      }
+      admin_update_user_plan: {
+        Args: { p_user_id: string; p_plan_type: number; p_agent_limit: number }
+        Returns: boolean
       }
       get_user_by_email: {
         Args: { p_email: string }
@@ -186,9 +337,17 @@ export type Database = {
           email: string
         }[]
       }
+      is_admin: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
+      is_master_admin: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      admin_role_type: "master" | "group"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -303,6 +462,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      admin_role_type: ["master", "group"],
+    },
   },
 } as const

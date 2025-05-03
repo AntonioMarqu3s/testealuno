@@ -1,16 +1,14 @@
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { Button } from "@/components/ui/button";
 import { RefreshCw } from "lucide-react";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useAdminUsers } from "@/hooks/admin/useAdminUsers";
 import { useAdminAgents } from "@/hooks/admin/useAdminAgents";
 
-// Import the new components
+// Import the components
 import { UserSearchBar } from "@/components/admin/users/UserSearchBar";
 import { UsersTable } from "@/components/admin/users/UsersTable";
 import { ErrorAlert } from "@/components/admin/users/ErrorAlert";
@@ -24,16 +22,30 @@ export default function AdminUsers() {
   const { users, isLoading, error, fetchUsers } = useAdminUsers();
   const { agents } = useAdminAgents();
 
-  // Apply search only when button is clicked or Enter is pressed
-  const filteredUsers = users.filter(user => 
-    searchApplied ? (
-      user.email?.toLowerCase().includes(searchApplied.toLowerCase()) ||
-      user.id?.toLowerCase().includes(searchApplied.toLowerCase())
-    ) : true
-  );
+  // Enhanced filter function to search through different user fields
+  const filteredUsers = useMemo(() => {
+    if (!searchApplied) return users;
+    
+    const searchLower = searchApplied.toLowerCase();
+    return users.filter(user => 
+      // Search by email
+      user.email?.toLowerCase().includes(searchLower) ||
+      // Search by ID
+      user.id?.toLowerCase().includes(searchLower) ||
+      // Search by plan name
+      user.plan?.name?.toLowerCase().includes(searchLower) ||
+      // Search by payment status
+      user.plan?.payment_status?.toLowerCase().includes(searchLower) ||
+      // Search in metadata (name)
+      user.metadata?.name?.toLowerCase().includes(searchLower) ||
+      // Search by whether user is active or inactive
+      (searchLower === "ativo" && user.isActive) ||
+      (searchLower === "inativo" && !user.isActive)
+    );
+  }, [users, searchApplied]);
 
   // Group agents by user ID
-  const agentsByUser = React.useMemo(() => {
+  const agentsByUser = useMemo(() => {
     const grouped: Record<string, number> = {};
     agents.forEach(agent => {
       if (agent.userId) {
@@ -76,9 +88,14 @@ export default function AdminUsers() {
               Atualizar
             </Button>
             
+            <Button onClick={() => setIsCreateDialogOpen(true)}>
+              Adicionar Usuário
+            </Button>
+            
             <CreateUserDialog 
               isOpen={isCreateDialogOpen} 
               setIsOpen={setIsCreateDialogOpen} 
+              onSuccess={handleRefresh}
             />
           </div>
         </div>
@@ -87,11 +104,19 @@ export default function AdminUsers() {
           searchTerm={searchTerm} 
           setSearchTerm={setSearchTerm} 
           handleSearch={handleSearch} 
+          placeholderText="Buscar por email, plano, status..."
         />
         
         {error && (
           <ErrorAlert error={error} onRetry={handleRefresh} />
         )}
+        
+        <div className="text-sm text-muted-foreground">
+          {searchApplied ? 
+            `${filteredUsers.length} usuário(s) encontrado(s) para "${searchApplied}"` : 
+            `Mostrando ${users.length} usuário(s)`
+          }
+        </div>
         
         {isLoading ? (
           <div className="flex justify-center py-8">

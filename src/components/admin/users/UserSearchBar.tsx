@@ -1,35 +1,55 @@
 
 import React from "react";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { Search } from "lucide-react";
 
 interface UserSearchBarProps {
   searchTerm: string;
   setSearchTerm: (term: string) => void;
   handleSearch: () => void;
+  placeholderText?: string;
 }
 
-export function UserSearchBar({ searchTerm, setSearchTerm, handleSearch }: UserSearchBarProps) {
+export function UserSearchBar({ 
+  searchTerm, 
+  setSearchTerm, 
+  handleSearch,
+  placeholderText = "Buscar por email, nome do plano ou ID..."
+}: UserSearchBarProps) {
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      handleSearch();
+    }
+  };
+
   return (
-    <div className="flex items-center space-x-2">
+    <div className="flex gap-2 mb-4">
       <div className="relative flex-1">
         <Input
-          placeholder="Buscar usuários por email ou ID..."
-          className="pl-8"
+          type="text"
+          placeholder={placeholderText}
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter') {
-              handleSearch();
-            }
-          }}
+          onKeyDown={handleKeyDown}
+          className="pr-10"
         />
-        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground pointer-events-none" />
+        <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+          <Search className="h-4 w-4 text-muted-foreground" />
+        </div>
       </div>
-      <Button onClick={handleSearch} type="button">
-        Buscar
-      </Button>
+      <Button onClick={handleSearch}>Buscar</Button>
+      {searchTerm && (
+        <Button 
+          variant="outline"
+          onClick={() => {
+            setSearchTerm('');
+            handleSearch();
+          }}
+        >
+          Limpar
+        </Button>
+      )}
     </div>
   );
 }

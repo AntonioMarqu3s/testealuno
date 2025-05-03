@@ -3,20 +3,27 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 
-interface User {
+export interface UserPlan {
+  id: string;
+  name: string;
+  agent_limit: number;
+  plan: number;
+  payment_date?: string;
+  subscription_ends_at?: string;
+  payment_status?: string;
+  trial_ends_at?: string;
+  connect_instancia?: boolean;
+  trial_init?: string;
+}
+
+export interface User {
   id: string;
   email: string;
   created_at: string;
+  last_sign_in_at?: string | null;
   isActive: boolean;
-  plan?: {
-    name: string;
-    agent_limit: number;
-    plan: number;
-    payment_date?: string;
-    subscription_ends_at?: string;
-    payment_status?: string;
-    trial_ends_at?: string;
-  };
+  metadata?: Record<string, any>;
+  plan?: UserPlan;
 }
 
 export function useAdminUsers() {
@@ -32,9 +39,7 @@ export function useAdminUsers() {
       console.log("Fetching users with admin access");
       
       // Use the get_all_users edge function
-      const { data: usersData, error: fetchError } = await supabase.functions.invoke("get_all_users", {
-        method: 'GET'
-      });
+      const { data: usersData, error: fetchError } = await supabase.functions.invoke("get_all_users");
       
       if (fetchError) {
         console.error("Error fetching users:", fetchError);
@@ -43,19 +48,6 @@ export function useAdminUsers() {
       
       if (!usersData) {
         throw new Error("No user data returned");
-      }
-      
-      if (typeof usersData === 'string') {
-        try {
-          // Handle case where error message is returned as string
-          const errorData = JSON.parse(usersData);
-          if (errorData.error) {
-            throw new Error(errorData.error);
-          }
-        } catch (err) {
-          // If it's not valid JSON, just continue
-          console.warn("Unexpected response format, continuing:", usersData);
-        }
       }
       
       console.log(`Successfully fetched ${Array.isArray(usersData) ? usersData.length : 0} users`);
@@ -70,21 +62,6 @@ export function useAdminUsers() {
       toast.error("Erro ao carregar usuários", {
         description: errorMessage
       });
-      
-      // Add fallback mock data for development/demo only if in development
-      if (import.meta.env.DEV) {
-        const mockUsers = [
-          {
-            id: "d6ef66ca-d0f0-4884-89e2-9173b91fd987",
-            email: "admin@example.com",
-            created_at: "2025-04-01T10:00:00Z",
-            isActive: true,
-            metadata: { name: "Admin User" }
-          }
-        ];
-        
-        setUsers(mockUsers);
-      }
     } finally {
       setIsLoading(false);
     }
@@ -99,7 +76,7 @@ export function useAdminUsers() {
       console.log("Creating new user with plan type:", planType);
       
       // Try to create the user directly
-      const { error } = await supabase.functions.invoke("admin-create-user", {
+      const { data, error } = await supabase.functions.invoke("admin-create-user", {
         body: { email, password, planType }
       });
       

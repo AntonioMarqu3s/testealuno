@@ -72,45 +72,51 @@ Deno.serve(async (req) => {
     
     console.log(`Successfully fetched ${authUsers.users.length} users`)
 
-    // Format the users data for the client
-    let formattedUsers = authUsers.users.map(user => ({
-      id: user.id,
-      email: user.email,
-      created_at: user.created_at,
-      last_sign_in_at: user.last_sign_in_at,
-      isActive: user.last_sign_in_at !== null,
-      metadata: user.user_metadata
-    }))
-
-    // Fetch user plans to enrich the data
-    console.log('Fetching user plans data')
-    const { data: plans, error: plansError } = await supabaseClient
+    // Fetch all user plans data in a single query
+    console.log('Fetching all user plans data')
+    const { data: allPlans, error: allPlansError } = await supabaseClient
       .from("user_plans")
       .select("*")
       
-    if (plansError) {
-      console.error("Error fetching user plans:", plansError)
+    if (allPlansError) {
+      console.error("Error fetching all user plans:", allPlansError)
       // Continue without plans data
-    } else {
-      console.log(`Successfully fetched ${plans?.length || 0} user plans`)
-      
-      // Map plans to users
-      formattedUsers = formattedUsers.map(user => {
-        const userPlan = plans?.find(plan => plan.user_id === user.id)
-        return {
-          ...user,
-          plan: userPlan ? {
-            name: userPlan.name || "Plano Básico",
-            agent_limit: userPlan.agent_limit,
-            plan: userPlan.plan,
-            payment_date: userPlan.payment_date,
-            subscription_ends_at: userPlan.subscription_ends_at,
-            payment_status: userPlan.payment_status,
-            trial_ends_at: userPlan.trial_ends_at
-          } : undefined
-        }
-      })
     }
+    
+    // Create a lookup map for plans by user_id for efficient joining
+    const plansMap = {};
+    if (allPlans) {
+      console.log(`Successfully fetched ${allPlans.length} user plans`)
+      allPlans.forEach(plan => {
+        plansMap[plan.user_id] = plan;
+      });
+    }
+
+    // Format the users data for the client with joined plan data
+    const formattedUsers = authUsers.users.map(user => {
+      const userPlan = plansMap[user.id];
+      
+      return {
+        id: user.id,
+        email: user.email,
+        created_at: user.created_at,
+        last_sign_in_at: user.last_sign_in_at,
+        isActive: user.last_sign_in_at !== null,
+        metadata: user.user_metadata,
+        plan: userPlan ? {
+          id: userPlan.id,
+          name: userPlan.name || "Plano Básico",
+          agent_limit: userPlan.agent_limit,
+          plan: userPlan.plan,
+          payment_date: userPlan.payment_date,
+          subscription_ends_at: userPlan.subscription_ends_at,
+          payment_status: userPlan.payment_status,
+          trial_ends_at: userPlan.trial_ends_at,
+          connect_instancia: userPlan.connect_instancia,
+          trial_init: userPlan.trial_init
+        } : undefined
+      }
+    });
 
     return new Response(
       JSON.stringify(formattedUsers), 

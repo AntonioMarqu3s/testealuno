@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Calendar, Edit, Trash, Users } from "lucide-react";
 import { UserDetails } from "@/components/admin/UserDetails";
+import { UserPlan } from "@/hooks/admin/useAdminUsers";
 
 interface UserRowProps {
   user: {
@@ -13,15 +14,7 @@ interface UserRowProps {
     email: string;
     created_at: string;
     isActive: boolean;
-    plan?: {
-      name: string;
-      agent_limit: number;
-      plan: number;
-      payment_date?: string;
-      subscription_ends_at?: string;
-      payment_status?: string;
-      trial_ends_at?: string;
-    };
+    plan?: UserPlan;
   };
   agentsByUser: Record<string, number>;
   setSelectedUserId: (id: string | null) => void;
@@ -29,14 +22,54 @@ interface UserRowProps {
 }
 
 export function UserTableRow({ user, agentsByUser, setSelectedUserId, formatDate }: UserRowProps) {
+  // Helper function to get plan badge variant based on plan type
+  const getPlanBadgeVariant = (planType?: number) => {
+    switch(planType) {
+      case 0: return "outline"; // Free Trial
+      case 1: return "secondary"; // Básico
+      case 2: return "default"; // Standard
+      case 3: return "destructive"; // Premium
+      default: return "outline";
+    }
+  };
+  
+  // Helper function to format plan name
+  const getPlanDisplayName = (plan?: UserPlan) => {
+    if (!plan) return "N/A";
+    return plan.name || (
+      plan.plan === 0 ? "Teste Gratuito" : 
+      plan.plan === 1 ? "Básico" :
+      plan.plan === 2 ? "Standard" :
+      plan.plan === 3 ? "Premium" : "Desconhecido"
+    );
+  };
+  
+  // Helper function to get payment status badge styles
+  const getPaymentStatusBadge = (status?: string) => {
+    if (!status) return { className: "bg-gray-100 text-gray-800", text: "N/A" };
+    
+    switch(status.toLowerCase()) {
+      case 'completed':
+        return { className: "bg-green-100 text-green-800", text: "Pago" };
+      case 'pending':
+        return { className: "bg-yellow-100 text-yellow-800", text: "Pendente" };
+      case 'failed':
+        return { className: "bg-red-100 text-red-800", text: "Falhou" };
+      default:
+        return { className: "bg-gray-100 text-gray-800", text: status };
+    }
+  };
+
+  const paymentStatus = getPaymentStatusBadge(user.plan?.payment_status);
+
   return (
     <TableRow key={user.id}>
       <TableCell className="font-mono text-xs">{user.id.substring(0, 8)}...</TableCell>
       <TableCell>{user.email}</TableCell>
       <TableCell>
         {user.plan ? (
-          <Badge variant="outline" className="bg-primary/10">
-            {user.plan.name}
+          <Badge variant={getPlanBadgeVariant(user.plan.plan)} className="bg-primary/10">
+            {getPlanDisplayName(user.plan)}
           </Badge>
         ) : (
           <span className="text-muted-foreground text-sm">N/A</span>
@@ -51,14 +84,8 @@ export function UserTableRow({ user, agentsByUser, setSelectedUserId, formatDate
       </TableCell>
       <TableCell>
         {user.plan?.payment_status ? (
-          <span className={`px-2 py-1 rounded-full text-xs ${
-            user.plan.payment_status === 'completed' ? "bg-green-100 text-green-800" : 
-            user.plan.payment_status === 'pending' ? "bg-yellow-100 text-yellow-800" : 
-            "bg-gray-100 text-gray-800"
-          }`}>
-            {user.plan.payment_status === 'completed' ? "Pago" : 
-              user.plan.payment_status === 'pending' ? "Pendente" : 
-              user.plan.payment_status}
+          <span className={`px-2 py-1 rounded-full text-xs ${paymentStatus.className}`}>
+            {paymentStatus.text}
           </span>
         ) : (
           <span className="text-muted-foreground text-sm">N/A</span>
