@@ -14,6 +14,7 @@ import {
   deleteUserAgent,
   updateUserAgent
 } from "@/services";
+import { supabase } from "@/lib/supabase";
 
 export const useAgentSubmission = (agentType: string) => {
   const navigate = useNavigate();
@@ -129,6 +130,19 @@ export const useAgentSubmission = (agentType: string) => {
       
       // Delete agent from localStorage and call webhook
       const success = await deleteUserAgent(userEmail, agentId);
+      
+      // Delete agent from Supabase database
+      const { error } = await supabase
+        .from('agents')
+        .delete()
+        .eq('id', agentId);
+        
+      if (error) {
+        console.error("Error deleting agent from database:", error);
+        toast.error("Erro na exclusão do banco de dados", {
+          description: "O agente foi removido localmente, mas ocorreu um erro ao excluí-lo do banco de dados.",
+        });
+      }
       
       if (success) {
         toast.success("Agente removido com sucesso", {
