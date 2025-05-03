@@ -1,6 +1,6 @@
 
 import { supabase } from '@/lib/supabase';
-import { PlanType, UserPlan } from './userPlanService';
+import { PlanType, UserPlan } from './planTypes';
 
 /**
  * Update user plan with payment information

@@ -1,6 +1,6 @@
 
 import { supabase } from '@/lib/supabase';
-import { PlanType, UserPlan } from './userPlanService';
+import { PlanType, UserPlan } from './planTypes';
 
 /**
  * Get user plan from Supabase

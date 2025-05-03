@@ -1,6 +1,6 @@
 
 import { supabase } from '@/lib/supabase';
-import { PlanType } from './userPlanService';
+import { PlanType, PLAN_DETAILS } from './planTypes';
 
 /**
  * Update user plan in Supabase
@@ -9,31 +9,6 @@ export const updateUserPlanInSupabase = async (
   userId: string, 
   planType: PlanType
 ): Promise<boolean> => {
-  // Get plan details for the new plan
-  const PLAN_DETAILS = {
-    [PlanType.FREE_TRIAL]: { 
-      name: 'Teste Gratuito', 
-      agentLimit: 1, 
-      price: 0,
-      trialDays: 5 
-    },
-    [PlanType.BASIC]: { 
-      name: 'Inicial', 
-      agentLimit: 1, 
-      price: 97.00
-    },
-    [PlanType.STANDARD]: { 
-      name: 'Padrão', 
-      agentLimit: 3, 
-      price: 210.00
-    },
-    [PlanType.PREMIUM]: { 
-      name: 'Premium', 
-      agentLimit: 10, 
-      price: 700.00
-    }
-  };
-
   // Calculate subscription end date (30 days from now) for paid plans
   let subscriptionEndsAt = null;
   if (planType !== PlanType.FREE_TRIAL) {
