@@ -123,6 +123,11 @@ export function AdminUsers({ onEditAdmin }: AdminUsersProps) {
     }
   };
   
+  const handleAdminUpdated = () => {
+    console.log("Admin updated, refreshing list...");
+    fetchAdmins();
+  };
+  
   return (
     <div>
       {loading ? (
@@ -136,7 +141,7 @@ export function AdminUsers({ onEditAdmin }: AdminUsersProps) {
           currentUserAdminLevel={currentUserAdminLevel}
           onRemoveAdmin={removeAdmin}
           onEditAdmin={onEditAdmin}
-          onAdminUpdated={fetchAdmins}
+          onAdminUpdated={handleAdminUpdated}
         />
       )}
     </div>

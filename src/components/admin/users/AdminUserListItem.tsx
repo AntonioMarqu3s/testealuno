@@ -60,6 +60,17 @@ export function AdminUserListItem({
     setIsDetailDrawerOpen(true);
   };
 
+  const handleEditClick = () => {
+    // If we have an onEditAdmin callback, use it, otherwise open the drawer
+    if (onEditAdmin) {
+      onEditAdmin(admin.id);
+    } else {
+      handleOpenDetails();
+    }
+  };
+
+  const canEdit = admin.id === currentUserAdminId || currentUserAdminLevel === 'master';
+
   return (
     <>
       <div className="border rounded-md p-4 flex justify-between items-center">
@@ -78,12 +89,12 @@ export function AdminUserListItem({
           </p>
         </div>
         <div className="flex gap-2">
-          {/* View details button */}
+          {/* View/Edit details button */}
           <Button 
             variant="ghost" 
             size="sm"
             onClick={handleOpenDetails}
-            title="Ver detalhes do administrador"
+            title="Editar detalhes do administrador"
           >
             <Eye className="h-4 w-4" />
           </Button>
@@ -92,9 +103,9 @@ export function AdminUserListItem({
           <Button 
             variant="ghost" 
             size="sm"
-            onClick={() => onEditAdmin && onEditAdmin(admin.id)}
-            disabled={admin.id !== currentUserAdminId && currentUserAdminLevel !== 'master'}
-            title={admin.id !== currentUserAdminId && currentUserAdminLevel !== 'master' 
+            onClick={handleEditClick}
+            disabled={!canEdit}
+            title={!canEdit
               ? "Apenas administradores master podem editar outros administradores" 
               : "Editar administrador"}
           >
@@ -144,7 +155,7 @@ export function AdminUserListItem({
         </div>
       </div>
       
-      {/* Admin details drawer */}
+      {/* Admin details drawer - for editing */}
       <AdminUserDetailDrawer
         adminId={admin.id}
         open={isDetailDrawerOpen}

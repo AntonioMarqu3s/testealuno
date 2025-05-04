@@ -22,13 +22,13 @@ export function AdminUserDetailDrawer({ adminId, open, onClose, onAdminUpdated }
   const [adminUser, setAdminUser] = useState<AdminUser | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isUpdating, setIsUpdating] = useState<boolean>(false);
-  const { currentUserAdminLevel } = useAdminAuth();
+  const { currentUserAdminLevel, currentUserAdminId } = useAdminAuth();
   
-  // Form states
+  // Form states for the selected admin (not the logged-in admin)
   const [email, setEmail] = useState<string>("");
   const [adminLevel, setAdminLevel] = useState<string>("standard");
   
-  // Fetch admin details
+  // Fetch admin details of the selected admin
   useEffect(() => {
     const fetchAdminUser = async () => {
       if (!adminId || !open) return;
@@ -44,9 +44,12 @@ export function AdminUserDetailDrawer({ adminId, open, onClose, onAdminUpdated }
         if (error) throw error;
         
         setAdminUser(data);
-        // Initialize form fields
+        
+        // Initialize form fields with the selected admin's data
         setEmail(data.email || "");
-        setAdminLevel(data.admin_level || "standard");
+        setAdminLevel(data.admin_level || data.role || "standard");
+        
+        console.log("Fetched admin data:", data);
       } catch (err) {
         console.error("Error fetching admin details:", err);
         toast.error("Erro ao carregar detalhes do administrador");
@@ -69,6 +72,7 @@ export function AdminUserDetailDrawer({ adminId, open, onClose, onAdminUpdated }
         return;
       }
       
+      // Update the admin user's information
       const { error } = await supabase
         .from('admin_users')
         .update({
@@ -80,8 +84,7 @@ export function AdminUserDetailDrawer({ adminId, open, onClose, onAdminUpdated }
       if (error) throw error;
       
       toast.success("Administrador atualizado com sucesso");
-      onAdminUpdated();
-      onClose();
+      onAdminUpdated(); // Refresh the admin list
     } catch (err) {
       console.error("Error updating admin:", err);
       toast.error("Erro ao atualizar administrador");
@@ -91,13 +94,16 @@ export function AdminUserDetailDrawer({ adminId, open, onClose, onAdminUpdated }
   };
   
   const canEditAdminLevel = currentUserAdminLevel === 'master';
+  const isCurrentAdmin = adminUser?.id === currentUserAdminId;
   
   return (
     <Drawer open={open} onClose={onClose}>
       <DrawerContent className="h-[90vh] max-h-[90vh]">
         <div className="mx-auto w-full max-w-4xl">
           <DrawerHeader>
-            <DrawerTitle className="text-2xl font-bold">Detalhes do Administrador</DrawerTitle>
+            <DrawerTitle className="text-2xl font-bold">
+              {isLoading ? "Carregando..." : `Editar Administrador: ${email}`}
+            </DrawerTitle>
           </DrawerHeader>
           
           <div className="p-6 overflow-y-auto max-h-[calc(90vh-180px)]">
@@ -124,8 +130,9 @@ export function AdminUserDetailDrawer({ adminId, open, onClose, onAdminUpdated }
                   <Label htmlFor="email">Email</Label>
                   <Input 
                     id="email" 
+                    type="email"
                     value={email} 
-                    onChange={e => setEmail(e.target.value)} 
+                    onChange={(e) => setEmail(e.target.value)} 
                     placeholder="Email do administrador"
                   />
                 </div>
@@ -169,7 +176,7 @@ export function AdminUserDetailDrawer({ adminId, open, onClose, onAdminUpdated }
           <DrawerFooter className="px-6">
             <div className="flex justify-between w-full">
               <Button variant="outline" onClick={onClose}>
-                Cancelar
+                Fechar
               </Button>
               <Button 
                 onClick={handleUpdateAdmin} 
