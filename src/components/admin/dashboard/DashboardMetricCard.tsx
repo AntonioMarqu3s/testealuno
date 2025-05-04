@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -22,21 +22,48 @@ export function DashboardMetricCard({
   isLoading = false,
   previousValue
 }: DashboardMetricCardProps) {
+  const [animateValue, setAnimateValue] = useState(false);
+  const [displayValue, setDisplayValue] = useState<string | number>(value);
+  
   // Calculate if there's an increase or decrease compared to previous value
   const hasChanged = previousValue !== undefined && previousValue !== value;
   const isIncrease = hasChanged && Number(value) > Number(previousValue);
+  
+  // Animate value changes
+  useEffect(() => {
+    if (hasChanged && !isLoading) {
+      setAnimateValue(true);
+      setDisplayValue(value);
+      
+      // Reset animation state after animation completes
+      const timer = setTimeout(() => {
+        setAnimateValue(false);
+      }, 1000);
+      
+      return () => clearTimeout(timer);
+    } else {
+      setDisplayValue(value);
+    }
+  }, [value, previousValue, hasChanged, isLoading]);
   
   return (
     <Card>
       <CardContent className="p-6">
         <div className="flex items-center justify-between">
-          <div>
+          <div className="flex-1">
             <p className="text-sm font-medium text-muted-foreground">{title}</p>
             {isLoading ? (
               <Skeleton className="h-9 w-16 mt-1" />
             ) : (
               <div className="flex items-center gap-2">
-                <p className="text-3xl font-bold mt-1">{value}</p>
+                <p 
+                  className={`text-3xl font-bold mt-1 ${animateValue ? 'transition-all duration-500 transform scale-110' : ''}`}
+                  style={{
+                    color: animateValue ? (isIncrease ? 'green' : 'red') : 'inherit',
+                  }}
+                >
+                  {displayValue}
+                </p>
                 
                 {/* Show change indicator if we have a previous value that's different */}
                 {hasChanged && (

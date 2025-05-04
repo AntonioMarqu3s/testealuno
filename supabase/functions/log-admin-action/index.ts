@@ -14,6 +14,8 @@ serve(async (req) => {
   }
 
   try {
+    console.log("Admin action logging function called");
+    
     // Create a Supabase client with the service role key
     const supabaseAdmin = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
@@ -28,13 +30,36 @@ serve(async (req) => {
 
     // Get the request body
     const { action, performed_by, target_id, details } = await req.json();
+    console.log("Received log data:", { action, performed_by, target_id });
 
     // Validate required fields
     if (!action || !performed_by) {
+      console.error("Missing required fields");
       return new Response(
         JSON.stringify({ error: "Missing required fields: action and performed_by are required" }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
+    }
+
+    // First let's check if the table exists
+    const { error: checkError } = await supabaseAdmin
+      .from('admin_audit_logs')
+      .select('id')
+      .limit(1);
+      
+    if (checkError) {
+      console.log("Table check error:", checkError.message);
+      // Table doesn't exist, so let's create it
+      const { error: createTableError } = await supabaseAdmin.rpc('create_admin_audit_logs_if_not_exists');
+      
+      if (createTableError) {
+        console.error("Error creating table:", createTableError);
+        return new Response(
+          JSON.stringify({ error: createTableError.message }),
+          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+      console.log("Created admin_audit_logs table");
     }
 
     // Insert the log entry
@@ -59,6 +84,7 @@ serve(async (req) => {
       );
     }
 
+    console.log("Admin action logged successfully with ID:", data.id);
     return new Response(
       JSON.stringify({ success: true, id: data.id }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

@@ -37,13 +37,27 @@ export function useAdminDashboardMetrics() {
   const fetchDashboardMetrics = useCallback(async () => {
     try {
       setIsLoading(true);
+      console.log('Fetching dashboard metrics...');
       
-      // Get total users count
-      const { count: totalUsers, error: usersError } = await supabase
-        .from('user_plans')
-        .select('*', { count: 'exact', head: true });
+      // Get total users count from auth.users using a RPC function
+      const { data: { count: totalUsers }, error: usersCountError } = await supabase
+        .rpc('admin_count_total_users');
         
-      if (usersError) throw usersError;
+      if (usersCountError) {
+        console.error('Error fetching total users:', usersCountError);
+        // Fallback to user_plans table
+        const { count: fallbackUserCount, error: fallbackError } = await supabase
+          .from('user_plans')
+          .select('*', { count: 'exact', head: true });
+          
+        if (fallbackError) throw fallbackError;
+        
+        console.log('Using fallback user count:', fallbackUserCount);
+        metrics.totalUsers = fallbackUserCount || 0;
+      } else {
+        console.log('Total users from RPC:', totalUsers);
+        metrics.totalUsers = totalUsers || 0;
+      }
       
       // Get new users in last 30 days
       const thirtyDaysAgo = new Date();
@@ -52,16 +66,28 @@ export function useAdminDashboardMetrics() {
       const { count: newUsers, error: newUsersError } = await supabase
         .from('user_plans')
         .select('*', { count: 'exact', head: true })
-        .gte('created_at', thirtyDaysAgo.toISOString());
+        .gte('updated_at', thirtyDaysAgo.toISOString());
         
-      if (newUsersError) throw newUsersError;
+      if (newUsersError) {
+        console.error('Error fetching new users:', newUsersError);
+        metrics.newUsers = 0;
+      } else {
+        console.log('New users count:', newUsers);
+        metrics.newUsers = newUsers || 0;
+      }
       
-      // Get total agents
+      // Get total agents - direct query to agents table
       const { count: totalAgents, error: agentsError } = await supabase
         .from('agents')
         .select('*', { count: 'exact', head: true });
         
-      if (agentsError) throw agentsError;
+      if (agentsError) {
+        console.error('Error fetching total agents:', agentsError);
+        metrics.totalAgents = 0;
+      } else {
+        console.log('Total agents count:', totalAgents);
+        metrics.totalAgents = totalAgents || 0;
+      }
       
       // Get active subscriptions
       const { count: activeSubscriptions, error: subscriptionsError } = await supabase
@@ -70,15 +96,15 @@ export function useAdminDashboardMetrics() {
         .gt('plan', 0)
         .eq('payment_status', 'completed');
         
-      if (subscriptionsError) throw subscriptionsError;
+      if (subscriptionsError) {
+        console.error('Error fetching active subscriptions:', subscriptionsError);
+        metrics.activeSubscriptions = 0;
+      } else {
+        console.log('Active subscriptions count:', activeSubscriptions);
+        metrics.activeSubscriptions = activeSubscriptions || 0;
+      }
       
-      setMetrics({
-        totalUsers: totalUsers || 0,
-        newUsers: newUsers || 0,
-        totalAgents: totalAgents || 0,
-        activeSubscriptions: activeSubscriptions || 0
-      });
-      
+      setMetrics({...metrics});
       setLastUpdated(new Date());
     } catch (error) {
       console.error('Error fetching dashboard metrics:', error);
@@ -90,8 +116,25 @@ export function useAdminDashboardMetrics() {
   
   const fetchActivities = useCallback(async (pageNumber = 1, filter = timeFilter) => {
     try {
+      console.log('Fetching activities with filter:', filter, 'page:', pageNumber);
       const pageSize = 10;
       const offset = (pageNumber - 1) * pageSize;
+      
+      // First check if admin_audit_logs table exists
+      const { error: checkError } = await supabase
+        .from('admin_audit_logs')
+        .select('id')
+        .limit(1);
+      
+      let tableExists = !checkError;
+      
+      // If the table doesn't exist or there's an error, show a toast and set empty activities
+      if (!tableExists) {
+        console.log('admin_audit_logs table does not exist or is not accessible');
+        setActivities([]);
+        setHasMoreActivities(false);
+        return;
+      }
       
       let query = supabase
         .from('admin_audit_logs')
@@ -116,7 +159,24 @@ export function useAdminDashboardMetrics() {
       
       const { data, error } = await query;
       
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching activities:', error);
+        // If we get an error, set empty activities but don't show toast error
+        setActivities([]);
+        setHasMoreActivities(false);
+        return;
+      }
+      
+      if (!data || data.length === 0) {
+        console.log('No activities found');
+        if (pageNumber === 1) {
+          setActivities([]);
+        }
+        setHasMoreActivities(false);
+        return;
+      }
+      
+      console.log('Activities found:', data.length);
       
       // Format activities
       const formattedActivities = data.map(item => ({
@@ -168,12 +228,14 @@ export function useAdminDashboardMetrics() {
   };
   
   const refreshData = useCallback(() => {
+    console.log('Refreshing dashboard data...');
     fetchDashboardMetrics();
     fetchActivities(1);
     setPage(1);
   }, [fetchDashboardMetrics, fetchActivities]);
   
   const changeTimeFilter = (filter: 'today' | 'week' | 'month' | 'all') => {
+    console.log('Changing time filter to:', filter);
     setTimeFilter(filter);
     setPage(1);
     fetchActivities(1, filter);
@@ -207,11 +269,13 @@ export function useAdminDashboardMetrics() {
   
   // Initial data loading
   useEffect(() => {
+    console.log('Initial loading of dashboard metrics and activities');
     fetchDashboardMetrics();
     fetchActivities();
     
     // Setup polling for automatic updates
     const pollingInterval = setInterval(() => {
+      console.log('Auto-refreshing dashboard data');
       fetchDashboardMetrics();
       fetchActivities(1);
       setPage(1);
