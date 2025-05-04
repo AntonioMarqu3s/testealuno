@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
@@ -13,12 +14,34 @@ export interface AdminUser {
   plan: number;
   plan_name: string;
   agent_limit: number;
-  role: AdminRole; // Adicionado o campo role
+  role: AdminRole; // Required role property
   payment_status?: string;
   payment_date?: string;
   subscription_ends_at?: string;
   trial_ends_at?: string;
   connect_instancia?: boolean;
+}
+
+// Function to log admin actions
+async function logAdminAction(action: string, targetId: string | undefined, details: any = {}) {
+  try {
+    const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+    if (sessionError) throw sessionError;
+    
+    if (!sessionData.session) return;
+
+    // Call the edge function to log the action
+    await supabase.functions.invoke("log-admin-action", {
+      body: {
+        action,
+        performed_by: sessionData.session.user.id,
+        target_id: targetId,
+        details
+      }
+    });
+  } catch (error) {
+    console.error("Failed to log admin action:", error);
+  }
 }
 
 export function useAdminUsersList() {
@@ -81,6 +104,7 @@ export function useAdminUsersList() {
     adminUsers,
     isLoading,
     error,
-    fetchAdminUsers
+    fetchAdminUsers,
+    logAdminAction
   };
 }

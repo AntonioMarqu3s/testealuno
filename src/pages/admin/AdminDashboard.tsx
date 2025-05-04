@@ -1,46 +1,85 @@
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
+import { DashboardMetricCard } from "@/components/admin/dashboard/DashboardMetricCard";
+import { ActivityFeed } from "@/components/admin/dashboard/ActivityFeed";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, UserPlus, Settings, Calendar } from "lucide-react";
+import { Users, UserPlus, Bot, Calendar } from "lucide-react";
+import { useAdminDashboardMetrics } from "@/hooks/admin/useAdminDashboardMetrics";
+import { AdminQuickAction } from "@/components/admin/dashboard/AdminQuickAction";
 
 export default function AdminDashboard() {
+  const {
+    metrics,
+    activities,
+    isLoading,
+    lastUpdated,
+    hasMoreActivities,
+    loadMoreActivities,
+    refreshData,
+    timeFilter,
+    changeTimeFilter,
+    exportAsCSV
+  } = useAdminDashboardMetrics();
+  
+  const [previousMetrics, setPreviousMetrics] = useState({
+    totalUsers: 0,
+    newUsers: 0,
+    totalAgents: 0,
+    activeSubscriptions: 0
+  });
+  
+  // Save previous metrics for animation comparison
+  useEffect(() => {
+    if (!isLoading) {
+      setPreviousMetrics(metrics);
+    }
+  }, [metrics, isLoading]);
+
   return (
     <AdminLayout>
       <div className="p-6 space-y-6">
         <h1 className="text-3xl font-bold">Dashboard Administrativo</h1>
         
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-          <DashboardCard
+          <DashboardMetricCard
             title="Total de Usuários"
-            value="--"
+            value={metrics.totalUsers}
             icon={<Users className="h-6 w-6" />}
             description="Usuários registrados"
             colorClass="bg-blue-100 text-blue-700"
+            isLoading={isLoading}
+            previousValue={previousMetrics.totalUsers}
           />
           
-          <DashboardCard
+          <DashboardMetricCard
             title="Novos Usuários"
-            value="--"
+            value={metrics.newUsers}
             icon={<UserPlus className="h-6 w-6" />}
             description="Últimos 30 dias"
             colorClass="bg-green-100 text-green-700"
+            isLoading={isLoading}
+            previousValue={previousMetrics.newUsers}
           />
           
-          <DashboardCard
+          <DashboardMetricCard
             title="Total de Agentes"
-            value="--"
-            icon={<Settings className="h-6 w-6" />}
+            value={metrics.totalAgents}
+            icon={<Bot className="h-6 w-6" />}
             description="Agentes criados"
             colorClass="bg-purple-100 text-purple-700"
+            isLoading={isLoading}
+            previousValue={previousMetrics.totalAgents}
           />
           
-          <DashboardCard
+          <DashboardMetricCard
             title="Assinaturas Ativas"
-            value="--"
+            value={metrics.activeSubscriptions}
             icon={<Calendar className="h-6 w-6" />}
             description="Planos pagos"
             colorClass="bg-amber-100 text-amber-700"
+            isLoading={isLoading}
+            previousValue={previousMetrics.activeSubscriptions}
           />
         </div>
         
@@ -76,63 +115,19 @@ export default function AdminDashboard() {
             </CardContent>
           </Card>
           
-          <Card>
-            <CardHeader>
-              <CardTitle>Atividade Recente</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground text-center py-8">
-                Dados de atividade serão exibidos aqui
-              </p>
-            </CardContent>
-          </Card>
+          <ActivityFeed 
+            activities={activities}
+            isLoading={isLoading}
+            lastUpdated={lastUpdated}
+            hasMore={hasMoreActivities}
+            onLoadMore={loadMoreActivities}
+            onRefresh={refreshData}
+            timeFilter={timeFilter}
+            onChangeTimeFilter={changeTimeFilter}
+            onExport={exportAsCSV}
+          />
         </div>
       </div>
     </AdminLayout>
-  );
-}
-
-interface DashboardCardProps {
-  title: string;
-  value: string;
-  icon: React.ReactNode;
-  description: string;
-  colorClass: string;
-}
-
-function DashboardCard({ title, value, icon, description, colorClass }: DashboardCardProps) {
-  return (
-    <Card>
-      <CardContent className="p-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-sm font-medium text-muted-foreground">{title}</p>
-            <p className="text-3xl font-bold mt-1">{value}</p>
-            <p className="text-xs text-muted-foreground mt-1">{description}</p>
-          </div>
-          <div className={`p-3 rounded-full ${colorClass}`}>
-            {icon}
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
-
-interface AdminQuickActionProps {
-  label: string;
-  description: string;
-  href: string;
-}
-
-function AdminQuickAction({ label, description, href }: AdminQuickActionProps) {
-  return (
-    <a 
-      href={href} 
-      className="block p-4 rounded-lg border border-border hover:bg-muted transition-colors"
-    >
-      <div className="font-medium">{label}</div>
-      <div className="text-sm text-muted-foreground">{description}</div>
-    </a>
   );
 }
