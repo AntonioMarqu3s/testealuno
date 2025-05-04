@@ -3,8 +3,6 @@ import React, { useState, useMemo } from "react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { Button } from "@/components/ui/button";
 import { RefreshCw } from "lucide-react";
-import { formatDistanceToNow } from "date-fns";
-import { ptBR } from "date-fns/locale";
 import { useAdminUsers } from "@/hooks/admin/useAdminUsers";
 import { useAdminAgents } from "@/hooks/admin/useAdminAgents";
 
@@ -13,12 +11,14 @@ import { UserSearchBar } from "@/components/admin/users/UserSearchBar";
 import { UsersTable } from "@/components/admin/users/UsersTable";
 import { ErrorAlert } from "@/components/admin/users/ErrorAlert";
 import { CreateUserDialog } from "@/components/admin/users/CreateUserDialog";
+import { UserDetailDrawer } from "@/components/admin/users/UserDetailDrawer";
 
 export default function AdminUsers() {
   const [searchTerm, setSearchTerm] = useState("");
   const [searchApplied, setSearchApplied] = useState("");
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+  const [isDetailDrawerOpen, setIsDetailDrawerOpen] = useState(false);
   const { users, isLoading, error, fetchUsers } = useAdminUsers();
   const { agents } = useAdminAgents();
 
@@ -68,6 +68,18 @@ export default function AdminUsers() {
   // Handle search
   const handleSearch = () => {
     setSearchApplied(searchTerm);
+  };
+
+  // Handle opening user detail drawer
+  const handleUserClick = (userId: string) => {
+    setSelectedUserId(userId);
+    setIsDetailDrawerOpen(true);
+  };
+
+  // Handle closing user detail drawer
+  const handleCloseDrawer = () => {
+    setSelectedUserId(null);
+    setIsDetailDrawerOpen(false);
   };
 
   // Format date for display
@@ -127,10 +139,17 @@ export default function AdminUsers() {
             users={users}
             filteredUsers={filteredUsers}
             agentsByUser={agentsByUser}
-            setSelectedUserId={setSelectedUserId}
+            setSelectedUserId={handleUserClick}
             formatDate={formatDate}
           />
         )}
+        
+        <UserDetailDrawer 
+          userId={selectedUserId}
+          open={isDetailDrawerOpen}
+          onClose={handleCloseDrawer}
+          onUserUpdated={handleRefresh}
+        />
       </div>
     </AdminLayout>
   );

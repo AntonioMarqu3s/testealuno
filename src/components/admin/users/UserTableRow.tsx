@@ -3,10 +3,7 @@ import React from "react";
 import { TableCell, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Calendar, Edit, Trash, Users } from "lucide-react";
-import { UserDetails } from "@/components/admin/UserDetails";
-import { UserPlan } from "@/hooks/admin/useAdminUsers";
 
 interface UserRowProps {
   user: {
@@ -14,10 +11,18 @@ interface UserRowProps {
     email: string;
     created_at: string;
     isActive: boolean;
-    plan?: UserPlan;
+    plan?: {
+      name: string;
+      agent_limit: number;
+      plan: number;
+      payment_date?: string;
+      subscription_ends_at?: string;
+      payment_status?: string;
+      trial_ends_at?: string;
+    };
   };
   agentsByUser: Record<string, number>;
-  setSelectedUserId: (id: string | null) => void;
+  setSelectedUserId: (id: string) => void;
   formatDate: (dateString: string | null | undefined) => string;
 }
 
@@ -34,7 +39,7 @@ export function UserTableRow({ user, agentsByUser, setSelectedUserId, formatDate
   };
   
   // Helper function to format plan name
-  const getPlanDisplayName = (plan?: UserPlan) => {
+  const getPlanDisplayName = (plan?: any) => {
     if (!plan) return "N/A";
     return plan.name || (
       plan.plan === 0 ? "Teste Gratuito" : 
@@ -117,23 +122,13 @@ export function UserTableRow({ user, agentsByUser, setSelectedUserId, formatDate
         )}
       </TableCell>
       <TableCell className="text-right">
-        <Dialog>
-          <DialogTrigger asChild>
-            <Button 
-              variant="ghost" 
-              size="sm"
-              onClick={() => setSelectedUserId(user.id)}
-            >
-              <Edit className="h-4 w-4" />
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-lg">
-            <DialogHeader>
-              <DialogTitle>Detalhes do Usuário</DialogTitle>
-            </DialogHeader>
-            <UserDetails userId={user.id} />
-          </DialogContent>
-        </Dialog>
+        <Button 
+          variant="ghost" 
+          size="sm"
+          onClick={() => setSelectedUserId(user.id)}
+        >
+          <Edit className="h-4 w-4" />
+        </Button>
         
         <Button variant="ghost" size="sm" className="text-red-500 hover:text-red-700">
           <Trash className="h-4 w-4" />
