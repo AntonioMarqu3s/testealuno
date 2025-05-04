@@ -37,7 +37,7 @@ export function AdminUserForm({
   const form = useForm<AdminUserFormData>({
     defaultValues: {
       email: adminUser?.email || "",
-      admin_level: adminUser?.admin_level || adminUser?.role || "standard",
+      admin_level: adminUser?.admin_level || "standard",
       password: "",
       confirmPassword: "",
     },
