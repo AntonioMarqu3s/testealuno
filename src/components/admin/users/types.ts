@@ -8,5 +8,4 @@ export type { AdminUser, AdminRole, Group };
 export interface AdminUserTableData extends AdminUser {
   user_id: string;
   user_email?: string;
-  email?: string;
 }

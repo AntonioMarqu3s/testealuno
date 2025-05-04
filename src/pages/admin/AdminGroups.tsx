@@ -3,6 +3,7 @@ import React from "react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { useAdminAuth } from "@/context/AdminAuthContext";
 import { Badge } from "@/components/ui/badge";
+import { GroupManagement } from "@/components/admin/groups/GroupManagement";
 
 export default function AdminGroups() {
   const { currentUserAdminLevel } = useAdminAuth();
@@ -23,11 +24,7 @@ export default function AdminGroups() {
             <p>Apenas administradores master podem acessar esta seção.</p>
           </div>
         ) : (
-          <div className="border rounded-lg p-6 text-center">
-            <p className="text-muted-foreground">
-              Funcionalidade em desenvolvimento.
-            </p>
-          </div>
+          <GroupManagement />
         )}
       </div>
     </AdminLayout>

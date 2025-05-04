@@ -32,6 +32,7 @@ export interface AdminUser {
   role: AdminRole;
   groups?: Group[];
   created_at: string;
+  user_id?: string; // Added to fix compatibility
 }
 
 // Interface for the admin user with additional user details
