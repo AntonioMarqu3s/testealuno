@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useAdminGroups } from '@/hooks/admin/useAdminGroups';
 import { Button } from '@/components/ui/button';
@@ -11,7 +10,7 @@ import { UserPlus, Users, Shield } from 'lucide-react';
 import { toast } from 'sonner';
 
 export function GroupManagement() {
-  const { groups, loading, createGroup } = useAdminGroups();
+  const { groups, isLoading, createGroup } = useAdminGroups();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
@@ -70,7 +69,7 @@ export function GroupManagement() {
         </Dialog>
       </div>
 
-      {loading ? (
+      {isLoading ? (
         <div className="flex justify-center py-8">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
         </div>

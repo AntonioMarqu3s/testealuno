@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import { useAdminAuth } from "@/context/AdminAuthContext";
+import { AdminRole } from "@/types/admin";
 
 export interface AdminUser {
   id: string;
@@ -12,6 +13,12 @@ export interface AdminUser {
   plan: number;
   plan_name: string;
   agent_limit: number;
+  role: AdminRole; // Adicionado o campo role
+  payment_status?: string;
+  payment_date?: string;
+  subscription_ends_at?: string;
+  trial_ends_at?: string;
+  connect_instancia?: boolean;
 }
 
 export function useAdminUsersList() {

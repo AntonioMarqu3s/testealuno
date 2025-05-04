@@ -258,13 +258,13 @@ export function UserDetailFields({ userData, isLoading, onSave }: UserDetailFiel
     }
 
     // Ensure we have a valid plan ID
-    const validPlanId = userData?.plan?.id || `plan-${userData?.id || 'new'}`;
+    const planId = userData?.plan?.id || `plan-${userData?.id || 'new'}`;
 
     setEditedData({
       ...editedData,
       plan: {
         ...(editedData.plan || userData.plan || {}),
-        id: validPlanId,
+        id: planId,
         plan: numPlanId,
         name: selectedPlan.name,
         agent_limit: selectedPlan.agent_limit,
@@ -498,6 +498,9 @@ export function UserDetailFields({ userData, isLoading, onSave }: UserDetailFiel
                           ...editedData,
                           plan: { 
                             ...(editedData.plan || userData.plan || {}), 
+                            id: userData?.plan?.id || `plan-${userData?.id || 'new'}`,
+                            name: (editedData.plan?.name || userData.plan?.name || 'Teste Gratuito'),
+                            plan: (editedData.plan?.plan || userData.plan?.plan || 0),
                             agent_limit: parseInt(e.target.value) 
                           }
                         })}

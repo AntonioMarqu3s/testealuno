@@ -76,7 +76,7 @@ export function AdminUserDetailDrawer({ adminId, open, onClose, onAdminUpdated }
               
               {!isLoading && adminUser && (
                 <AdminUserForm
-                  adminUser={{...adminUser, role: adminUser.role || 'group' as const}}
+                  adminUser={{...adminUser, role: adminUser.role || 'group'}}
                   isUpdating={isUpdating}
                   showPasswordFields={showPasswordFields}
                   handlePasswordToggle={handlePasswordToggle}
@@ -114,7 +114,7 @@ export function AdminUserDetailDrawer({ adminId, open, onClose, onAdminUpdated }
                       
                       {adminUser && (
                         <AdminUserForm
-                          adminUser={{...adminUser, role: adminUser.role || 'group' as const}}
+                          adminUser={{...adminUser, role: adminUser.role || 'group'}}
                           isUpdating={isUpdating}
                           showPasswordFields={showPasswordFields}
                           handlePasswordToggle={handlePasswordToggle}
