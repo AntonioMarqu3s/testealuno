@@ -136,6 +136,7 @@ export function AdminUsers({ onEditAdmin }: AdminUsersProps) {
           currentUserAdminLevel={currentUserAdminLevel}
           onRemoveAdmin={removeAdmin}
           onEditAdmin={onEditAdmin}
+          onAdminUpdated={fetchAdmins}
         />
       )}
     </div>

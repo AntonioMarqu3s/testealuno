@@ -17,6 +17,7 @@ interface AdminUsersListProps {
   currentUserAdminLevel: string | null;
   onRemoveAdmin: (adminId: string, userId: string) => Promise<void>;
   onEditAdmin?: (adminId: string) => void;
+  onAdminUpdated?: () => void;
 }
 
 export function AdminUsersList({
@@ -24,7 +25,8 @@ export function AdminUsersList({
   currentUserAdminId,
   currentUserAdminLevel,
   onRemoveAdmin,
-  onEditAdmin
+  onEditAdmin,
+  onAdminUpdated
 }: AdminUsersListProps) {
   return (
     <div className="space-y-4">
@@ -36,6 +38,7 @@ export function AdminUsersList({
           currentUserAdminLevel={currentUserAdminLevel}
           onRemoveAdmin={onRemoveAdmin}
           onEditAdmin={onEditAdmin}
+          onAdminUpdated={onAdminUpdated}
         />
       ))}
     </div>
