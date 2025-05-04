@@ -1,3 +1,4 @@
+
 import { useEffect } from "react";
 import { Toaster as ShadcnToaster } from "@/components/ui/toaster";
 import { Toaster as SonnerToaster } from "@/components/ui/sonner";
@@ -6,9 +7,9 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
 import { AdminAuthProvider } from "./context/AdminAuthContext";
-import { AdminGuard } from "./components/admin/AdminGuard";
 import { supabase } from "@/lib/supabase";
 import { initializeAdminUser } from "@/utils/adminAuthUtils";
+import { adminRoutes } from "./routes/adminRoutes";
 import AuthCallback from "./pages/AuthCallback";
 import ResetPassword from "./pages/ResetPassword";
 import Index from "./pages/Index";
@@ -22,14 +23,6 @@ import Checkout from "./pages/Checkout";
 import PlanCheckout from "./pages/PlanCheckout";
 import Plans from "./pages/Plans";
 import Settings from "./pages/Settings";
-import AdminLogin from "./pages/admin/AdminLogin";
-import AdminDashboard from "./pages/admin/AdminDashboard";
-import AdminUsers from "./pages/admin/AdminUsers";
-import AdminPlans from "./pages/admin/AdminPlans";
-import AdminPayments from "./pages/admin/AdminPayments";
-import AdminAdministrators from "./pages/admin/AdminAdministrators";
-import AdminGroups from "./pages/admin/AdminGroups";
-import AdminSettings from "./pages/admin/AdminSettings";
 import { initializeUserEmail } from "./services/user/userService";
 import { initializeUserPlan } from "./services/plan/userPlanService";
 import WhatsAppFloatingButton from "./components/ui/WhatsAppFloatingButton";
@@ -88,14 +81,7 @@ function App() {
                   <Route path="/update-email" element={<Dashboard />} />
                   
                   {/* Admin routes */}
-                  <Route path="/admin" element={<AdminLogin />} />
-                  <Route path="/admin/dashboard" element={<AdminGuard><AdminDashboard /></AdminGuard>} />
-                  <Route path="/admin/users" element={<AdminGuard><AdminUsers /></AdminGuard>} />
-                  <Route path="/admin/plans" element={<AdminGuard><AdminPlans /></AdminGuard>} />
-                  <Route path="/admin/payments" element={<AdminGuard><AdminPayments /></AdminGuard>} />
-                  <Route path="/admin/administrators" element={<AdminGuard><AdminAdministrators /></AdminGuard>} />
-                  <Route path="/admin/groups" element={<AdminGuard><AdminGroups /></AdminGuard>} />
-                  <Route path="/admin/settings" element={<AdminGuard><AdminSettings /></AdminGuard>} />
+                  {adminRoutes}
                   
                   {/* 404 route */}
                   <Route path="*" element={<NotFound />} />
