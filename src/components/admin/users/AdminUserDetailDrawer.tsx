@@ -10,6 +10,7 @@ import { useAdminAuth } from "@/context/AdminAuthContext";
 import { AdminUser } from "@/hooks/admin/useAdminUsersList";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Card } from "@/components/ui/card";
 
 interface AdminUserDetailDrawerProps {
   adminId: string | null;
@@ -22,11 +23,14 @@ export function AdminUserDetailDrawer({ adminId, open, onClose, onAdminUpdated }
   const [adminUser, setAdminUser] = useState<AdminUser | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isUpdating, setIsUpdating] = useState<boolean>(false);
+  const [showPasswordFields, setShowPasswordFields] = useState<boolean>(false);
   const { currentUserAdminLevel, currentUserAdminId } = useAdminAuth();
   
-  // Form states for the selected admin (not the logged-in admin)
+  // Form states for the selected admin
   const [email, setEmail] = useState<string>("");
   const [adminLevel, setAdminLevel] = useState<string>("standard");
+  const [password, setPassword] = useState<string>("");
+  const [confirmPassword, setConfirmPassword] = useState<string>("");
   
   // Fetch admin details of the selected admin
   useEffect(() => {
@@ -48,6 +52,8 @@ export function AdminUserDetailDrawer({ adminId, open, onClose, onAdminUpdated }
         // Initialize form fields with the selected admin's data
         setEmail(data.email || "");
         setAdminLevel(data.admin_level || data.role || "standard");
+        setPassword("");
+        setConfirmPassword("");
         
         console.log("Fetched admin data:", data);
       } catch (err) {
@@ -60,9 +66,25 @@ export function AdminUserDetailDrawer({ adminId, open, onClose, onAdminUpdated }
     
     fetchAdminUser();
   }, [adminId, open]);
+
+  const handlePasswordToggle = () => {
+    setShowPasswordFields(!showPasswordFields);
+  };
   
   const handleUpdateAdmin = async () => {
     if (!adminId) return;
+    
+    // Validate password if it's being changed
+    if (showPasswordFields && password) {
+      if (password !== confirmPassword) {
+        toast.error("As senhas não coincidem");
+        return;
+      }
+      if (password.length < 6) {
+        toast.error("A senha deve ter pelo menos 6 caracteres");
+        return;
+      }
+    }
     
     setIsUpdating(true);
     try {
@@ -72,7 +94,7 @@ export function AdminUserDetailDrawer({ adminId, open, onClose, onAdminUpdated }
         return;
       }
       
-      // Update the admin user's information
+      // Update the admin user's information in admin_users table
       const { error } = await supabase
         .from('admin_users')
         .update({
@@ -83,7 +105,27 @@ export function AdminUserDetailDrawer({ adminId, open, onClose, onAdminUpdated }
         
       if (error) throw error;
       
+      // If password is being updated, call the edge function
+      if (showPasswordFields && password) {
+        const { data: updateResult, error: updateError } = await supabase.functions.invoke("update-admin-credentials", {
+          body: { 
+            adminId,
+            email,
+            password,
+          }
+        });
+        
+        if (updateError) throw updateError;
+        
+        if (!updateResult.success) {
+          throw new Error(updateResult.message || "Erro ao atualizar credenciais");
+        }
+      }
+      
       toast.success("Administrador atualizado com sucesso");
+      setShowPasswordFields(false);
+      setPassword("");
+      setConfirmPassword("");
       onAdminUpdated(); // Refresh the admin list
     } catch (err) {
       console.error("Error updating admin:", err);
@@ -158,6 +200,42 @@ export function AdminUserDetailDrawer({ adminId, open, onClose, onAdminUpdated }
                     </p>
                   )}
                 </div>
+                
+                <div className="space-y-2">
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    onClick={handlePasswordToggle}
+                  >
+                    {showPasswordFields ? "Cancelar Alteração de Senha" : "Alterar Senha"}
+                  </Button>
+                </div>
+                
+                {showPasswordFields && (
+                  <Card className="p-4 space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="password">Nova Senha</Label>
+                      <Input
+                        id="password"
+                        type="password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        placeholder="Digite a nova senha"
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="confirm-password">Confirme a Senha</Label>
+                      <Input
+                        id="confirm-password"
+                        type="password"
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        placeholder="Confirme a nova senha"
+                      />
+                    </div>
+                  </Card>
+                )}
                 
                 <div className="space-y-2">
                   <Label htmlFor="created-at">Criado em</Label>
