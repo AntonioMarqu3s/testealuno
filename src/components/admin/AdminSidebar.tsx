@@ -8,16 +8,24 @@ import {
   Calendar,
   CreditCard,
   Shield,
-  User,
-  UserCog,
   FolderKanban
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useAdminAuth } from "@/context/AdminAuthContext";
+import { useAdminMenu, AdminMenuItem } from "@/hooks/admin/useAdminMenu";
 
 export function AdminSidebar() {
-  const { currentUserAdminLevel } = useAdminAuth();
-  const isMasterAdmin = currentUserAdminLevel === 'master';
+  const { menuItems } = useAdminMenu();
+  
+  // Map of icon names to their components
+  const iconMap: Record<string, React.ComponentType<any>> = {
+    LayoutDashboard,
+    Users,
+    Settings,
+    Calendar,
+    CreditCard,
+    Shield,
+    FolderKanban
+  };
 
   return (
     <aside className="w-64 bg-card border-r h-screen flex flex-col">
@@ -28,56 +36,17 @@ export function AdminSidebar() {
       
       <nav className="flex-1 p-4">
         <ul className="space-y-2">
-          <SidebarItem 
-            to="/admin/dashboard" 
-            icon={<LayoutDashboard className="h-5 w-5" />}
-            label="Dashboard"
-          />
-          
-          <SidebarItem 
-            to="/admin/users" 
-            icon={<Users className="h-5 w-5" />}
-            label="Usuários"
-          />
-          
-          {/* Only visible to master admin */}
-          {isMasterAdmin && (
-            <SidebarItem 
-              to="/admin/administrators" 
-              icon={<UserCog className="h-5 w-5" />}
-              label="Administradores"
-            />
-          )}
-          
-          {/* Only visible to master admin */}
-          {isMasterAdmin && (
-            <SidebarItem 
-              to="/admin/groups" 
-              icon={<FolderKanban className="h-5 w-5" />}
-              label="Grupos"
-            />
-          )}
-          
-          <SidebarItem 
-            to="/admin/plans" 
-            icon={<Calendar className="h-5 w-5" />}
-            label="Planos"
-          />
-          
-          <SidebarItem 
-            to="/admin/payments" 
-            icon={<CreditCard className="h-5 w-5" />}
-            label="Pagamentos"
-          />
-          
-          {/* Only visible to master admin */}
-          {isMasterAdmin && (
-            <SidebarItem 
-              to="/admin/settings" 
-              icon={<Settings className="h-5 w-5" />}
-              label="Configurações"
-            />
-          )}
+          {menuItems.map((item: AdminMenuItem) => {
+            const IconComponent = iconMap[item.icon];
+            return (
+              <SidebarItem 
+                key={item.path}
+                to={item.path} 
+                icon={<IconComponent className="h-5 w-5" />}
+                label={item.label}
+              />
+            );
+          })}
         </ul>
       </nav>
       
