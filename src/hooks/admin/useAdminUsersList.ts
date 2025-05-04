@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
@@ -10,6 +9,9 @@ export interface AdminUser {
   email: string;
   admin_level: string;
   created_at: string;
+  plan: number;
+  plan_name: string;
+  agent_limit: number;
 }
 
 export function useAdminUsersList() {
@@ -27,7 +29,14 @@ export function useAdminUsersList() {
       
       const { data, error: fetchError } = await supabase
         .from('admin_users')
-        .select('*')
+        .select(`
+          *,
+          user_plans!user_id (
+            name,
+            agent_limit,
+            plan
+          )
+        `)
         .order('created_at', { ascending: false });
       
       if (fetchError) {
@@ -35,8 +44,16 @@ export function useAdminUsersList() {
         throw new Error(`Error fetching admin users: ${fetchError.message}`);
       }
       
-      console.log(`Successfully fetched ${data?.length || 0} admin users:`, data);
-      setAdminUsers(data || []);
+      // Mapear os dados incluindo informações do plano
+      const mappedData = data?.map(user => ({
+        ...user,
+        plan: user.user_plans?.plan || 0,
+        plan_name: user.user_plans?.name || 'Teste Gratuito',
+        agent_limit: user.user_plans?.agent_limit || 1
+      })) || [];
+      
+      console.log(`Successfully fetched ${mappedData.length} admin users:`, mappedData);
+      setAdminUsers(mappedData);
     } catch (err) {
       console.error("Error in fetchAdminUsers:", err);
       const errorMessage = err instanceof Error ? err.message : "Failed to fetch admin users";

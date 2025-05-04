@@ -1,15 +1,16 @@
-
 import React from "react";
-import { FormField, FormItem, FormLabel, FormControl } from "@/components/ui/form";
+import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Control } from "react-hook-form";
+import { UserFormData } from "@/hooks/admin/useUserDetailDrawer";
 
 // Generic interface that works with both user and admin forms
 interface PasswordFieldsProps {
-  control: Control<any>;
+  control: Control<UserFormData>;
+  disabled?: boolean;
 }
 
-export function PasswordFields({ control }: PasswordFieldsProps) {
+export function PasswordFields({ control, disabled }: PasswordFieldsProps) {
   return (
     <div className="space-y-4">
       <FormField
@@ -23,8 +24,10 @@ export function PasswordFields({ control }: PasswordFieldsProps) {
                 type="password" 
                 placeholder="Digite a nova senha"
                 {...field}
+                disabled={disabled}
               />
             </FormControl>
+            <FormMessage />
           </FormItem>
         )}
       />
@@ -40,8 +43,10 @@ export function PasswordFields({ control }: PasswordFieldsProps) {
                 type="password" 
                 placeholder="Confirme a nova senha"
                 {...field}
+                disabled={disabled}
               />
             </FormControl>
+            <FormMessage />
           </FormItem>
         )}
       />

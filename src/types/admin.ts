@@ -1,4 +1,3 @@
-
 /**
  * Admin System Type Definitions
  */
@@ -6,16 +5,30 @@
 // Define the possible admin role types
 export type AdminRole = 'master' | 'group';
 
+// Admin Types
+export type AdminLevel = 'master' | 'group';
+
+export interface Admin {
+  id: string;
+  email: string;
+  name: string;
+  level: AdminLevel;
+  created_at: string;
+  updated_at: string;
+}
+
 // Group interface representing a user group in the system
 export interface Group {
   id: string;
   name: string;
-  description: string | null;
+  description: string;
+  admin_id: string;
+  admin?: {
+    name: string;
+    email: string;
+  };
   created_at: string;
-  created_by: string;
   updated_at: string;
-  total_users: number;
-  total_admins: number;
 }
 
 // User within a group interface

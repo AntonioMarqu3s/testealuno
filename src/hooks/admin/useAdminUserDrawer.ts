@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
@@ -20,19 +19,54 @@ export function useAdminUserDrawer(adminId: string | null, onClose: () => void, 
       
       setIsLoading(true);
       try {
+        // Buscar dados do usuário com plano
         const { data, error } = await supabase
           .from('admin_users')
-          .select('*')
+          .select(`
+            *,
+            user_plans (
+              name,
+              agent_limit,
+              plan
+            )
+          `)
           .eq('id', adminId)
           .single();
           
         if (error) throw error;
         
-        setAdminUser(data);
-        console.log("Fetched admin data:", data);
+        console.log("Dados brutos do admin_users:", {
+          adminId,
+          data,
+          user_id: data?.user_id
+        });
+
+        // Buscar plano diretamente
+        const { data: planData, error: planError } = await supabase
+          .from('user_plans')
+          .select('*')
+          .eq('user_id', data.user_id)
+          .single();
+
+        console.log("Plano buscado diretamente:", planData);
+        
+        if (planError && planError.code !== 'PGRST116') { // Ignora erro de não encontrado
+          throw planError;
+        }
+
+        const adminUserData = {
+          ...data,
+          plan: planData?.plan ?? 0,
+          plan_name: planData?.name ?? 'Teste Gratuito',
+          agent_limit: planData?.agent_limit ?? 1
+        };
+        
+        console.log("Dados processados do usuário:", adminUserData);
+        
+        setAdminUser(adminUserData);
       } catch (err) {
         console.error("Error fetching admin details:", err);
-        toast.error("Erro ao carregar detalhes do administrador");
+        toast.error("Erro ao carregar detalhes do usuário");
       } finally {
         setIsLoading(false);
       }
@@ -46,7 +80,7 @@ export function useAdminUserDrawer(adminId: string | null, onClose: () => void, 
   };
   
   const handleUpdateAdmin = async (formData: AdminUserFormData) => {
-    if (!adminId) return;
+    if (!adminId || !adminUser) return;
     
     // Validate password if it's being changed
     if (showPasswordFields && formData.password) {
@@ -69,7 +103,7 @@ export function useAdminUserDrawer(adminId: string | null, onClose: () => void, 
       }
       
       // Update the admin user's information in admin_users table
-      const { error } = await supabase
+      const { error: updateError } = await supabase
         .from('admin_users')
         .update({
           email: formData.email,
@@ -77,7 +111,60 @@ export function useAdminUserDrawer(adminId: string | null, onClose: () => void, 
         })
         .eq('id', adminId);
         
-      if (error) throw error;
+      if (updateError) throw updateError;
+
+      // Update user plan if changed
+      if (formData.plan !== adminUser.plan) {
+        console.log("Atualizando plano:", {
+          userId: adminUser.user_id,
+          planoAtual: adminUser.plan,
+          novoPlano: formData.plan,
+          formData
+        });
+
+        // Primeiro verifica se já existe um plano
+        const { data: existingPlan } = await supabase
+          .from('user_plans')
+          .select('*')
+          .eq('user_id', adminUser.user_id)
+          .single();
+
+        console.log("Plano existente:", existingPlan);
+
+        const planData = {
+          user_id: adminUser.user_id,
+          plan: formData.plan,
+          name: formData.plan === 0 ? 'Teste Gratuito' :
+                formData.plan === 1 ? 'Inicial' :
+                formData.plan === 2 ? 'Padrão' :
+                'Premium',
+          agent_limit: formData.plan === 0 ? 1 :
+                      formData.plan === 1 ? 1 :
+                      formData.plan === 2 ? 3 :
+                      10
+        };
+
+        console.log("Dados do novo plano:", planData);
+
+        const { error: planError } = await supabase
+          .from('user_plans')
+          .upsert(planData);
+          
+        if (planError) {
+          console.error("Erro ao atualizar plano:", planError);
+          throw planError;
+        }
+
+        console.log("Plano atualizado com sucesso");
+      }
+
+      // Also update the auth.users table with the new email
+      const { error: authUpdateError } = await supabase.auth.admin.updateUserById(
+        adminUser.user_id,
+        { email: formData.email }
+      );
+
+      if (authUpdateError) throw authUpdateError;
       
       // If password is being updated, call the edge function
       if (showPasswordFields && formData.password) {
@@ -96,13 +183,29 @@ export function useAdminUserDrawer(adminId: string | null, onClose: () => void, 
         }
       }
       
-      toast.success("Administrador atualizado com sucesso");
+      // Update local state
+      setAdminUser(prev => prev ? {
+        ...prev,
+        email: formData.email,
+        admin_level: formData.admin_level,
+        plan: formData.plan,
+        plan_name: formData.plan === 0 ? 'Teste Gratuito' :
+                  formData.plan === 1 ? 'Inicial' :
+                  formData.plan === 2 ? 'Padrão' :
+                  'Premium',
+        agent_limit: formData.plan === 0 ? 1 :
+                    formData.plan === 1 ? 1 :
+                    formData.plan === 2 ? 3 :
+                    10
+      } : null);
+      
+      toast.success("Usuário atualizado com sucesso");
       setShowPasswordFields(false);
       onAdminUpdated(); 
       onClose();
     } catch (err) {
       console.error("Error updating admin:", err);
-      toast.error("Erro ao atualizar administrador");
+      toast.error("Erro ao atualizar usuário");
     } finally {
       setIsUpdating(false);
     }

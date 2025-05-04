@@ -1,10 +1,11 @@
-
 import React from "react";
-import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerFooter, DrawerClose } from "@/components/ui/drawer";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { useAdminUserDrawer } from "@/hooks/admin/useAdminUserDrawer";
 import { AdminDetailFields } from "./drawer/AdminDetailFields";
 import { AdminUserForm } from "./drawer/AdminUserForm";
+import { UserAgentsList } from "./drawer/UserAgentsList";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface AdminUserDetailDrawerProps {
   adminId: string | null;
@@ -26,17 +27,22 @@ export function AdminUserDetailDrawer({ adminId, open, onClose, onAdminUpdated }
   } = useAdminUserDrawer(adminId, onClose, onAdminUpdated);
   
   return (
-    <Drawer open={open} onClose={onClose}>
-      <DrawerContent className="h-[90vh] max-h-[90vh]">
-        <div className="mx-auto w-full max-w-4xl">
-          <DrawerHeader>
-            <DrawerTitle className="text-2xl font-bold">
-              {isLoading ? "Carregando..." : `Editar Administrador: ${adminUser?.email || ""}`}
-            </DrawerTitle>
-          </DrawerHeader>
-          
-          <div className="p-6 overflow-y-auto max-h-[calc(90vh-180px)]">
-            <div className="space-y-6">
+    <Dialog open={open} onOpenChange={onClose}>
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden">
+        <DialogHeader>
+          <DialogTitle className="text-2xl font-bold">
+            {isLoading ? "Carregando..." : `Editar Usuário: ${adminUser?.email || ""}`}
+          </DialogTitle>
+        </DialogHeader>
+        
+        <div className="overflow-y-auto flex-1">
+          <Tabs defaultValue="informacoes" className="space-y-6">
+            <TabsList>
+              <TabsTrigger value="informacoes">Informações</TabsTrigger>
+              <TabsTrigger value="agentes">Agentes</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="informacoes" className="space-y-6">
               <AdminDetailFields 
                 adminUser={adminUser} 
                 isLoading={isLoading} 
@@ -53,16 +59,21 @@ export function AdminUserDetailDrawer({ adminId, open, onClose, onAdminUpdated }
                   isCurrentAdmin={isCurrentAdmin}
                 />
               )}
-            </div>
-          </div>
-          
-          <DrawerFooter className="px-6">
-            <Button variant="outline" onClick={onClose}>
-              Fechar
-            </Button>
-          </DrawerFooter>
+            </TabsContent>
+            
+            <TabsContent value="agentes">
+              {console.log("AdminUser data:", adminUser)}
+              {adminUser && <UserAgentsList userId={adminUser.user_id} />}
+            </TabsContent>
+          </Tabs>
         </div>
-      </DrawerContent>
-    </Drawer>
+        
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose}>
+            Fechar
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }

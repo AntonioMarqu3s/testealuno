@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerFooter } from "@/components/ui/drawer";
 import { Button } from "@/components/ui/button";
@@ -6,6 +5,8 @@ import { useUserDetailDrawer } from "@/hooks/admin/useUserDetailDrawer";
 import { UserDetailFields } from "./drawer/UserDetailFields";
 import { UserForm } from "./drawer/UserForm";
 import { Loader2 } from "lucide-react";
+import { supabase } from "@/lib/supabase";
+import { toast } from "sonner";
 
 interface UserDetailDrawerProps {
   userId: string | null;
@@ -23,6 +24,32 @@ export function UserDetailDrawer({ userId, open, onClose, onUserUpdated }: UserD
     handlePasswordToggle,
     handleUpdateUser,
   } = useUserDetailDrawer(userId, onClose, onUserUpdated);
+
+  const handleSavePlanDetails = async (data: any) => {
+    if (!userId || !data.plan) return;
+
+    try {
+      const { error } = await supabase
+        .from('user_plans')
+        .update({
+          name: data.plan.name,
+          agent_limit: data.plan.agent_limit,
+          payment_status: data.plan.payment_status,
+          payment_date: data.plan.payment_date,
+          subscription_ends_at: data.plan.subscription_ends_at,
+          trial_ends_at: data.plan.trial_ends_at
+        })
+        .eq('user_id', userId);
+
+      if (error) throw error;
+      
+      toast.success("Plano atualizado com sucesso");
+      onUserUpdated();
+    } catch (error) {
+      console.error("Erro ao atualizar plano:", error);
+      toast.error("Erro ao atualizar plano");
+    }
+  };
   
   return (
     <Drawer open={open} onClose={onClose}>
@@ -43,7 +70,8 @@ export function UserDetailDrawer({ userId, open, onClose, onUserUpdated }: UserD
               <div className="space-y-6">
                 <UserDetailFields 
                   userData={userData} 
-                  isLoading={isLoading} 
+                  isLoading={isLoading}
+                  onSave={handleSavePlanDetails}
                 />
                 
                 {userData && (

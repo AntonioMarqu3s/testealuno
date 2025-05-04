@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
@@ -37,19 +36,51 @@ export function useUserDetailDrawer(userId: string | null, onClose: () => void, 
   // Fetch user details
   useEffect(() => {
     const fetchUserData = async () => {
-      if (!userId) return;
+      if (!userId) {
+        setIsLoading(false);
+        return;
+      }
       
       setIsLoading(true);
       try {
-        // Use the edge function to get user details
-        const { data, error } = await supabase.functions.invoke("get-user-details", {
-          body: { userId }
-        });
+        // Buscar dados do usuário usando RPC
+        const { data: userData, error: userError } = await supabase
+          .rpc('get_user_details', { p_user_id: userId });
           
-        if (error) throw error;
+        if (userError) throw userError;
+        if (!userData) throw new Error("Usuário não encontrado");
+
+        // Buscar dados do plano do usuário
+        const { data: planData, error: planError } = await supabase
+          .from('user_plans')
+          .select('*')
+          .eq('user_id', userId)
+          .single();
+          
+        if (planError && planError.code !== 'PGRST116') { // Ignora erro de não encontrado
+          throw planError;
+        }
+
+        const formattedUserData: UserData = {
+          id: userData.id,
+          email: userData.email,
+          created_at: userData.created_at,
+          last_sign_in_at: userData.last_sign_in_at,
+          isActive: userData.is_active,
+          metadata: userData.raw_user_meta_data,
+          plan: planData ? {
+            id: planData.id,
+            name: planData.name,
+            agent_limit: planData.agent_limit,
+            plan: planData.plan,
+            payment_date: planData.payment_date,
+            subscription_ends_at: planData.subscription_ends_at,
+            payment_status: planData.payment_status,
+            trial_ends_at: planData.trial_ends_at
+          } : undefined
+        };
         
-        console.log("Fetched user data:", data);
-        setUserData(data);
+        setUserData(formattedUserData);
       } catch (err) {
         console.error("Error fetching user details:", err);
         toast.error("Erro ao carregar detalhes do usuário");
@@ -66,7 +97,7 @@ export function useUserDetailDrawer(userId: string | null, onClose: () => void, 
   };
   
   const handleUpdateUser = async (formData: UserFormData) => {
-    if (!userId) return;
+    if (!userId || !userData) return;
     
     // Validate password if it's being changed
     if (showPasswordFields && formData.password) {
@@ -82,37 +113,15 @@ export function useUserDetailDrawer(userId: string | null, onClose: () => void, 
     
     setIsUpdating(true);
     try {
-      // Update the user's email if changed
-      if (userData && formData.email !== userData.email) {
-        const { data: updateResult, error: updateEmailError } = await supabase.functions.invoke("update-user-credentials", {
-          body: { 
-            userId,
-            email: formData.email,
-          }
+      // Update user data using RPC
+      const { error: updateError } = await supabase
+        .rpc('update_user_details', {
+          p_user_id: userId,
+          p_email: formData.email,
+          p_password: showPasswordFields ? formData.password : null
         });
-        
-        if (updateEmailError) throw updateEmailError;
-        
-        if (!updateResult.success) {
-          throw new Error(updateResult.message || "Erro ao atualizar email");
-        }
-      }
-      
-      // Update password if changed
-      if (showPasswordFields && formData.password) {
-        const { data: updateResult, error: updatePasswordError } = await supabase.functions.invoke("update-user-credentials", {
-          body: { 
-            userId,
-            password: formData.password,
-          }
-        });
-        
-        if (updatePasswordError) throw updatePasswordError;
-        
-        if (!updateResult.success) {
-          throw new Error(updateResult.message || "Erro ao atualizar senha");
-        }
-      }
+
+      if (updateError) throw updateError;
       
       toast.success("Usuário atualizado com sucesso");
       setShowPasswordFields(false);

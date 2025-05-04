@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useAdminAuth } from '@/context/AdminAuthContext';
@@ -22,9 +21,9 @@ export const useAdminMenu = () => {
     { path: '/admin/users', label: 'Usuários', icon: 'Users' },
     { path: '/admin/plans', label: 'Planos', icon: 'Calendar' },
     { path: '/admin/payments', label: 'Pagamentos', icon: 'CreditCard' },
-    { path: '/admin/administrators', label: 'Administradores', icon: 'Shield', requiresMasterAdmin: true },
-    { path: '/admin/groups', label: 'Grupos', icon: 'Users2', requiresMasterAdmin: true },
-    { path: '/admin/settings', label: 'Configurações', icon: 'Settings', requiresMasterAdmin: true },
+    { path: '/admin/groups', label: 'Grupos', icon: 'Users2' },
+    { path: '/admin/administrators', label: 'Administradores', icon: 'Shield' },
+    { path: '/admin/settings', label: 'Configurações', icon: 'Settings', requiresMasterAdmin: true }
   ];
 
   // Filter menu items based on user's admin level

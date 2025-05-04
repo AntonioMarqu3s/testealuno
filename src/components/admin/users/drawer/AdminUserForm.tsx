@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Form, FormField, FormItem, FormLabel, FormControl } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
@@ -7,10 +6,12 @@ import { useForm } from "react-hook-form";
 import { AdminUser } from "@/hooks/admin/useAdminUsersList";
 import { Button } from "@/components/ui/button";
 import { PasswordFields } from "./PasswordFields";
+import { Badge } from "@/components/ui/badge";
 
 export interface AdminUserFormData {
   email: string;
   admin_level: string;
+  plan: number;
   password?: string;
   confirmPassword?: string;
 }
@@ -35,18 +36,44 @@ export function AdminUserForm({
   isCurrentAdmin
 }: AdminUserFormProps) {
   const form = useForm<AdminUserFormData>({
-    defaultValues: {
+    values: {
       email: adminUser?.email || "",
       admin_level: adminUser?.admin_level || "standard",
+      plan: adminUser?.plan || 0,
       password: "",
       confirmPassword: "",
     },
   });
 
+  console.log("Dados do usuário no form:", {
+    adminUser,
+    formValues: form.getValues()
+  });
+
+  // Atualiza o formulário quando os dados do usuário mudam
+  React.useEffect(() => {
+    if (adminUser) {
+      console.log("Atualizando form com dados:", adminUser);
+      form.reset({
+        email: adminUser.email,
+        admin_level: adminUser.admin_level,
+        plan: adminUser.plan,
+        password: "",
+        confirmPassword: "",
+      });
+    }
+  }, [adminUser, form]);
+
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         <div className="space-y-2">
+          <div className="flex items-center gap-2 mb-4">
+            <span className="font-medium">Plano Atual:</span>
+            <Badge variant="outline" className="capitalize">
+              {adminUser?.plan_name || 'Teste Gratuito'}
+            </Badge>
+          </div>
           <FormField
             control={form.control}
             name="email"
@@ -55,7 +82,7 @@ export function AdminUserForm({
                 <FormLabel>Email</FormLabel>
                 <FormControl>
                   <Input 
-                    placeholder="Email do administrador"
+                    placeholder="Email do usuário"
                     {...field}
                   />
                 </FormControl>
@@ -89,6 +116,32 @@ export function AdminUserForm({
                     Apenas administradores master podem alterar este campo.
                   </p>
                 )}
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="plan"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Plano</FormLabel>
+                <FormControl>
+                  <Select 
+                    value={field.value.toString()} 
+                    onValueChange={(value) => field.onChange(parseInt(value))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione o plano" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="0">Teste Gratuito (1 agente)</SelectItem>
+                      <SelectItem value="1">Inicial (1 agente)</SelectItem>
+                      <SelectItem value="2">Padrão (3 agentes)</SelectItem>
+                      <SelectItem value="3">Premium (10 agentes)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </FormControl>
               </FormItem>
             )}
           />

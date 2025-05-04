@@ -1,4 +1,3 @@
-
 import React from "react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,6 +6,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PlanType, PLAN_DETAILS } from "@/services/plan/planTypes";
 import { Badge } from "@/components/ui/badge";
+import { supabase } from "@/lib/supabase";
+import { toast } from "sonner";
+import { useForm } from "react-hook-form";
+
+interface PlanFormData {
+  agentLimit: number;
+  trialDays?: number;
+  price: number;
+}
 
 export default function AdminPlans() {
   return (
@@ -80,6 +88,50 @@ function PlanCard({
   badgeText,
   badgeVariant = "default"
 }: PlanCardProps) {
+  const form = useForm<PlanFormData>({
+    defaultValues: {
+      agentLimit,
+      trialDays,
+      price
+    }
+  });
+
+  const [isLoading, setIsLoading] = React.useState(false);
+
+  async function handleSubmit(data: PlanFormData) {
+    try {
+      setIsLoading(true);
+
+      // Atualizar no banco de dados
+      const { error } = await supabase
+        .from('plans')
+        .update({
+          agent_limit: data.agentLimit,
+          trial_days: data.trialDays,
+          price: data.price,
+          updated_at: new Date().toISOString()
+        })
+        .eq('type', planType);
+
+      if (error) throw error;
+
+      // Atualizar no PLAN_DETAILS
+      PLAN_DETAILS[planType] = {
+        ...PLAN_DETAILS[planType],
+        agentLimit: data.agentLimit,
+        trialDays: data.trialDays,
+        price: data.price
+      };
+
+      toast.success('Plano atualizado com sucesso');
+    } catch (err) {
+      console.error('Erro ao atualizar plano:', err);
+      toast.error('Erro ao atualizar plano');
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
   return (
     <Card>
       <CardHeader>
@@ -112,14 +164,13 @@ function PlanCard({
           )}
         </div>
         
-        <form className="space-y-4 pt-4 border-t">
+        <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4 pt-4 border-t">
           <div className="space-y-2">
             <Label htmlFor={`agent-limit-${planType}`}>Limite de Agentes</Label>
             <Input 
               id={`agent-limit-${planType}`} 
               type="number" 
-              defaultValue={agentLimit}
-              min="1" 
+              {...form.register("agentLimit", { required: true, min: 1 })}
             />
           </div>
           
@@ -129,8 +180,7 @@ function PlanCard({
               <Input 
                 id={`trial-days-${planType}`} 
                 type="number" 
-                defaultValue={trialDays}
-                min="0" 
+                {...form.register("trialDays", { min: 0 })}
               />
             </div>
           )}
@@ -140,14 +190,15 @@ function PlanCard({
             <Input 
               id={`price-${planType}`} 
               type="number" 
-              defaultValue={price}
-              min="0" 
+              {...form.register("price", { required: true, min: 0 })}
               step="0.01" 
             />
           </div>
           
           <div className="pt-2">
-            <Button className="w-full">Atualizar Plano</Button>
+            <Button type="submit" className="w-full" disabled={isLoading}>
+              {isLoading ? "Atualizando..." : "Atualizar Plano"}
+            </Button>
           </div>
         </form>
       </CardContent>

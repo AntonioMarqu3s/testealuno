@@ -1,4 +1,3 @@
-
 export interface Agent {
   id: string;
   name: string;
@@ -6,6 +5,7 @@ export interface Agent {
   isConnected: boolean;
   createdAt: Date;
   instanceId: string;
+  instanceName?: string;
   clientIdentifier?: string;
   connectInstancia?: boolean;
   userId?: string; // Add userId for better type safety
