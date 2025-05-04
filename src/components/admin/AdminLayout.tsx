@@ -9,7 +9,15 @@ interface AdminLayoutProps {
 }
 
 export function AdminLayout({ children }: AdminLayoutProps) {
-  const { isAdmin, adminLogout } = useAdminAuth();
+  const { isAdmin, isLoading } = useAdminAuth();
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
 
   if (!isAdmin) {
     return (
@@ -34,8 +42,8 @@ export function AdminLayout({ children }: AdminLayoutProps) {
     <div className="flex h-screen bg-muted/20">
       <AdminSidebar />
       <div className="flex flex-col flex-1 overflow-hidden">
-        <AdminNavbar onLogout={adminLogout} />
-        <main className="flex-1 overflow-y-auto">
+        <AdminNavbar />
+        <main className="flex-1 overflow-y-auto p-6">
           {children}
         </main>
       </div>
