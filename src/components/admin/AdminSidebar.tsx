@@ -9,6 +9,7 @@ import {
   CreditCard,
   Shield,
   LogOut,
+  UserGroup,
   FolderKanban
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -22,6 +23,7 @@ const iconMap = {
   Calendar,
   CreditCard,
   Shield,
+  UserGroup,
   FolderKanban
 };
 
@@ -39,7 +41,7 @@ export function AdminSidebar() {
       <nav className="flex-1 p-4">
         <ul className="space-y-2">
           {menuItems.map((item) => {
-            const Icon = iconMap[item.icon as keyof typeof iconMap];
+            const Icon = iconMap[item.icon as keyof typeof iconMap] || Users;
             return (
               <li key={item.path}>
                 <NavLink

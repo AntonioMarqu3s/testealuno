@@ -1,9 +1,8 @@
-
 import React, { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import { useAdminAuth } from "@/context/AdminAuthContext";
-import { AdminUser } from "./users/types";
+import { AdminUser } from "@/types/admin";
 import { AdminUsersList } from "./users/AdminUsersList";
 import { AdminUsersLoading } from "./users/AdminUsersLoading";
 import { AdminUsersEmptyState } from "./users/AdminUsersEmptyState";
@@ -82,7 +81,7 @@ export function AdminUsers({ onEditAdmin }: AdminUsersProps) {
       
       // Check if trying to remove a master admin
       const adminToRemove = admins.find(admin => admin.id === adminId);
-      if (adminToRemove?.admin_level === 'master' && currentUserAdminLevel !== 'master') {
+      if (adminToRemove?.role === 'master' && currentUserAdminLevel !== 'master') {
         toast.error("Apenas Administradores Master podem remover outros Administradores Master");
         return;
       }
