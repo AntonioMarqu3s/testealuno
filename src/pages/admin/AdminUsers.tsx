@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from "react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { Button } from "@/components/ui/button";
@@ -72,6 +71,7 @@ export default function AdminUsers() {
 
   // Handle opening user detail drawer
   const handleUserClick = (userId: string) => {
+    console.log("Opening user details for:", userId);
     setSelectedUserId(userId);
     setIsDetailDrawerOpen(true);
   };

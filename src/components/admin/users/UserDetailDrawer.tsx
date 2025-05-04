@@ -1,10 +1,11 @@
 
 import React from "react";
-import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerFooter, DrawerClose } from "@/components/ui/drawer";
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerFooter } from "@/components/ui/drawer";
 import { Button } from "@/components/ui/button";
 import { useUserDetailDrawer } from "@/hooks/admin/useUserDetailDrawer";
 import { UserDetailFields } from "./drawer/UserDetailFields";
 import { UserForm } from "./drawer/UserForm";
+import { Loader2 } from "lucide-react";
 
 interface UserDetailDrawerProps {
   userId: string | null;
@@ -34,22 +35,28 @@ export function UserDetailDrawer({ userId, open, onClose, onUserUpdated }: UserD
           </DrawerHeader>
           
           <div className="p-6 overflow-y-auto max-h-[calc(90vh-180px)]">
-            <div className="space-y-6">
-              <UserDetailFields 
-                userData={userData} 
-                isLoading={isLoading} 
-              />
-              
-              {!isLoading && (
-                <UserForm
-                  userData={userData}
-                  isUpdating={isUpdating}
-                  showPasswordFields={showPasswordFields}
-                  handlePasswordToggle={handlePasswordToggle}
-                  onSubmit={handleUpdateUser}
+            {isLoading ? (
+              <div className="flex justify-center items-center h-32">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              </div>
+            ) : (
+              <div className="space-y-6">
+                <UserDetailFields 
+                  userData={userData} 
+                  isLoading={isLoading} 
                 />
-              )}
-            </div>
+                
+                {userData && (
+                  <UserForm
+                    userData={userData}
+                    isUpdating={isUpdating}
+                    showPasswordFields={showPasswordFields}
+                    handlePasswordToggle={handlePasswordToggle}
+                    onSubmit={handleUpdateUser}
+                  />
+                )}
+              </div>
+            )}
           </div>
           
           <DrawerFooter className="px-6">

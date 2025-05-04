@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useEffect } from "react";
 import { Form, FormField, FormItem, FormLabel, FormControl } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useForm } from "react-hook-form";
@@ -29,6 +29,17 @@ export function UserForm({
       confirmPassword: "",
     },
   });
+
+  // Reset form when userData changes
+  useEffect(() => {
+    if (userData) {
+      form.reset({
+        email: userData.email || "",
+        password: "",
+        confirmPassword: "",
+      });
+    }
+  }, [userData, form]);
 
   return (
     <Form {...form}>

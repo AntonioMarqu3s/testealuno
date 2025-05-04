@@ -48,8 +48,8 @@ export function useUserDetailDrawer(userId: string | null, onClose: () => void, 
           
         if (error) throw error;
         
-        setUserData(data);
         console.log("Fetched user data:", data);
+        setUserData(data);
       } catch (err) {
         console.error("Error fetching user details:", err);
         toast.error("Erro ao carregar detalhes do usuário");

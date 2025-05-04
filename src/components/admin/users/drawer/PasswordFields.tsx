@@ -1,18 +1,17 @@
 
 import React from "react";
-import { Card } from "@/components/ui/card";
 import { FormField, FormItem, FormLabel, FormControl } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Control } from "react-hook-form";
-import { AdminUserFormData } from "./AdminUserForm";
 
+// Generic interface that works with both user and admin forms
 interface PasswordFieldsProps {
-  control: Control<AdminUserFormData>;
+  control: Control<any>;
 }
 
 export function PasswordFields({ control }: PasswordFieldsProps) {
   return (
-    <Card className="p-4 space-y-4">
+    <div className="space-y-4">
       <FormField
         control={control}
         name="password"
@@ -20,8 +19,8 @@ export function PasswordFields({ control }: PasswordFieldsProps) {
           <FormItem>
             <FormLabel>Nova Senha</FormLabel>
             <FormControl>
-              <Input
-                type="password"
+              <Input 
+                type="password" 
                 placeholder="Digite a nova senha"
                 {...field}
               />
@@ -35,10 +34,10 @@ export function PasswordFields({ control }: PasswordFieldsProps) {
         name="confirmPassword"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Confirme a Senha</FormLabel>
+            <FormLabel>Confirmar Senha</FormLabel>
             <FormControl>
-              <Input
-                type="password"
+              <Input 
+                type="password" 
                 placeholder="Confirme a nova senha"
                 {...field}
               />
@@ -46,6 +45,6 @@ export function PasswordFields({ control }: PasswordFieldsProps) {
           </FormItem>
         )}
       />
-    </Card>
+    </div>
   );
 }
