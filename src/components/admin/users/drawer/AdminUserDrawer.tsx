@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { useAdminUserDrawer } from "@/hooks/admin/useAdminUserDrawer";
 import { AdminDetailFields } from "./AdminDetailFields";
 import { AdminUserForm } from "./AdminUserForm";
-import { UserAgentsList } from "./drawer/UserAgentsList";
+import { UserAgentsList } from "../drawer/UserAgentsList";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { UserPlanInfo } from "./UserPlanInfo";
 import { Loader2 } from "lucide-react";
@@ -72,29 +72,23 @@ export function AdminUserDetailDrawer({ adminId, open, onClose, onAdminUpdated }
                 </div>
               ) : (
                 <UserPlanInfo 
-                  plan={adminUser?.plan || 0} 
-                  planName={adminUser?.plan_name || 'Teste Gratuito'} 
-                  agentLimit={adminUser?.agent_limit || 1}
-                  paymentStatus={adminUser?.payment_status}
-                  paymentDate={adminUser?.payment_date}
-                  subscriptionEndsAt={adminUser?.subscription_ends_at}
-                  trialEndsAt={adminUser?.trial_ends_at}
-                  connectInstancia={adminUser?.connect_instancia}
+                  plan={{
+                    id: adminUser?.id || '',
+                    plan: adminUser?.plan || 0, 
+                    name: adminUser?.plan_name || 'Teste Gratuito', 
+                    agent_limit: adminUser?.agent_limit || 1,
+                    payment_status: adminUser?.payment_status,
+                    payment_date: adminUser?.payment_date,
+                    subscription_ends_at: adminUser?.subscription_ends_at,
+                    trial_ends_at: adminUser?.trial_ends_at,
+                    connect_instancia: adminUser?.connect_instancia
+                  }}
                 />
               )}
-              <AdminUserForm
-                adminUser={adminUser}
-                isUpdating={isUpdating}
-                showPasswordFields={showPasswordFields}
-                handlePasswordToggle={handlePasswordToggle}
-                onSubmit={handleUpdateAdmin}
-                canEditAdminLevel={canEditAdminLevel}
-                isCurrentAdmin={isCurrentAdmin}
-              />
             </TabsContent>
             
             <TabsContent value="agentes">
-              {adminUser && <UserAgentsList userId={adminUser.user_id} />}
+              {adminUser && <UserAgentsList userId={adminUser.user_id || ''} />}
             </TabsContent>
           </Tabs>
         </div>

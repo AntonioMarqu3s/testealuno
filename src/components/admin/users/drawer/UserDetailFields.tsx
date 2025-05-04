@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -27,12 +26,24 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/lib/supabase";
-import { Agent } from "@/components/agent/AgentTypes";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { UserPlan } from "@/types/admin";
+
+interface Agent {
+  id: string;
+  name: string;
+  type: string;
+  isConnected: boolean;
+  createdAt: Date;
+  instanceId: string;
+  clientIdentifier?: string;
+  connectInstancia: boolean;
+  userId: string;
+}
 
 const PLAN_TYPES = {
   FREE_TRIAL: {
@@ -246,45 +257,61 @@ export function UserDetailFields({ userData, isLoading, onSave }: UserDetailFiel
       trialEndsAt = addDays(new Date(), 5).toISOString();
     }
 
+    // Ensure we have a valid plan ID
+    const planId = userData?.plan?.id || `plan-${userData?.id || 'new'}`;
+
     setEditedData({
       ...editedData,
       plan: {
         ...(editedData.plan || userData.plan || {}),
+        id: planId,
         plan: numPlanId,
         name: selectedPlan.name,
         agent_limit: selectedPlan.agent_limit,
         trial_ends_at: trialEndsAt
-      }
+      } as UserPlan
     });
   };
 
   const handlePaymentStatusChange = (value: string) => {
+    // Ensure we have a valid plan ID
+    const planId = userData?.plan?.id || `plan-${userData?.id || 'new'}`;
+
     setEditedData({
       ...editedData,
       plan: {
         ...(editedData.plan || userData.plan || {}),
+        id: planId,
         payment_status: value
-      }
+      } as UserPlan
     });
   };
 
   const handleDateChange = (field: string, date: Date | undefined) => {
+    // Ensure we have a valid plan ID
+    const planId = userData?.plan?.id || `plan-${userData?.id || 'new'}`;
+
     setEditedData({
       ...editedData,
       plan: {
         ...(editedData.plan || userData.plan || {}),
+        id: planId,
         [field]: date ? date.toISOString() : null
-      }
+      } as UserPlan
     });
   };
 
   const handleConnectInstanciaChange = (checked: boolean) => {
+    // Ensure we have a valid plan ID
+    const planId = userData?.plan?.id || `plan-${userData?.id || 'new'}`;
+
     setEditedData({
       ...editedData,
       plan: {
         ...(editedData.plan || userData.plan || {}),
+        id: planId,
         connect_instancia: checked
-      }
+      } as UserPlan
     });
   };
 
@@ -520,7 +547,9 @@ export function UserDetailFields({ userData, isLoading, onSave }: UserDetailFiel
                     ) : (
                       <p className="flex items-center gap-2 text-sm">
                         <Calendar className="h-3 w-3 text-primary" />
-                        {userData.plan?.payment_date ? formatDate(userData.plan.payment_date) : "N/A"}
+                        {userData.plan?.payment_date ? 
+                          formatDate(userData.plan.payment_date) : 
+                          "N/A"}
                       </p>
                     )}
                   </div>

@@ -23,13 +23,16 @@ export interface Group {
   id: string;
   name: string;
   description: string;
-  admin_id: string;
+  admin_id?: string; // Making this optional to support current implementation
   admin?: {
     name: string;
     email: string;
   };
   created_at: string;
   updated_at: string;
+  created_by?: string;
+  total_users?: number;
+  total_admins?: number;
 }
 
 // User within a group interface
@@ -46,7 +49,8 @@ export interface AdminUser {
   role: AdminRole;
   groups?: Group[];
   created_at: string;
-  user_id?: string; // Added to fix compatibility
+  user_id?: string;
+  admin_level?: string;
   plan?: number;
   plan_name?: string;
   agent_limit?: number;
@@ -69,4 +73,28 @@ export interface AdminMenuItem {
   label: string;
   icon: string;
   requiresMasterAdmin?: boolean;
+}
+
+// User plan interface
+export interface UserPlan {
+  id: string;
+  name: string;
+  agent_limit: number;
+  plan: number;
+  payment_date?: string;
+  subscription_ends_at?: string;
+  payment_status?: string;
+  trial_ends_at?: string;
+  connect_instancia?: boolean;
+  updated_at?: string;
+  trial_init?: string;
+}
+
+// User form data interface
+export interface UserFormData {
+  email: string;
+  password?: string;
+  confirmPassword?: string;
+  admin_level?: string;
+  plan?: number;
 }

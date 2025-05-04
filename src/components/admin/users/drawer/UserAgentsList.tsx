@@ -1,91 +1,102 @@
-import React from "react";
-import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
+
+import React, { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
+import { Card, CardContent } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Badge } from "@/components/ui/badge";
+import { Bot, AlertCircle } from "lucide-react";
 
 interface UserAgentsListProps {
   userId: string;
 }
 
-export function UserAgentsList({ userId }: UserAgentsListProps) {
-  const [agents, setAgents] = React.useState<any[]>([]);
-  const [isLoading, setIsLoading] = React.useState(true);
+interface Agent {
+  id: string;
+  name: string;
+  instance_id: string;
+  created_at: string;
+  is_connected: boolean;
+}
 
-  React.useEffect(() => {
-    async function loadData() {
-      if (!userId) return;
+export function UserAgentsList({ userId }: UserAgentsListProps) {
+  const [agents, setAgents] = useState<Agent[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  
+  useEffect(() => {
+    const fetchAgents = async () => {
+      if (!userId) {
+        setIsLoading(false);
+        return;
+      }
+      
+      setIsLoading(true);
       
       try {
-        console.log("Buscando agentes para userId:", userId);
-        
-        // Buscar agentes diretamente usando o user_id do admin_users
         const { data, error } = await supabase
           .from('agents')
-          .select(`
-            id,
-            name,
-            type,
-            is_connected,
-            instance_id,
-            created_at
-          `)
+          .select('*')
           .eq('user_id', userId);
           
-        console.log("Resposta da busca de agentes:", { data, error });
-        
         if (error) throw error;
+        
         setAgents(data || []);
       } catch (err) {
-        console.error('Erro ao carregar agentes:', err);
+        console.error("Error fetching agents:", err);
+        setError("Erro ao carregar agentes");
       } finally {
         setIsLoading(false);
       }
-    }
+    };
     
-    loadData();
+    fetchAgents();
   }, [userId]);
-
+  
   if (isLoading) {
-    return <Skeleton className="h-32 w-full" />;
-  }
-
-  if (!agents || agents.length === 0) {
     return (
-      <div className="text-center py-8 text-muted-foreground">
-        <div className="mb-2">🤖</div>
-        Este usuário não possui agentes
+      <div className="space-y-2">
+        <Skeleton className="h-12 w-full" />
+        <Skeleton className="h-12 w-full" />
+        <Skeleton className="h-12 w-full" />
       </div>
     );
   }
-
+  
+  if (error) {
+    return (
+      <div className="flex items-center gap-2 text-destructive">
+        <AlertCircle className="h-4 w-4" />
+        <p>{error}</p>
+      </div>
+    );
+  }
+  
+  if (agents.length === 0) {
+    return (
+      <Card>
+        <CardContent className="p-6 text-center">
+          <Bot className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
+          <p className="text-muted-foreground">Este usuário não possui agentes</p>
+        </CardContent>
+      </Card>
+    );
+  }
+  
   return (
-    <div className="space-y-4">
-      {agents.map((agent) => (
-        <div key={agent.id} className="p-4 border rounded-lg bg-card">
-          <div className="flex items-center justify-between mb-2">
-            <div className="flex items-center gap-2">
-              <span className="font-medium text-lg">{agent.name || 'Sem nome'}</span>
-              <Badge variant={agent.is_connected ? "success" : "destructive"}>
-                {agent.is_connected ? "Conectado" : "Desconectado"}
-              </Badge>
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-4 text-sm text-muted-foreground">
+    <div className="space-y-3">
+      {agents.map(agent => (
+        <div key={agent.id} className="border rounded-lg p-3">
+          <div className="flex justify-between items-center">
             <div>
-              <span className="font-medium text-foreground">Tipo: </span>
-              <Badge variant="outline">{agent.type || 'Não definido'}</Badge>
+              <p className="font-medium">{agent.name}</p>
+              <p className="text-sm text-muted-foreground">{agent.instance_id}</p>
             </div>
-            <div>
-              <span className="font-medium text-foreground">ID da Instância: </span>
-              {agent.instance_id || 'N/A'}
-            </div>
-            <div>
-              <span className="font-medium text-foreground">Criado em: </span>
-              {new Date(agent.created_at).toLocaleDateString('pt-BR')}
-            </div>
+            <Badge variant={agent.is_connected ? "success" : "outline"}>
+              {agent.is_connected ? "Conectado" : "Desconectado"}
+            </Badge>
           </div>
         </div>
       ))}
     </div>
   );
-} 
+}

@@ -1,14 +1,14 @@
+
 import React from "react";
 import { Form, FormField, FormItem, FormLabel, FormControl } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useForm } from "react-hook-form";
-import { AdminUser } from "@/hooks/admin/useAdminUsersList";
+import { AdminUser, UserFormData } from "@/types/admin";
 import { Button } from "@/components/ui/button";
-import { PasswordFields } from "./PasswordFields";
 import { Badge } from "@/components/ui/badge";
 
-export interface AdminUserFormData {
+export interface AdminUserFormData extends UserFormData {
   email: string;
   admin_level: string;
   plan: number;
@@ -24,6 +24,47 @@ interface AdminUserFormProps {
   onSubmit: (data: AdminUserFormData) => Promise<void>;
   canEditAdminLevel: boolean;
   isCurrentAdmin: boolean;
+}
+
+// Password Fields component
+function PasswordFields({ control }: { control: any }) {
+  return (
+    <div className="space-y-2">
+      <FormField
+        control={control}
+        name="password"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Nova Senha</FormLabel>
+            <FormControl>
+              <Input 
+                type="password" 
+                placeholder="Digite a nova senha"
+                {...field}
+              />
+            </FormControl>
+          </FormItem>
+        )}
+      />
+      
+      <FormField
+        control={control}
+        name="confirmPassword"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Confirmar Senha</FormLabel>
+            <FormControl>
+              <Input 
+                type="password" 
+                placeholder="Confirme a nova senha"
+                {...field}
+              />
+            </FormControl>
+          </FormItem>
+        )}
+      />
+    </div>
+  );
 }
 
 export function AdminUserForm({
@@ -45,19 +86,13 @@ export function AdminUserForm({
     },
   });
 
-  console.log("Dados do usuário no form:", {
-    adminUser,
-    formValues: form.getValues()
-  });
-
   // Atualiza o formulário quando os dados do usuário mudam
   React.useEffect(() => {
     if (adminUser) {
-      console.log("Atualizando form com dados:", adminUser);
       form.reset({
         email: adminUser.email,
-        admin_level: adminUser.admin_level,
-        plan: adminUser.plan,
+        admin_level: adminUser.admin_level || "standard",
+        plan: adminUser.plan || 0,
         password: "",
         confirmPassword: "",
       });
