@@ -9,6 +9,7 @@ import { UserAgentsList } from "./UserAgentsList";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { UserPlanInfo } from "./UserPlanInfo";
 import { Loader2 } from "lucide-react";
+import { AdminUser, UserPlan } from "@/types/admin";
 
 interface AdminUserDetailDrawerProps {
   adminId: string | null;
@@ -28,6 +29,28 @@ export function AdminUserDetailDrawer({ adminId, open, onClose, onAdminUpdated }
     canEditAdminLevel,
     isCurrentAdmin
   } = useAdminUserDrawer(adminId, onClose, onAdminUpdated);
+  
+  // Create a user plan object from admin user data
+  const getUserPlan = (user: AdminUser | null): UserPlan | undefined => {
+    if (!user) return undefined;
+    
+    // Only create plan object if we have necessary data
+    if (user.id && (user.plan !== undefined || user.agent_limit !== undefined)) {
+      return {
+        id: user.id,
+        name: user.plan_name || 'Teste Gratuito',
+        agent_limit: user.agent_limit || 1,
+        plan: user.plan || 0,
+        payment_status: user.payment_status,
+        payment_date: user.payment_date,
+        subscription_ends_at: user.subscription_ends_at,
+        trial_ends_at: user.trial_ends_at,
+        connect_instancia: user.connect_instancia
+      };
+    }
+    
+    return undefined;
+  };
   
   return (
     <Dialog open={open} onOpenChange={onClose}>
@@ -71,24 +94,14 @@ export function AdminUserDetailDrawer({ adminId, open, onClose, onAdminUpdated }
                   <Loader2 className="h-8 w-8 animate-spin text-primary" />
                 </div>
               ) : (
-                <UserPlanInfo 
-                  plan={adminUser ? {
-                    id: adminUser.id || '',
-                    plan: adminUser.plan || 0, 
-                    name: adminUser.plan_name || 'Teste Gratuito', 
-                    agent_limit: adminUser.agent_limit || 1,
-                    payment_status: adminUser.payment_status,
-                    payment_date: adminUser.payment_date,
-                    subscription_ends_at: adminUser.subscription_ends_at,
-                    trial_ends_at: adminUser.trial_ends_at,
-                    connect_instancia: adminUser.connect_instancia
-                  } : undefined}
-                />
+                <UserPlanInfo plan={getUserPlan(adminUser)} />
               )}
             </TabsContent>
             
             <TabsContent value="agentes">
-              {adminUser && <UserAgentsList userId={adminUser.user_id || ''} />}
+              {adminUser && adminUser.user_id && (
+                <UserAgentsList userId={adminUser.user_id} />
+              )}
             </TabsContent>
           </Tabs>
         </div>

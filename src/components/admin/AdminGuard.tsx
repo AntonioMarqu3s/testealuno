@@ -2,6 +2,7 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAdminAuth } from "@/context/AdminAuthContext";
+import { toast } from "sonner";
 
 interface AdminGuardProps {
   children: React.ReactNode;
@@ -13,6 +14,9 @@ export function AdminGuard({ children }: AdminGuardProps) {
 
   useEffect(() => {
     if (!isLoading && !isAdmin) {
+      toast.error("Acesso restrito", {
+        description: "Você não tem permissão para acessar esta área"
+      });
       navigate("/admin");
     }
   }, [isAdmin, isLoading, navigate]);

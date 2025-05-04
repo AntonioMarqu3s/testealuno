@@ -7,6 +7,7 @@ import { AdminDetailFields } from "./drawer/AdminDetailFields";
 import { AdminUserForm } from "./drawer/AdminUserForm";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Loader2 } from "lucide-react";
+import { AdminUser, UserPlan } from "@/types/admin";
 
 interface AdminUserDetailDrawerProps {
   adminId: string | null;
@@ -26,6 +27,28 @@ export function AdminUserDetailDrawer({ adminId, open, onClose, onAdminUpdated }
     canEditAdminLevel,
     isCurrentAdmin
   } = useAdminUserDrawer(adminId, onClose, onAdminUpdated);
+  
+  // Create a user plan object from admin user data
+  const getUserPlan = (user: AdminUser | null): UserPlan | undefined => {
+    if (!user) return undefined;
+    
+    // Only return plan data if we have necessary fields
+    if (user.plan !== undefined) {
+      return {
+        id: user.id,
+        name: user.plan_name || 'Teste Gratuito',
+        agent_limit: user.agent_limit || 1,
+        plan: user.plan,
+        payment_status: user.payment_status,
+        payment_date: user.payment_date,
+        subscription_ends_at: user.subscription_ends_at,
+        trial_ends_at: user.trial_ends_at,
+        connect_instancia: user.connect_instancia
+      };
+    }
+    
+    return undefined;
+  };
   
   return (
     <Dialog open={open} onOpenChange={onClose}>
@@ -53,7 +76,7 @@ export function AdminUserDetailDrawer({ adminId, open, onClose, onAdminUpdated }
               
               {!isLoading && adminUser && (
                 <AdminUserForm
-                  adminUser={adminUser}
+                  adminUser={{...adminUser, role: adminUser.role || 'group' as const}}
                   isUpdating={isUpdating}
                   showPasswordFields={showPasswordFields}
                   handlePasswordToggle={handlePasswordToggle}
@@ -89,15 +112,17 @@ export function AdminUserDetailDrawer({ adminId, open, onClose, onAdminUpdated }
                         </div>
                       </div>
                       
-                      <AdminUserForm
-                        adminUser={adminUser}
-                        isUpdating={isUpdating}
-                        showPasswordFields={showPasswordFields}
-                        handlePasswordToggle={handlePasswordToggle}
-                        onSubmit={handleUpdateAdmin}
-                        canEditAdminLevel={canEditAdminLevel}
-                        isCurrentAdmin={isCurrentAdmin}
-                      />
+                      {adminUser && (
+                        <AdminUserForm
+                          adminUser={{...adminUser, role: adminUser.role || 'group' as const}}
+                          isUpdating={isUpdating}
+                          showPasswordFields={showPasswordFields}
+                          handlePasswordToggle={handlePasswordToggle}
+                          onSubmit={handleUpdateAdmin}
+                          canEditAdminLevel={canEditAdminLevel}
+                          isCurrentAdmin={isCurrentAdmin}
+                        />
+                      )}
                     </div>
                   )}
                 </>

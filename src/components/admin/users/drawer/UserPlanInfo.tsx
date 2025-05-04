@@ -1,120 +1,115 @@
 
-import React from "react";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
-import { AlertCircle, Clock, CheckCircle, X, AlertTriangle } from "lucide-react";
-import { UserPlan } from "@/types/admin";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import { CreditCard, Calendar, Check, X } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Badge } from "@/components/ui/badge";
+import { UserPlan } from "@/types/admin";
 
 interface UserPlanInfoProps {
   plan?: UserPlan;
 }
 
-// Helper function to format dates consistently
-export const formatDate = (dateString: string | undefined | null) => {
-  if (!dateString) return "N/A";
-  return format(new Date(dateString), "dd/MM/yyyy", { locale: ptBR });
-};
-
-// Component to show plan status badge
-export function PlanStatusBadge({ plan }: { plan: UserPlan }) {
-  if (plan.payment_status === "completed") {
-    return <Badge variant="success">Ativo</Badge>;
-  }
-  
-  // Check if trial is active
-  const trialEndsAt = plan.trial_ends_at ? new Date(plan.trial_ends_at) : null;
-  const isTrialActive = trialEndsAt && trialEndsAt > new Date();
-  
-  if (isTrialActive) {
-    return <Badge variant="secondary">Trial Ativo</Badge>;
-  }
-  
-  return <Badge variant="outline">Pendente</Badge>;
-}
-
 export function UserPlanInfo({ plan }: UserPlanInfoProps) {
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return "N/A";
+    try {
+      return format(new Date(dateString), "dd/MM/yyyy", { locale: ptBR });
+    } catch (error) {
+      return "Data inválida";
+    }
+  };
+
+  const getPlanName = (planId?: number) => {
+    switch (planId) {
+      case 0: return "Trial Gratuito";
+      case 1: return "Básico";
+      case 2: return "Standard";
+      case 3: return "Premium";
+      default: return "Desconhecido";
+    }
+  };
+
   if (!plan) {
     return (
-      <Alert>
-        <AlertCircle className="h-4 w-4" />
-        <AlertDescription>Este usuário não possui um plano cadastrado.</AlertDescription>
-      </Alert>
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-lg">Plano</CardTitle>
+          <CardDescription>Nenhum plano configurado</CardDescription>
+        </CardHeader>
+      </Card>
     );
   }
 
   return (
-    <>
-      <div className="border p-4 rounded-md bg-muted/50">
-        <div className="flex justify-between items-start">
+    <Card>
+      <CardHeader className="pb-2">
+        <CardTitle className="text-lg">Detalhes do Plano</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="flex justify-between items-center">
+          <div className="flex items-center gap-2">
+            <CreditCard className="h-5 w-5 text-primary" />
+            <h3 className="font-medium">{plan.name || getPlanName(plan.plan)}</h3>
+          </div>
+          <Badge variant={plan.payment_status === 'completed' ? 'success' : 'destructive'}>
+            {plan.payment_status === 'completed' ? 'Pago' : 'Pendente'}
+          </Badge>
+        </div>
+
+        <Separator />
+
+        <div className="grid grid-cols-2 gap-4">
           <div>
-            <h3 className="font-medium">{plan.name}</h3>
-            <PlanStatusBadge plan={plan} />
+            <p className="text-sm text-muted-foreground mb-1">Limite de Agentes</p>
+            <p className="font-medium">{plan.agent_limit || 1}</p>
           </div>
-          <div className="text-right">
-            <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold">
-              {plan.plan === 0 ? "Free Trial" : 
-               plan.plan === 1 ? "Básico" :
-               plan.plan === 2 ? "Standard" :
-               plan.plan === 3 ? "Premium" : "Desconhecido"}
-            </span>
+          <div>
+            <p className="text-sm text-muted-foreground mb-1">Connect Instancia</p>
+            <div className="flex items-center gap-2">
+              {plan.connect_instancia ? (
+                <Badge variant="success" className="gap-1">
+                  <Check className="h-3 w-3" />
+                  Ativo
+                </Badge>
+              ) : (
+                <Badge variant="secondary" className="gap-1">
+                  <X className="h-3 w-3" />
+                  Inativo
+                </Badge>
+              )}
+            </div>
           </div>
         </div>
-      </div>
-      
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-1.5">
-          <h3 className="text-sm font-medium text-muted-foreground">Limite de Agentes</h3>
-          <p className="text-sm">{plan.agent_limit}</p>
+
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <p className="text-sm text-muted-foreground mb-1">Data de Pagamento</p>
+            <div className="flex items-center gap-2">
+              <Calendar className="h-4 w-4 text-muted-foreground" />
+              <span>{formatDate(plan.payment_date)}</span>
+            </div>
+          </div>
+          <div>
+            <p className="text-sm text-muted-foreground mb-1">Expiração</p>
+            <div className="flex items-center gap-2">
+              <Calendar className="h-4 w-4 text-muted-foreground" />
+              <span>{formatDate(plan.subscription_ends_at)}</span>
+            </div>
+          </div>
         </div>
         
-        <div className="space-y-1.5">
-          <h3 className="text-sm font-medium text-muted-foreground">Status de Pagamento</h3>
-          <p className="text-sm capitalize">{plan.payment_status || "N/A"}</p>
-        </div>
-      </div>
-      
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-1.5">
-          <h3 className="text-sm font-medium text-muted-foreground">Data de Pagamento</h3>
-          <p className="text-sm">{plan.payment_date ? formatDate(plan.payment_date) : "N/A"}</p>
-        </div>
-        
-        <div className="space-y-1.5">
-          <h3 className="text-sm font-medium text-muted-foreground">Expiração da Assinatura</h3>
-          <p className="text-sm">{plan.subscription_ends_at ? formatDate(plan.subscription_ends_at) : "N/A"}</p>
-        </div>
-      </div>
-      
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-1.5">
-          <h3 className="text-sm font-medium text-muted-foreground">Início do Trial</h3>
-          <p className="text-sm">{plan.trial_init ? formatDate(plan.trial_init) : "N/A"}</p>
-        </div>
-        
-        <div className="space-y-1.5">
-          <h3 className="text-sm font-medium text-muted-foreground">Fim do Trial</h3>
-          <p className="text-sm">{plan.trial_ends_at ? formatDate(plan.trial_ends_at) : "N/A"}</p>
-        </div>
-      </div>
-      
-      <div className="space-y-1.5">
-        <h3 className="text-sm font-medium text-muted-foreground">Connect Instancia</h3>
-        <p className="text-sm">{plan.connect_instancia ? "Sim" : "Não"}</p>
-      </div>
-      
-      <div className="space-y-1.5">
-        <h3 className="text-sm font-medium text-muted-foreground">Última Atualização</h3>
-        <p className="text-sm">{formatDate(plan.updated_at)}</p>
-      </div>
-      
-      <div className="flex justify-end">
-        <Button variant="outline" size="sm">
-          Editar Plano
-        </Button>
-      </div>
-    </>
+        {plan.trial_ends_at && (
+          <div>
+            <p className="text-sm text-muted-foreground mb-1">Término do Trial</p>
+            <div className="flex items-center gap-2">
+              <Calendar className="h-4 w-4 text-muted-foreground" />
+              <span>{formatDate(plan.trial_ends_at)}</span>
+            </div>
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 }

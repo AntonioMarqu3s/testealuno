@@ -247,8 +247,8 @@ export function UserDetailFields({ userData, isLoading, onSave }: UserDetailFiel
     return format(new Date(dateString), "dd/MM/yyyy", { locale: ptBR });
   };
 
-  const handlePlanChange = (selectPlanId: string) => {
-    const numPlanId = parseInt(selectPlanId);
+  const handlePlanChange = (selectedPlanId: string) => {
+    const numPlanId = parseInt(selectedPlanId);
     const selectedPlan = Object.values(PLAN_TYPES).find(p => p.id === numPlanId);
     if (!selectedPlan) return;
 
@@ -258,13 +258,13 @@ export function UserDetailFields({ userData, isLoading, onSave }: UserDetailFiel
     }
 
     // Ensure we have a valid plan ID
-    const userPlanId = userData?.plan?.id || `plan-${userData?.id || 'new'}`;
+    const validPlanId = userData?.plan?.id || `plan-${userData?.id || 'new'}`;
 
     setEditedData({
       ...editedData,
       plan: {
         ...(editedData.plan || userData.plan || {}),
-        id: userPlanId,
+        id: validPlanId,
         plan: numPlanId,
         name: selectedPlan.name,
         agent_limit: selectedPlan.agent_limit,
