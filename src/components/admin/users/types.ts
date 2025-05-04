@@ -1,9 +1,12 @@
 
-export interface AdminUser {
-  id: string;
+import { AdminUser, AdminRole, Group } from "@/types/admin";
+
+// Re-export the types from the central file
+export type { AdminUser, AdminRole, Group };
+
+// Export any additional user-specific types
+export interface AdminUserTableData extends AdminUser {
   user_id: string;
-  created_at: string;
   user_email?: string;
-  admin_level?: string;
   email?: string;
 }
