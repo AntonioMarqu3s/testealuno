@@ -1,3 +1,4 @@
+
 /**
  * Admin System Type Definitions
  */
@@ -46,6 +47,14 @@ export interface AdminUser {
   groups?: Group[];
   created_at: string;
   user_id?: string; // Added to fix compatibility
+  plan?: number;
+  plan_name?: string;
+  agent_limit?: number;
+  payment_date?: string;
+  subscription_ends_at?: string;
+  payment_status?: string;
+  trial_ends_at?: string;
+  connect_instancia?: boolean;
 }
 
 // Interface for the admin user with additional user details

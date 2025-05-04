@@ -48,7 +48,7 @@ Deno.serve(async (req) => {
     }
     
     // Get request data
-    const { userId, email, password } = await req.json()
+    const { userId, email, password, planData } = await req.json()
     
     if (!userId) {
       throw new Error('User ID is required')
@@ -79,10 +79,62 @@ Deno.serve(async (req) => {
       }
     }
     
+    // Update plan data if provided
+    if (planData) {
+      // Check if user already has a plan
+      const { data: existingPlan } = await supabaseClient
+        .from('user_plans')
+        .select('*')
+        .eq('user_id', userId)
+        .single()
+      
+      if (existingPlan) {
+        // Update existing plan
+        const { error: updatePlanError } = await supabaseClient
+          .from('user_plans')
+          .update({
+            name: planData.name,
+            plan: planData.plan,
+            agent_limit: planData.agent_limit,
+            payment_date: planData.payment_date,
+            payment_status: planData.payment_status,
+            subscription_ends_at: planData.subscription_ends_at,
+            trial_ends_at: planData.trial_ends_at,
+            connect_instancia: planData.connect_instancia,
+            updated_at: new Date().toISOString()
+          })
+          .eq('user_id', userId)
+        
+        if (updatePlanError) {
+          throw updatePlanError
+        }
+      } else {
+        // Create new plan
+        const { error: insertPlanError } = await supabaseClient
+          .from('user_plans')
+          .insert({
+            user_id: userId,
+            name: planData.name,
+            plan: planData.plan,
+            agent_limit: planData.agent_limit,
+            payment_date: planData.payment_date,
+            payment_status: planData.payment_status,
+            subscription_ends_at: planData.subscription_ends_at,
+            trial_ends_at: planData.trial_ends_at,
+            connect_instancia: planData.connect_instancia,
+            updated_at: new Date().toISOString()
+          })
+        
+        if (insertPlanError) {
+          throw insertPlanError
+        }
+      }
+    }
+    
     return new Response(
       JSON.stringify({ 
         success: true, 
-        message: 'User credentials updated successfully' 
+        message: 'User credentials and plan updated successfully' 
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )

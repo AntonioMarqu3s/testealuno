@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -174,6 +175,15 @@ export function UserDetailFields({ userData, isLoading, onSave }: UserDetailFiel
     }
   };
 
+  // Set initial edited data when entering edit mode
+  useEffect(() => {
+    if (isEditing && userData) {
+      setEditedData({
+        plan: userData.plan ? { ...userData.plan } : undefined
+      });
+    }
+  }, [isEditing, userData]);
+
   if (isLoading) {
     return (
       <div className="w-[600px]">
@@ -239,11 +249,41 @@ export function UserDetailFields({ userData, isLoading, onSave }: UserDetailFiel
     setEditedData({
       ...editedData,
       plan: {
-        ...(editedData.plan || userData.plan),
+        ...(editedData.plan || userData.plan || {}),
         plan: numPlanId,
         name: selectedPlan.name,
         agent_limit: selectedPlan.agent_limit,
         trial_ends_at: trialEndsAt
+      }
+    });
+  };
+
+  const handlePaymentStatusChange = (value: string) => {
+    setEditedData({
+      ...editedData,
+      plan: {
+        ...(editedData.plan || userData.plan || {}),
+        payment_status: value
+      }
+    });
+  };
+
+  const handleDateChange = (field: string, date: Date | undefined) => {
+    setEditedData({
+      ...editedData,
+      plan: {
+        ...(editedData.plan || userData.plan || {}),
+        [field]: date ? date.toISOString() : null
+      }
+    });
+  };
+
+  const handleConnectInstanciaChange = (checked: boolean) => {
+    setEditedData({
+      ...editedData,
+      plan: {
+        ...(editedData.plan || userData.plan || {}),
+        connect_instancia: checked
       }
     });
   };
@@ -269,7 +309,7 @@ export function UserDetailFields({ userData, isLoading, onSave }: UserDetailFiel
       </div>
 
       <Tabs defaultValue="info" className="w-full">
-        <TabsList className="w-full justify-start">
+        <TabsList className="w-full justify-start mt-4">
           <TabsTrigger value="info" className="flex items-center gap-2">
             <User className="h-4 w-4" />
             Informações
@@ -341,7 +381,7 @@ export function UserDetailFields({ userData, isLoading, onSave }: UserDetailFiel
                   <div className="flex items-center gap-2">
                     {isEditing ? (
                       <Select
-                        value={String(editedData.plan?.plan ?? userData.plan.plan)}
+                        value={String(editedData.plan?.plan ?? (userData.plan?.plan || 0))}
                         onValueChange={handlePlanChange}
                       >
                         <SelectTrigger className="w-full h-8 text-sm">
@@ -362,17 +402,19 @@ export function UserDetailFields({ userData, isLoading, onSave }: UserDetailFiel
                           ))}
                         </SelectContent>
                       </Select>
-                    ) : (
+                    ) : userData.plan ? (
                       <div className="flex items-center gap-2">
                         <Badge className="h-5 text-xs">
                           {PLAN_TYPES[Object.keys(PLAN_TYPES).find(
-                            key => PLAN_TYPES[key as keyof typeof PLAN_TYPES].id === userData.plan.plan
+                            key => PLAN_TYPES[key as keyof typeof PLAN_TYPES].id === userData.plan?.plan
                           ) as keyof typeof PLAN_TYPES]?.name || "Desconhecido"}
                         </Badge>
                         {isTrialActive && (
                           <Badge variant="secondary" className="h-5 text-xs">Trial Ativo</Badge>
                         )}
                       </div>
+                    ) : (
+                      <span className="text-sm text-muted-foreground">Sem plano</span>
                     )}
                   </div>
                 </div>
@@ -381,11 +423,8 @@ export function UserDetailFields({ userData, isLoading, onSave }: UserDetailFiel
                   <Label className="text-sm">Status do Pagamento</Label>
                   {isEditing ? (
                     <Select
-                      value={editedData.plan?.payment_status || userData.plan.payment_status}
-                      onValueChange={(value) => setEditedData({
-                        ...editedData,
-                        plan: { ...(editedData.plan || userData.plan), payment_status: value }
-                      })}
+                      value={editedData.plan?.payment_status || userData.plan?.payment_status || 'pending'}
+                      onValueChange={handlePaymentStatusChange}
                     >
                       <SelectTrigger className="h-8 text-sm">
                         <SelectValue />
@@ -396,12 +435,52 @@ export function UserDetailFields({ userData, isLoading, onSave }: UserDetailFiel
                         <SelectItem value="test">Teste</SelectItem>
                       </SelectContent>
                     </Select>
-                  ) : (
+                  ) : userData.plan ? (
                     <Badge variant={userData.plan.payment_status === "completed" ? "success" : "destructive"} className="h-5 text-xs">
                       {userData.plan.payment_status === "completed" ? "Completo" : 
                        userData.plan.payment_status === "pending" ? "Pendente" : "Teste"}
                     </Badge>
+                  ) : (
+                    <span className="text-sm text-muted-foreground">N/A</span>
                   )}
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label className="text-sm">Connect Instancia</Label>
+                    {isEditing ? (
+                      <Switch
+                        checked={editedData.plan?.connect_instancia ?? (userData.plan?.connect_instancia || false)}
+                        onCheckedChange={handleConnectInstanciaChange}
+                        className="data-[state=checked]:bg-primary"
+                      />
+                    ) : (
+                      <Badge variant={userData.plan?.connect_instancia ? "success" : "secondary"} className="h-5 text-xs">
+                        {userData.plan?.connect_instancia ? "Ativo" : "Inativo"}
+                      </Badge>
+                    )}
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label className="text-sm">Limite de Agentes</Label>
+                    {isEditing ? (
+                      <Input
+                        type="number"
+                        value={editedData.plan?.agent_limit ?? (userData.plan?.agent_limit || 1)}
+                        onChange={(e) => setEditedData({
+                          ...editedData,
+                          plan: { 
+                            ...(editedData.plan || userData.plan || {}), 
+                            agent_limit: parseInt(e.target.value) 
+                          }
+                        })}
+                        className="h-8 text-sm"
+                        min={1}
+                      />
+                    ) : (
+                      <p className="text-sm">{userData.plan?.agent_limit || 1}</p>
+                    )}
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
@@ -414,12 +493,14 @@ export function UserDetailFields({ userData, isLoading, onSave }: UserDetailFiel
                             variant="outline"
                             className={cn(
                               "w-full h-8 justify-start text-left font-normal text-sm",
-                              !editedData.plan?.payment_date && "text-muted-foreground"
+                              !editedData.plan?.payment_date && !userData.plan?.payment_date && "text-muted-foreground"
                             )}
                           >
                             <CalendarIcon className="mr-2 h-3 w-3" />
                             {editedData.plan?.payment_date ? 
                               formatDate(editedData.plan.payment_date) : 
+                              userData.plan?.payment_date ?
+                              formatDate(userData.plan.payment_date) :
                               "Selecione uma data"}
                           </Button>
                         </PopoverTrigger>
@@ -428,11 +509,10 @@ export function UserDetailFields({ userData, isLoading, onSave }: UserDetailFiel
                             mode="single"
                             selected={editedData.plan?.payment_date ? 
                               new Date(editedData.plan.payment_date) : 
+                              userData.plan?.payment_date ?
+                              new Date(userData.plan.payment_date) :
                               undefined}
-                            onSelect={(date) => setEditedData({
-                              ...editedData,
-                              plan: { ...(editedData.plan || userData.plan), payment_date: date?.toISOString() }
-                            })}
+                            onSelect={(date) => handleDateChange('payment_date', date)}
                             initialFocus
                           />
                         </PopoverContent>
@@ -440,7 +520,7 @@ export function UserDetailFields({ userData, isLoading, onSave }: UserDetailFiel
                     ) : (
                       <p className="flex items-center gap-2 text-sm">
                         <Calendar className="h-3 w-3 text-primary" />
-                        {userData.plan.payment_date ? formatDate(userData.plan.payment_date) : "N/A"}
+                        {userData.plan?.payment_date ? formatDate(userData.plan.payment_date) : "N/A"}
                       </p>
                     )}
                   </div>
@@ -454,12 +534,14 @@ export function UserDetailFields({ userData, isLoading, onSave }: UserDetailFiel
                             variant="outline"
                             className={cn(
                               "w-full h-8 justify-start text-left font-normal text-sm",
-                              !editedData.plan?.subscription_ends_at && "text-muted-foreground"
+                              !editedData.plan?.subscription_ends_at && !userData.plan?.subscription_ends_at && "text-muted-foreground"
                             )}
                           >
                             <CalendarIcon className="mr-2 h-3 w-3" />
                             {editedData.plan?.subscription_ends_at ? 
                               formatDate(editedData.plan.subscription_ends_at) : 
+                              userData.plan?.subscription_ends_at ?
+                              formatDate(userData.plan.subscription_ends_at) :
                               "Selecione uma data"}
                           </Button>
                         </PopoverTrigger>
@@ -468,11 +550,10 @@ export function UserDetailFields({ userData, isLoading, onSave }: UserDetailFiel
                             mode="single"
                             selected={editedData.plan?.subscription_ends_at ? 
                               new Date(editedData.plan.subscription_ends_at) : 
+                              userData.plan?.subscription_ends_at ?
+                              new Date(userData.plan.subscription_ends_at) :
                               undefined}
-                            onSelect={(date) => setEditedData({
-                              ...editedData,
-                              plan: { ...(editedData.plan || userData.plan), subscription_ends_at: date?.toISOString() }
-                            })}
+                            onSelect={(date) => handleDateChange('subscription_ends_at', date)}
                             initialFocus
                           />
                         </PopoverContent>
@@ -480,7 +561,7 @@ export function UserDetailFields({ userData, isLoading, onSave }: UserDetailFiel
                     ) : (
                       <p className="flex items-center gap-2 text-sm">
                         <Calendar className="h-3 w-3 text-primary" />
-                        {userData.plan.subscription_ends_at ? 
+                        {userData.plan?.subscription_ends_at ? 
                           formatDate(userData.plan.subscription_ends_at) : 
                           "N/A"}
                       </p>
@@ -496,12 +577,14 @@ export function UserDetailFields({ userData, isLoading, onSave }: UserDetailFiel
                             variant="outline"
                             className={cn(
                               "w-full h-8 justify-start text-left font-normal text-sm",
-                              !editedData.plan?.trial_ends_at && "text-muted-foreground"
+                              !editedData.plan?.trial_ends_at && !userData.plan?.trial_ends_at && "text-muted-foreground"
                             )}
                           >
                             <CalendarIcon className="mr-2 h-3 w-3" />
                             {editedData.plan?.trial_ends_at ? 
                               formatDate(editedData.plan.trial_ends_at) : 
+                              userData.plan?.trial_ends_at ?
+                              formatDate(userData.plan.trial_ends_at) :
                               "Selecione uma data"}
                           </Button>
                         </PopoverTrigger>
@@ -510,11 +593,10 @@ export function UserDetailFields({ userData, isLoading, onSave }: UserDetailFiel
                             mode="single"
                             selected={editedData.plan?.trial_ends_at ? 
                               new Date(editedData.plan.trial_ends_at) : 
+                              userData.plan?.trial_ends_at ?
+                              new Date(userData.plan.trial_ends_at) :
                               undefined}
-                            onSelect={(date) => setEditedData({
-                              ...editedData,
-                              plan: { ...(editedData.plan || userData.plan), trial_ends_at: date?.toISOString() }
-                            })}
+                            onSelect={(date) => handleDateChange('trial_ends_at', date)}
                             initialFocus
                           />
                         </PopoverContent>
@@ -522,7 +604,7 @@ export function UserDetailFields({ userData, isLoading, onSave }: UserDetailFiel
                     ) : (
                       <div className="flex items-center gap-2 text-sm">
                         <Calendar className="h-3 w-3 text-primary" />
-                        <span>{userData.plan.trial_ends_at ? 
+                        <span>{userData.plan?.trial_ends_at ? 
                           formatDate(userData.plan.trial_ends_at) : 
                           "N/A"}</span>
                         {isTrialActive && (
