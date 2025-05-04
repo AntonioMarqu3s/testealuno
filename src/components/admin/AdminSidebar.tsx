@@ -8,24 +8,26 @@ import {
   Calendar,
   CreditCard,
   Shield,
+  LogOut,
   FolderKanban
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useAdminMenu, AdminMenuItem } from "@/hooks/admin/useAdminMenu";
+import { useAdminMenu } from "@/hooks/admin/useAdminMenu";
+import { useAdminAuth } from "@/context/AdminAuthContext";
+
+const iconMap = {
+  LayoutDashboard,
+  Users,
+  Settings,
+  Calendar,
+  CreditCard,
+  Shield,
+  FolderKanban
+};
 
 export function AdminSidebar() {
-  const { menuItems } = useAdminMenu();
-  
-  // Map of icon names to their components
-  const iconMap: Record<string, React.ComponentType<any>> = {
-    LayoutDashboard,
-    Users,
-    Settings,
-    Calendar,
-    CreditCard,
-    Shield,
-    FolderKanban
-  };
+  const { menuItems, activeItem } = useAdminMenu();
+  const { adminLogout } = useAdminAuth();
 
   return (
     <aside className="w-64 bg-card border-r h-screen flex flex-col">
@@ -36,52 +38,43 @@ export function AdminSidebar() {
       
       <nav className="flex-1 p-4">
         <ul className="space-y-2">
-          {menuItems.map((item: AdminMenuItem) => {
-            const IconComponent = iconMap[item.icon];
+          {menuItems.map((item) => {
+            const Icon = iconMap[item.icon as keyof typeof iconMap];
             return (
-              <SidebarItem 
-                key={item.path}
-                to={item.path} 
-                icon={<IconComponent className="h-5 w-5" />}
-                label={item.label}
-              />
+              <li key={item.path}>
+                <NavLink
+                  to={item.path}
+                  className={({ isActive }) =>
+                    cn(
+                      "flex items-center gap-3 px-3 py-2 rounded-md transition-colors",
+                      isActive
+                        ? "bg-primary text-primary-foreground"
+                        : "hover:bg-muted"
+                    )
+                  }
+                >
+                  <Icon className="h-5 w-5" />
+                  <span>{item.label}</span>
+                </NavLink>
+              </li>
             );
           })}
         </ul>
       </nav>
       
       <div className="p-4 border-t">
-        <div className="text-xs text-muted-foreground">
+        <button
+          onClick={adminLogout}
+          className="flex items-center gap-2 w-full px-3 py-2 text-destructive hover:bg-destructive/10 rounded-md transition-colors"
+        >
+          <LogOut className="h-5 w-5" />
+          <span>Sair</span>
+        </button>
+        
+        <div className="text-xs text-muted-foreground mt-4">
           Painel Administrativo v1.0
         </div>
       </div>
     </aside>
-  );
-}
-
-interface SidebarItemProps {
-  to: string;
-  icon: React.ReactNode;
-  label: string;
-}
-
-function SidebarItem({ to, icon, label }: SidebarItemProps) {
-  return (
-    <li>
-      <NavLink
-        to={to}
-        className={({ isActive }) =>
-          cn(
-            "flex items-center gap-3 px-3 py-2 rounded-md transition-colors",
-            isActive
-              ? "bg-primary text-primary-foreground"
-              : "hover:bg-muted"
-          )
-        }
-      >
-        {icon}
-        <span>{label}</span>
-      </NavLink>
-    </li>
   );
 }
