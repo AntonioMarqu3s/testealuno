@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import { useAdminAuth } from "@/context/AdminAuthContext";
-import { AdminUser } from "@/types/admin";
+import { AdminUser as AdminUserType } from "@/types/admin";
 import { AdminUsersList } from "./users/AdminUsersList";
 import { AdminUsersLoading } from "./users/AdminUsersLoading";
 import { AdminUsersEmptyState } from "./users/AdminUsersEmptyState";
@@ -12,8 +12,14 @@ interface AdminUsersProps {
   onEditAdmin?: (adminId: string) => void;
 }
 
+// Define a local interface that matches how we're using the data
+interface AdminUserData extends AdminUserType {
+  user_id: string;
+  user_email?: string;
+}
+
 export function AdminUsers({ onEditAdmin }: AdminUsersProps) {
-  const [admins, setAdmins] = useState<AdminUser[]>([]);
+  const [admins, setAdmins] = useState<AdminUserData[]>([]);
   const [loading, setLoading] = useState(true);
   const { currentUserAdminId, currentUserAdminLevel } = useAdminAuth();
 
@@ -59,7 +65,7 @@ export function AdminUsers({ onEditAdmin }: AdminUsersProps) {
         });
       }
       
-      setAdmins(adminData as AdminUser[]);
+      setAdmins(adminData as AdminUserData[]);
     } catch (err) {
       console.error("Error fetching admin users:", err);
       toast.error("Erro ao carregar administradores");
