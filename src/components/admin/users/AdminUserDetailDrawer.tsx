@@ -4,7 +4,7 @@ import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerFooter, DrawerC
 import { Button } from "@/components/ui/button";
 import { useAdminUserDrawer } from "@/hooks/admin/useAdminUserDrawer";
 import { AdminDetailFields } from "./drawer/AdminDetailFields";
-import { AdminUserForm, AdminUserFormData } from "./drawer/AdminUserForm";
+import { AdminUserForm } from "./drawer/AdminUserForm";
 
 interface AdminUserDetailDrawerProps {
   adminId: string | null;
