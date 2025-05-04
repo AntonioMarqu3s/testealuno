@@ -1,7 +1,7 @@
 
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Shield, ShieldAlert, Pencil, Trash, Eye } from "lucide-react";
+import { Shield, ShieldAlert, Pencil, Trash } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import {
   AlertDialog,

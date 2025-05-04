@@ -2,19 +2,12 @@
 import React, { useState, useEffect } from "react";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerFooter, DrawerClose } from "@/components/ui/drawer";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import { useAdminAuth } from "@/context/AdminAuthContext";
 import { AdminUser } from "@/hooks/admin/useAdminUsersList";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Card } from "@/components/ui/card";
-import { Switch } from "@/components/ui/switch";
-import { Separator } from "@/components/ui/separator";
-import { Form, FormField, FormItem, FormLabel, FormControl } from "@/components/ui/form";
-import { useForm } from "react-hook-form";
+import { AdminDetailFields } from "./drawer/AdminDetailFields";
+import { AdminUserForm, AdminUserFormData } from "./drawer/AdminUserForm";
 
 interface AdminUserDetailDrawerProps {
   adminId: string | null;
@@ -23,29 +16,12 @@ interface AdminUserDetailDrawerProps {
   onAdminUpdated: () => void;
 }
 
-interface AdminUserFormData {
-  email: string;
-  admin_level: string;
-  password?: string;
-  confirmPassword?: string;
-}
-
 export function AdminUserDetailDrawer({ adminId, open, onClose, onAdminUpdated }: AdminUserDetailDrawerProps) {
   const [adminUser, setAdminUser] = useState<AdminUser | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isUpdating, setIsUpdating] = useState<boolean>(false);
   const [showPasswordFields, setShowPasswordFields] = useState<boolean>(false);
   const { currentUserAdminLevel, currentUserAdminId } = useAdminAuth();
-  
-  // Form states using react-hook-form
-  const form = useForm<AdminUserFormData>({
-    defaultValues: {
-      email: "",
-      admin_level: "standard",
-      password: "",
-      confirmPassword: "",
-    },
-  });
   
   // Fetch admin details of the selected admin
   useEffect(() => {
@@ -63,15 +39,6 @@ export function AdminUserDetailDrawer({ adminId, open, onClose, onAdminUpdated }
         if (error) throw error;
         
         setAdminUser(data);
-        
-        // Initialize form fields with the selected admin's data
-        form.reset({
-          email: data.email || "",
-          admin_level: data.admin_level || data.role || "standard",
-          password: "",
-          confirmPassword: "",
-        });
-        
         console.log("Fetched admin data:", data);
       } catch (err) {
         console.error("Error fetching admin details:", err);
@@ -82,7 +49,7 @@ export function AdminUserDetailDrawer({ adminId, open, onClose, onAdminUpdated }
     };
     
     fetchAdminUser();
-  }, [adminId, open, form]);
+  }, [adminId, open]);
 
   const handlePasswordToggle = () => {
     setShowPasswordFields(!showPasswordFields);
@@ -141,11 +108,6 @@ export function AdminUserDetailDrawer({ adminId, open, onClose, onAdminUpdated }
       
       toast.success("Administrador atualizado com sucesso");
       setShowPasswordFields(false);
-      form.reset({
-        ...formData,
-        password: "",
-        confirmPassword: "",
-      });
       onAdminUpdated(); // Refresh the admin list
     } catch (err) {
       console.error("Error updating admin:", err);
@@ -164,148 +126,29 @@ export function AdminUserDetailDrawer({ adminId, open, onClose, onAdminUpdated }
         <div className="mx-auto w-full max-w-4xl">
           <DrawerHeader>
             <DrawerTitle className="text-2xl font-bold">
-              {isLoading ? "Carregando..." : `Editar Administrador: ${form.watch("email")}`}
+              {isLoading ? "Carregando..." : `Editar Administrador: ${adminUser?.email || ""}`}
             </DrawerTitle>
           </DrawerHeader>
           
           <div className="p-6 overflow-y-auto max-h-[calc(90vh-180px)]">
-            {isLoading ? (
-              <div className="space-y-4">
-                <Skeleton className="h-8 w-full" />
-                <Skeleton className="h-8 w-full" />
-                <Skeleton className="h-8 w-full" />
-                <Skeleton className="h-8 w-2/3" />
-              </div>
-            ) : (
-              <Form {...form}>
-                <form onSubmit={form.handleSubmit(handleUpdateAdmin)} className="space-y-6">
-                  <div className="space-y-2">
-                    <Label htmlFor="admin-id">ID do Administrador</Label>
-                    <Input id="admin-id" value={adminUser?.id || ""} readOnly disabled className="bg-muted" />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="user-id">ID do Usuário</Label>
-                    <Input id="user-id" value={adminUser?.user_id || ""} readOnly disabled className="bg-muted" />
-                  </div>
-                  
-                  <FormField
-                    control={form.control}
-                    name="email"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Email</FormLabel>
-                        <FormControl>
-                          <Input 
-                            placeholder="Email do administrador"
-                            {...field}
-                          />
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="admin_level"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Nível de Administração</FormLabel>
-                        <FormControl>
-                          <Select 
-                            disabled={!canEditAdminLevel}
-                            value={field.value} 
-                            onValueChange={field.onChange}
-                          >
-                            <SelectTrigger className={!canEditAdminLevel ? "bg-muted" : ""}>
-                              <SelectValue placeholder="Selecione o nível" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="standard">Padrão</SelectItem>
-                              <SelectItem value="master">Master</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </FormControl>
-                        {!canEditAdminLevel && (
-                          <p className="text-sm text-muted-foreground">
-                            Apenas administradores master podem alterar este campo.
-                          </p>
-                        )}
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <div className="space-y-2">
-                    <Button 
-                      type="button" 
-                      variant="outline" 
-                      onClick={handlePasswordToggle}
-                    >
-                      {showPasswordFields ? "Cancelar Alteração de Senha" : "Alterar Senha"}
-                    </Button>
-                  </div>
-                  
-                  {showPasswordFields && (
-                    <Card className="p-4 space-y-4">
-                      <FormField
-                        control={form.control}
-                        name="password"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Nova Senha</FormLabel>
-                            <FormControl>
-                              <Input
-                                type="password"
-                                placeholder="Digite a nova senha"
-                                {...field}
-                              />
-                            </FormControl>
-                          </FormItem>
-                        )}
-                      />
-                      
-                      <FormField
-                        control={form.control}
-                        name="confirmPassword"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Confirme a Senha</FormLabel>
-                            <FormControl>
-                              <Input
-                                type="password"
-                                placeholder="Confirme a nova senha"
-                                {...field}
-                              />
-                            </FormControl>
-                          </FormItem>
-                        )}
-                      />
-                    </Card>
-                  )}
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="created-at">Criado em</Label>
-                    <Input 
-                      id="created-at" 
-                      value={adminUser ? new Date(adminUser.created_at).toLocaleString() : ""} 
-                      readOnly 
-                      disabled 
-                      className="bg-muted" 
-                    />
-                  </div>
-                  
-                  <Separator />
-                  
-                  <Button 
-                    type="submit" 
-                    disabled={isLoading || isUpdating}
-                    className="w-full"
-                  >
-                    {isUpdating ? "Salvando..." : "Salvar Alterações"}
-                  </Button>
-                </form>
-              </Form>
-            )}
+            <div className="space-y-6">
+              <AdminDetailFields 
+                adminUser={adminUser} 
+                isLoading={isLoading} 
+              />
+              
+              {!isLoading && (
+                <AdminUserForm
+                  adminUser={adminUser}
+                  isUpdating={isUpdating}
+                  showPasswordFields={showPasswordFields}
+                  handlePasswordToggle={handlePasswordToggle}
+                  onSubmit={handleUpdateAdmin}
+                  canEditAdminLevel={canEditAdminLevel}
+                  isCurrentAdmin={isCurrentAdmin}
+                />
+              )}
+            </div>
           </div>
           
           <DrawerFooter className="px-6">
