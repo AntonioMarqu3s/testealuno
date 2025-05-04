@@ -9,7 +9,6 @@ import { AuthProvider } from "./context/AuthContext";
 import { AdminAuthProvider } from "./context/AdminAuthContext";
 import { supabase } from "@/lib/supabase";
 import { initializeAdminUser } from "@/utils/adminAuthUtils";
-import { adminRoutes } from "./routes/adminRoutes";
 import AuthCallback from "./pages/AuthCallback";
 import ResetPassword from "./pages/ResetPassword";
 import Index from "./pages/Index";
@@ -26,6 +25,7 @@ import Settings from "./pages/Settings";
 import { initializeUserEmail } from "./services/user/userService";
 import { initializeUserPlan } from "./services/plan/userPlanService";
 import WhatsAppFloatingButton from "./components/ui/WhatsAppFloatingButton";
+import { adminRoutes } from "./routes/adminRoutes";
 
 const queryClient = new QueryClient({
   defaultOptions: {
