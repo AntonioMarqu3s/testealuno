@@ -55,13 +55,9 @@ export function AdminUserListItem({
     }
     return <Badge variant="outline" className="bg-primary/10">Admin</Badge>;
   };
-  
-  const handleOpenDetails = () => {
-    setIsDetailDrawerOpen(true);
-  };
 
-  const handleEditClick = () => {
-    handleOpenDetails();
+  const handleOpenEdit = () => {
+    setIsDetailDrawerOpen(true);
   };
 
   const canEdit = admin.id === currentUserAdminId || currentUserAdminLevel === 'master';
@@ -84,14 +80,14 @@ export function AdminUserListItem({
           </p>
         </div>
         <div className="flex gap-2">
-          {/* Detail button */}
+          {/* Edit button */}
           <Button 
             variant="ghost" 
             size="sm"
-            onClick={handleEditClick}
+            onClick={handleOpenEdit}
             title="Editar administrador"
           >
-            <Eye className="h-4 w-4" />
+            <Pencil className="h-4 w-4" />
           </Button>
           
           {/* Delete button with confirmation */}
