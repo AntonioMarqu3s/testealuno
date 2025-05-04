@@ -23,7 +23,7 @@ export const useAdminMenu = () => {
     { path: '/admin/plans', label: 'Planos', icon: 'Calendar' },
     { path: '/admin/payments', label: 'Pagamentos', icon: 'CreditCard' },
     { path: '/admin/administrators', label: 'Administradores', icon: 'Shield', requiresMasterAdmin: true },
-    { path: '/admin/groups', label: 'Grupos', icon: 'FolderKanban', requiresMasterAdmin: true },
+    { path: '/admin/groups', label: 'Grupos', icon: 'Users2', requiresMasterAdmin: true },
     { path: '/admin/settings', label: 'Configurações', icon: 'Settings', requiresMasterAdmin: true },
   ];
 

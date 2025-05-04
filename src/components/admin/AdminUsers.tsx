@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
@@ -58,7 +59,7 @@ export function AdminUsers({ onEditAdmin }: AdminUsersProps) {
         });
       }
       
-      setAdmins(adminData);
+      setAdmins(adminData as AdminUser[]);
     } catch (err) {
       console.error("Error fetching admin users:", err);
       toast.error("Erro ao carregar administradores");

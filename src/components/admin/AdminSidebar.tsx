@@ -3,13 +3,13 @@ import React from "react";
 import { NavLink } from "react-router-dom";
 import { 
   LayoutDashboard, 
-  Users, 
+  Users,
+  Users2,
   Settings, 
   Calendar,
   CreditCard,
   Shield,
   LogOut,
-  UserGroup,
   FolderKanban
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -19,11 +19,11 @@ import { useAdminAuth } from "@/context/AdminAuthContext";
 const iconMap = {
   LayoutDashboard,
   Users,
+  Users2,
   Settings,
   Calendar,
   CreditCard,
   Shield,
-  UserGroup,
   FolderKanban
 };
 
