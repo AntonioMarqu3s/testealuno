@@ -44,10 +44,12 @@ export function AdminUserDetailDrawer({ adminId, open, onClose, onAdminUpdated }
             </TabsList>
             
             <TabsContent value="informacoes" className="space-y-6">
-              <AdminDetailFields 
-                adminUser={adminUser} 
-                isLoading={isLoading} 
-              />
+              {adminUser && (
+                <AdminDetailFields 
+                  adminUser={adminUser} 
+                  isLoading={isLoading} 
+                />
+              )}
               
               {!isLoading && adminUser && (
                 <AdminUserForm

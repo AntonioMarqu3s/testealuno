@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { useAdminUserDrawer } from "@/hooks/admin/useAdminUserDrawer";
 import { AdminDetailFields } from "./AdminDetailFields";
 import { AdminUserForm } from "./AdminUserForm";
-import { UserAgentsList } from "../drawer/UserAgentsList";
+import { UserAgentsList } from "./UserAgentsList";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { UserPlanInfo } from "./UserPlanInfo";
 import { Loader2 } from "lucide-react";
@@ -52,7 +52,7 @@ export function AdminUserDetailDrawer({ adminId, open, onClose, onAdminUpdated }
                 isLoading={isLoading} 
               />
               
-              {!isLoading && (
+              {!isLoading && adminUser && (
                 <AdminUserForm
                   adminUser={adminUser}
                   isUpdating={isUpdating}
@@ -72,17 +72,17 @@ export function AdminUserDetailDrawer({ adminId, open, onClose, onAdminUpdated }
                 </div>
               ) : (
                 <UserPlanInfo 
-                  plan={{
-                    id: adminUser?.id || '',
-                    plan: adminUser?.plan || 0, 
-                    name: adminUser?.plan_name || 'Teste Gratuito', 
-                    agent_limit: adminUser?.agent_limit || 1,
-                    payment_status: adminUser?.payment_status,
-                    payment_date: adminUser?.payment_date,
-                    subscription_ends_at: adminUser?.subscription_ends_at,
-                    trial_ends_at: adminUser?.trial_ends_at,
-                    connect_instancia: adminUser?.connect_instancia
-                  }}
+                  plan={adminUser ? {
+                    id: adminUser.id || '',
+                    plan: adminUser.plan || 0, 
+                    name: adminUser.plan_name || 'Teste Gratuito', 
+                    agent_limit: adminUser.agent_limit || 1,
+                    payment_status: adminUser.payment_status,
+                    payment_date: adminUser.payment_date,
+                    subscription_ends_at: adminUser.subscription_ends_at,
+                    trial_ends_at: adminUser.trial_ends_at,
+                    connect_instancia: adminUser.connect_instancia
+                  } : undefined}
                 />
               )}
             </TabsContent>

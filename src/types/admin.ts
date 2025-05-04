@@ -98,3 +98,12 @@ export interface UserFormData {
   admin_level?: string;
   plan?: number;
 }
+
+// Admin User Form Data interface
+export interface AdminUserFormData {
+  email: string;
+  password?: string;
+  confirmPassword?: string;
+  admin_level: string;
+  plan: number;
+}

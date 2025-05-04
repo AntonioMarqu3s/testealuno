@@ -247,8 +247,8 @@ export function UserDetailFields({ userData, isLoading, onSave }: UserDetailFiel
     return format(new Date(dateString), "dd/MM/yyyy", { locale: ptBR });
   };
 
-  const handlePlanChange = (planId: string) => {
-    const numPlanId = parseInt(planId);
+  const handlePlanChange = (selectPlanId: string) => {
+    const numPlanId = parseInt(selectPlanId);
     const selectedPlan = Object.values(PLAN_TYPES).find(p => p.id === numPlanId);
     if (!selectedPlan) return;
 
@@ -258,13 +258,13 @@ export function UserDetailFields({ userData, isLoading, onSave }: UserDetailFiel
     }
 
     // Ensure we have a valid plan ID
-    const planId = userData?.plan?.id || `plan-${userData?.id || 'new'}`;
+    const userPlanId = userData?.plan?.id || `plan-${userData?.id || 'new'}`;
 
     setEditedData({
       ...editedData,
       plan: {
         ...(editedData.plan || userData.plan || {}),
-        id: planId,
+        id: userPlanId,
         plan: numPlanId,
         name: selectedPlan.name,
         agent_limit: selectedPlan.agent_limit,
@@ -275,13 +275,13 @@ export function UserDetailFields({ userData, isLoading, onSave }: UserDetailFiel
 
   const handlePaymentStatusChange = (value: string) => {
     // Ensure we have a valid plan ID
-    const planId = userData?.plan?.id || `plan-${userData?.id || 'new'}`;
+    const userPlanId = userData?.plan?.id || `plan-${userData?.id || 'new'}`;
 
     setEditedData({
       ...editedData,
       plan: {
         ...(editedData.plan || userData.plan || {}),
-        id: planId,
+        id: userPlanId,
         payment_status: value
       } as UserPlan
     });
@@ -289,13 +289,13 @@ export function UserDetailFields({ userData, isLoading, onSave }: UserDetailFiel
 
   const handleDateChange = (field: string, date: Date | undefined) => {
     // Ensure we have a valid plan ID
-    const planId = userData?.plan?.id || `plan-${userData?.id || 'new'}`;
+    const userPlanId = userData?.plan?.id || `plan-${userData?.id || 'new'}`;
 
     setEditedData({
       ...editedData,
       plan: {
         ...(editedData.plan || userData.plan || {}),
-        id: planId,
+        id: userPlanId,
         [field]: date ? date.toISOString() : null
       } as UserPlan
     });
@@ -303,13 +303,13 @@ export function UserDetailFields({ userData, isLoading, onSave }: UserDetailFiel
 
   const handleConnectInstanciaChange = (checked: boolean) => {
     // Ensure we have a valid plan ID
-    const planId = userData?.plan?.id || `plan-${userData?.id || 'new'}`;
+    const userPlanId = userData?.plan?.id || `plan-${userData?.id || 'new'}`;
 
     setEditedData({
       ...editedData,
       plan: {
         ...(editedData.plan || userData.plan || {}),
-        id: planId,
+        id: userPlanId,
         connect_instancia: checked
       } as UserPlan
     });

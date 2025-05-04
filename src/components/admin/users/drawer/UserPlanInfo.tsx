@@ -3,17 +3,37 @@ import React from "react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { AlertCircle, Clock, CheckCircle, X, AlertTriangle } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 import { UserPlan } from "@/types/admin";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import { Badge } from "@/components/ui/badge";
 
 interface UserPlanInfoProps {
   plan?: UserPlan;
 }
 
-const formatDate = (dateString?: string | null): string => {
+// Helper function to format dates consistently
+export const formatDate = (dateString: string | undefined | null) => {
   if (!dateString) return "N/A";
-  return new Date(dateString).toLocaleDateString('pt-BR');
+  return format(new Date(dateString), "dd/MM/yyyy", { locale: ptBR });
 };
+
+// Component to show plan status badge
+export function PlanStatusBadge({ plan }: { plan: UserPlan }) {
+  if (plan.payment_status === "completed") {
+    return <Badge variant="success">Ativo</Badge>;
+  }
+  
+  // Check if trial is active
+  const trialEndsAt = plan.trial_ends_at ? new Date(plan.trial_ends_at) : null;
+  const isTrialActive = trialEndsAt && trialEndsAt > new Date();
+  
+  if (isTrialActive) {
+    return <Badge variant="secondary">Trial Ativo</Badge>;
+  }
+  
+  return <Badge variant="outline">Pendente</Badge>;
+}
 
 export function UserPlanInfo({ plan }: UserPlanInfoProps) {
   if (!plan) {
@@ -31,18 +51,7 @@ export function UserPlanInfo({ plan }: UserPlanInfoProps) {
         <div className="flex justify-between items-start">
           <div>
             <h3 className="font-medium">{plan.name}</h3>
-            <Badge 
-              variant={
-                plan.payment_status === "completed" ? "success" : 
-                plan.payment_status === "pending" ? "outline" : 
-                "secondary"
-              } 
-              className="mt-1"
-            >
-              {plan.payment_status === "completed" ? "Completo" : 
-               plan.payment_status === "pending" ? "Pendente" : 
-               "Teste"}
-            </Badge>
+            <PlanStatusBadge plan={plan} />
           </div>
           <div className="text-right">
             <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold">
