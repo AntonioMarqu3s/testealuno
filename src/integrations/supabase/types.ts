@@ -9,8 +9,74 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      admin_audit_logs: {
+        Row: {
+          action: Database["public"]["Enums"]["admin_audit_action"]
+          created_at: string
+          details: Json | null
+          id: string
+          performed_by: string
+          target_id: string | null
+        }
+        Insert: {
+          action: Database["public"]["Enums"]["admin_audit_action"]
+          created_at?: string
+          details?: Json | null
+          id?: string
+          performed_by: string
+          target_id?: string | null
+        }
+        Update: {
+          action?: Database["public"]["Enums"]["admin_audit_action"]
+          created_at?: string
+          details?: Json | null
+          id?: string
+          performed_by?: string
+          target_id?: string | null
+        }
+        Relationships: []
+      }
+      admin_notifications: {
+        Row: {
+          admin_id: string
+          created_at: string
+          id: string
+          message: string
+          read: boolean
+          title: string
+          type: string
+        }
+        Insert: {
+          admin_id: string
+          created_at?: string
+          id?: string
+          message: string
+          read?: boolean
+          title: string
+          type: string
+        }
+        Update: {
+          admin_id?: string
+          created_at?: string
+          id?: string
+          message?: string
+          read?: boolean
+          title?: string
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "admin_notifications_admin_id_fkey"
+            columns: ["admin_id"]
+            isOneToOne: false
+            referencedRelation: "admin_users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       admin_users: {
         Row: {
+          admin_level: string
           created_at: string
           email: string | null
           id: string
@@ -18,6 +84,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          admin_level?: string
           created_at?: string
           email?: string | null
           id?: string
@@ -25,6 +92,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          admin_level?: string
           created_at?: string
           email?: string | null
           id?: string
@@ -161,6 +229,35 @@ export type Database = {
           },
         ]
       }
+      group_members: {
+        Row: {
+          added_at: string | null
+          group_id: string | null
+          id: string
+          user_id: string | null
+        }
+        Insert: {
+          added_at?: string | null
+          group_id?: string | null
+          id?: string
+          user_id?: string | null
+        }
+        Update: {
+          added_at?: string | null
+          group_id?: string | null
+          id?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "group_members_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       group_users: {
         Row: {
           created_at: string
@@ -264,6 +361,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      add_admin_audit_log: {
+        Args: {
+          p_action: Database["public"]["Enums"]["admin_audit_action"]
+          p_target_id?: string
+          p_details?: Json
+        }
+        Returns: string
+      }
       admin_create_admin_user: {
         Args: { p_email: string; p_password: string }
         Returns: string
@@ -330,6 +435,10 @@ export type Database = {
         Args: { p_user_id: string; p_plan_type: number; p_agent_limit: number }
         Returns: boolean
       }
+      get_admin_level: {
+        Args: { checking_user_id?: string }
+        Returns: string
+      }
       get_user_by_email: {
         Args: { p_email: string }
         Returns: {
@@ -338,15 +447,36 @@ export type Database = {
         }[]
       }
       is_admin: {
-        Args: Record<PropertyKey, never>
+        Args: Record<PropertyKey, never> | { checking_user_id?: string }
         Returns: boolean
       }
       is_master_admin: {
         Args: Record<PropertyKey, never>
         Returns: boolean
       }
+      send_admin_notification: {
+        Args: {
+          p_admin_id: string
+          p_type: string
+          p_title: string
+          p_message: string
+        }
+        Returns: string
+      }
     }
     Enums: {
+      admin_audit_action:
+        | "create_admin"
+        | "update_admin"
+        | "delete_admin"
+        | "create_group"
+        | "update_group"
+        | "delete_group"
+        | "add_group_user"
+        | "remove_group_user"
+        | "add_group_admin"
+        | "remove_group_admin"
+        | "update_settings"
       admin_role_type: "master" | "group"
     }
     CompositeTypes: {
@@ -463,6 +593,19 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      admin_audit_action: [
+        "create_admin",
+        "update_admin",
+        "delete_admin",
+        "create_group",
+        "update_group",
+        "delete_group",
+        "add_group_user",
+        "remove_group_user",
+        "add_group_admin",
+        "remove_group_admin",
+        "update_settings",
+      ],
       admin_role_type: ["master", "group"],
     },
   },

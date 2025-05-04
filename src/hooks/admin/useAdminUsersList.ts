@@ -19,13 +19,6 @@ export function useAdminUsersList() {
   const { currentUserAdminLevel } = useAdminAuth();
 
   const fetchAdminUsers = async () => {
-    // Only master admins can view other admins
-    if (currentUserAdminLevel !== 'master') {
-      setAdminUsers([]);
-      setIsLoading(false);
-      return;
-    }
-
     try {
       setIsLoading(true);
       setError(null);
@@ -42,7 +35,7 @@ export function useAdminUsersList() {
         throw new Error(`Error fetching admin users: ${fetchError.message}`);
       }
       
-      console.log(`Successfully fetched ${data?.length || 0} admin users`);
+      console.log(`Successfully fetched ${data?.length || 0} admin users:`, data);
       setAdminUsers(data || []);
     } catch (err) {
       console.error("Error in fetchAdminUsers:", err);

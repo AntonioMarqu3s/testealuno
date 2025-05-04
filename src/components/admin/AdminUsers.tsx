@@ -16,6 +16,7 @@ interface AdminUsersProps {
 interface AdminUserData extends AdminUserType {
   user_id: string;
   user_email?: string;
+  admin_level?: string;
 }
 
 export function AdminUsers({ onEditAdmin }: AdminUsersProps) {
@@ -27,15 +28,20 @@ export function AdminUsers({ onEditAdmin }: AdminUsersProps) {
     try {
       setLoading(true);
       
-      // Fetch admin users using direct SQL for reliability
+      console.log("Fetching admin users data...");
+      
+      // Fetch admin users
       const { data: adminData, error: adminError } = await supabase
         .from('admin_users')
         .select('*')
         .order('created_at', { ascending: false });
         
       if (adminError) {
+        console.error("Error fetching admin users:", adminError);
         throw adminError;
       }
+      
+      console.log("Admin data fetched:", adminData);
       
       // Get user emails if not already in the data
       const userIds = adminData.filter(admin => !admin.email).map(admin => admin.user_id);
@@ -47,6 +53,8 @@ export function AdminUsers({ onEditAdmin }: AdminUsersProps) {
         
         if (userError) {
           console.error("Error fetching user emails:", userError);
+        } else {
+          console.log("User email data:", userData);
         }
         
         // Map emails to admin users
@@ -65,6 +73,7 @@ export function AdminUsers({ onEditAdmin }: AdminUsersProps) {
         });
       }
       
+      console.log("Final admin data with emails:", adminData);
       setAdmins(adminData as AdminUserData[]);
     } catch (err) {
       console.error("Error fetching admin users:", err);
@@ -88,17 +97,21 @@ export function AdminUsers({ onEditAdmin }: AdminUsersProps) {
       
       // Check if trying to remove a master admin
       const adminToRemove = admins.find(admin => admin.id === adminId);
-      if (adminToRemove?.role === 'master' && currentUserAdminLevel !== 'master') {
+      const adminLevel = adminToRemove?.admin_level || adminToRemove?.role;
+      
+      if (adminLevel === 'master' && currentUserAdminLevel !== 'master') {
         toast.error("Apenas Administradores Master podem remover outros Administradores Master");
         return;
       }
       
+      console.log("Removing admin:", adminId);
       const { error } = await supabase
         .from('admin_users')
         .delete()
         .eq('id', adminId);
         
       if (error) {
+        console.error("Error removing admin:", error);
         throw error;
       }
       

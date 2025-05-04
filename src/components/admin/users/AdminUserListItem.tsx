@@ -22,6 +22,7 @@ interface AdminUser {
   user_email?: string;
   admin_level?: string;
   email?: string;
+  role?: string;
 }
 
 interface AdminUserListItemProps {
@@ -39,6 +40,10 @@ export function AdminUserListItem({
   onRemoveAdmin,
   onEditAdmin 
 }: AdminUserListItemProps) {
+  // Use the admin_level field first, then fall back to role if needed
+  const adminLevel = admin.admin_level || admin.role || 'standard';
+  const email = admin.user_email || admin.email || 'Email não disponível';
+  
   const getAdminLevelBadge = (level?: string) => {
     if (level === 'master') {
       return <Badge variant="outline" className="bg-purple-100 text-purple-800 border-purple-300">Admin Master</Badge>;
@@ -47,19 +52,16 @@ export function AdminUserListItem({
   };
 
   return (
-    <div 
-      key={admin.id} 
-      className="border rounded-md p-4 flex justify-between items-center"
-    >
+    <div className="border rounded-md p-4 flex justify-between items-center">
       <div>
         <div className="flex items-center gap-2">
-          {admin.admin_level === 'master' ? (
+          {adminLevel === 'master' ? (
             <ShieldAlert className="h-4 w-4 text-purple-600" />
           ) : (
             <Shield className="h-4 w-4 text-primary" />
           )}
-          <span className="font-medium">{admin.user_email}</span>
-          {getAdminLevelBadge(admin.admin_level)}
+          <span className="font-medium">{email}</span>
+          {getAdminLevelBadge(adminLevel)}
         </div>
         <p className="text-sm text-muted-foreground">
           Desde {new Date(admin.created_at).toLocaleDateString()}
@@ -88,12 +90,12 @@ export function AdminUserListItem({
               className="text-red-500 hover:text-red-700"
               disabled={
                 admin.id === currentUserAdminId || 
-                (admin.admin_level === 'master' && currentUserAdminLevel !== 'master')
+                (adminLevel === 'master' && currentUserAdminLevel !== 'master')
               }
               title={
                 admin.id === currentUserAdminId 
                   ? "Você não pode remover a si mesmo" 
-                  : admin.admin_level === 'master' && currentUserAdminLevel !== 'master'
+                  : adminLevel === 'master' && currentUserAdminLevel !== 'master'
                   ? "Apenas administradores master podem remover outros administradores master"
                   : "Remover administrador"
               }
