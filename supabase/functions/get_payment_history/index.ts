@@ -1,3 +1,4 @@
+
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 Deno.serve(async (req) => {
@@ -57,14 +58,35 @@ Deno.serve(async (req) => {
     const userId = userData.id;
     console.log('Found user ID:', userId);
     
-    // Buscar histórico de pagamentos na tabela 'pagamentos'
-    const { data, error } = await supabaseClient
-      .from('pagamentos')
-      .select('*')
+    // Now fetch payment history for the user
+    const { data: payments, error: paymentsError } = await supabaseClient
+      .from('user_plans')
+      .select('id, name, plan, agent_limit, payment_date, subscription_ends_at, payment_status')
       .eq('user_id', userId)
-      .order('data_pagamento', { ascending: false });
-    if (error) throw error;
-    return new Response(JSON.stringify(data), { headers: corsHeaders });
+      .order('payment_date', { ascending: false });
+      
+    if (paymentsError) {
+      console.error('Error fetching payments:', paymentsError.message);
+      throw new Error(`Error fetching payment history: ${paymentsError.message}`);
+    }
+    
+    console.log(`Found ${payments?.length || 0} payment records`);
+    
+    // Format the payment data
+    const formattedPayments = payments?.map(payment => ({
+      id: payment.id,
+      userEmail: userEmail,
+      planName: payment.name || 'Plano Padrão',
+      amount: getPlanAmount(payment.plan),
+      paymentDate: payment.payment_date,
+      expirationDate: payment.subscription_ends_at,
+      status: payment.payment_status || 'pending'
+    })) || [];
+
+    return new Response(
+      JSON.stringify({ payments: formattedPayments }), 
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    )
   } catch (error) {
     console.error('Error in get_payment_history:', error.message)
     

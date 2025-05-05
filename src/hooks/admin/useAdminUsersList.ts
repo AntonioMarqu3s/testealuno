@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import { useAdminAuth } from "@/context/AdminAuthContext";
-import { AdminRole } from "@/types/admin";
 
 export interface AdminUser {
   id: string;
@@ -13,34 +12,6 @@ export interface AdminUser {
   plan: number;
   plan_name: string;
   agent_limit: number;
-  role: AdminRole; // Required role property
-  payment_status?: string;
-  payment_date?: string;
-  subscription_ends_at?: string;
-  trial_ends_at?: string;
-  connect_instancia?: boolean;
-}
-
-// Function to log admin actions
-async function logAdminAction(action: string, targetId: string | undefined, details: any = {}) {
-  try {
-    const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
-    if (sessionError) throw sessionError;
-    
-    if (!sessionData.session) return;
-
-    // Call the edge function to log the action
-    await supabase.functions.invoke("log-admin-action", {
-      body: {
-        action,
-        performed_by: sessionData.session.user.id,
-        target_id: targetId,
-        details
-      }
-    });
-  } catch (error) {
-    console.error("Failed to log admin action:", error);
-  }
 }
 
 export function useAdminUsersList() {
@@ -57,9 +28,15 @@ export function useAdminUsersList() {
       console.log("Fetching admin users");
       
       const { data, error: fetchError } = await supabase
-        .from('users')
-        .select('*')
-        .eq('role', 'admin')
+        .from('admin_users')
+        .select(`
+          *,
+          user_plans!user_id (
+            name,
+            agent_limit,
+            plan
+          )
+        `)
         .order('created_at', { ascending: false });
       
       if (fetchError) {
@@ -67,12 +44,12 @@ export function useAdminUsersList() {
         throw new Error(`Error fetching admin users: ${fetchError.message}`);
       }
       
-      // Mapear os dados incluindo informações do plano, se necessário
+      // Mapear os dados incluindo informações do plano
       const mappedData = data?.map(user => ({
         ...user,
-        plan: user.plan || 0,
-        plan_name: user.plan_name || 'Teste Gratuito',
-        agent_limit: user.agent_limit || 1
+        plan: user.user_plans?.plan || 0,
+        plan_name: user.user_plans?.name || 'Teste Gratuito',
+        agent_limit: user.user_plans?.agent_limit || 1
       })) || [];
       
       console.log(`Successfully fetched ${mappedData.length} admin users:`, mappedData);
@@ -97,7 +74,6 @@ export function useAdminUsersList() {
     adminUsers,
     isLoading,
     error,
-    fetchAdminUsers,
-    logAdminAction
+    fetchAdminUsers
   };
 }

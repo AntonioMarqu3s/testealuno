@@ -1,3 +1,4 @@
+
 import { useEffect } from "react";
 import { Toaster as ShadcnToaster } from "@/components/ui/toaster";
 import { Toaster as SonnerToaster } from "@/components/ui/sonner";
@@ -5,7 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
-import { AdminAuthProvider, useAdminAuth } from "./context/AdminAuthContext";
+import { AdminAuthProvider } from "./context/AdminAuthContext";
 import { supabase } from "@/lib/supabase";
 import { initializeAdminUser } from "@/utils/adminAuthUtils";
 import AuthCallback from "./pages/AuthCallback";
@@ -34,16 +35,6 @@ const queryClient = new QueryClient({
     },
   },
 });
-
-function RequireUserOnly({ children }: { children: React.ReactNode }) {
-  const { isAdmin, isLoading } = useAdminAuth();
-  // Enquanto carrega, não renderiza nada
-  if (isLoading) return null;
-  // Se for admin, redireciona para o painel admin
-  if (isAdmin) return <Navigate to="/admin/dashboard" replace />;
-  // Se não for admin, renderiza normalmente
-  return <>{children}</>;
-}
 
 function App() {
   // Initialize user email and plan on app load
@@ -76,18 +67,18 @@ function App() {
                   <Route path="/auth-callback" element={<AuthCallback />} />
                   <Route path="/reset-password" element={<ResetPassword />} />
                   
-                  {/* User routes protegidas: só renderiza se NÃO for admin */}
-                  <Route path="/dashboard" element={<RequireUserOnly><Dashboard /></RequireUserOnly>} />
-                  <Route path="/create-agent" element={<RequireUserOnly><CreateAgent /></RequireUserOnly>} />
-                  <Route path="/edit-agent/:agentId" element={<RequireUserOnly><CreateAgent /></RequireUserOnly>} />
-                  <Route path="/agents" element={<RequireUserOnly><Agents /></RequireUserOnly>} />
-                  <Route path="/my-agents" element={<RequireUserOnly><Navigate to="/agents" replace /></RequireUserOnly>} />
-                  <Route path="/agent-analytics/:agentId" element={<RequireUserOnly><AgentAnalytics /></RequireUserOnly>} />
-                  <Route path="/checkout" element={<RequireUserOnly><Checkout /></RequireUserOnly>} />
-                  <Route path="/plan-checkout" element={<RequireUserOnly><PlanCheckout /></RequireUserOnly>} />
-                  <Route path="/plans" element={<RequireUserOnly><Plans /></RequireUserOnly>} />
-                  <Route path="/settings" element={<RequireUserOnly><Settings /></RequireUserOnly>} />
-                  <Route path="/update-email" element={<RequireUserOnly><Dashboard /></RequireUserOnly>} />
+                  {/* User routes */}
+                  <Route path="/dashboard" element={<Dashboard />} />
+                  <Route path="/create-agent" element={<CreateAgent />} />
+                  <Route path="/edit-agent/:agentId" element={<CreateAgent />} />
+                  <Route path="/agents" element={<Agents />} />
+                  <Route path="/my-agents" element={<Navigate to="/agents" replace />} />
+                  <Route path="/agent-analytics/:agentId" element={<AgentAnalytics />} />
+                  <Route path="/checkout" element={<Checkout />} />
+                  <Route path="/plan-checkout" element={<PlanCheckout />} />
+                  <Route path="/plans" element={<Plans />} />
+                  <Route path="/settings" element={<Settings />} />
+                  <Route path="/update-email" element={<Dashboard />} />
                   
                   {/* Admin routes */}
                   {adminRoutes}

@@ -4,69 +4,63 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { PlanType, PLAN_DETAILS } from "@/services/plan/planTypes";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import { useForm } from "react-hook-form";
-import { getAllPlansFromSupabase } from '@/services/plan/supabsePlanDataService';
+
+interface PlanFormData {
+  agentLimit: number;
+  trialDays?: number;
+  price: number;
+}
 
 export default function AdminPlans() {
-  const [plans, setPlans] = React.useState<any[]>([]);
-  const [isLoading, setIsLoading] = React.useState(true);
-
-  // Função para buscar planos disponível para todo o componente
-  const fetchPlans = React.useCallback(async () => {
-    console.log('Buscando planos na página AdminPlans...');
-    setIsLoading(true);
-    try {
-      const data = await getAllPlansFromSupabase();
-      console.log('Planos carregados com sucesso:', data);
-      setPlans(data);
-    } catch (error) {
-      console.error('Erro ao buscar planos:', error);
-      toast.error('Erro ao carregar planos');
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  // Efeito inicial para carregar planos
-  React.useEffect(() => {
-    fetchPlans();
-  }, [fetchPlans]);
-
   return (
     <AdminLayout>
       <div className="p-6 space-y-6">
-        <div className="flex justify-between items-center">
-          <h1 className="text-3xl font-bold">Gerenciar Planos</h1>
-          <Button 
-            onClick={fetchPlans} 
-            variant="outline"
-            disabled={isLoading}
-          >
-            {isLoading ? 'Carregando...' : 'Atualizar'}
-          </Button>
-        </div>
+        <h1 className="text-3xl font-bold">Gerenciar Planos</h1>
+        
         <div className="grid gap-6 md:grid-cols-2">
-          {isLoading ? (
-            <div className="col-span-2 text-center py-8">
-              <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
-              <p>Carregando planos...</p>
-            </div>
-          ) : plans.length === 0 ? (
-            <div className="col-span-2 text-center py-8">
-              <p className="text-muted-foreground">Nenhum plano encontrado.</p>
-            </div>
-          ) : (
-            plans.map((plan) => (
-              <PlanCard
-                key={plan.id}
-                plan={plan}
-                onPlanUpdated={fetchPlans}
-              />
-            ))
-          )}
+          <PlanCard 
+            planType={PlanType.FREE_TRIAL}
+            title="Teste Gratuito"
+            description="Acesso limitado para avaliação do sistema"
+            price={0}
+            agentLimit={PLAN_DETAILS[PlanType.FREE_TRIAL].agentLimit}
+            trialDays={PLAN_DETAILS[PlanType.FREE_TRIAL].trialDays || 0}
+            badgeText="Gratuito"
+            badgeVariant="outline"
+          />
+          
+          <PlanCard 
+            planType={PlanType.BASIC}
+            title="Inicial"
+            description="Plano básico para pequenas necessidades"
+            price={PLAN_DETAILS[PlanType.BASIC].price}
+            agentLimit={PLAN_DETAILS[PlanType.BASIC].agentLimit}
+            badgeText="Popular"
+            badgeVariant="secondary"
+          />
+          
+          <PlanCard 
+            planType={PlanType.STANDARD}
+            title="Padrão"
+            description="Plano ideal para a maioria dos usuários"
+            price={PLAN_DETAILS[PlanType.STANDARD].price}
+            agentLimit={PLAN_DETAILS[PlanType.STANDARD].agentLimit}
+          />
+          
+          <PlanCard 
+            planType={PlanType.PREMIUM}
+            title="Premium"
+            description="Acesso completo com recursos ilimitados"
+            price={PLAN_DETAILS[PlanType.PREMIUM].price}
+            agentLimit={PLAN_DETAILS[PlanType.PREMIUM].agentLimit}
+            badgeText="Premium"
+            badgeVariant="default"
+          />
         </div>
       </div>
     </AdminLayout>
@@ -74,50 +68,65 @@ export default function AdminPlans() {
 }
 
 interface PlanCardProps {
-  plan: any;
-  onPlanUpdated: () => Promise<void>;
+  planType: PlanType;
+  title: string;
+  description: string;
+  price: number;
+  agentLimit: number;
+  trialDays?: number;
+  badgeText?: string;
+  badgeVariant?: "default" | "secondary" | "destructive" | "outline";
 }
 
-function PlanCard({ plan, onPlanUpdated }: PlanCardProps) {
-  console.log('Renderizando PlanCard para plano:', plan);
-  
-  const form = useForm({
+function PlanCard({ 
+  planType, 
+  title, 
+  description, 
+  price, 
+  agentLimit, 
+  trialDays,
+  badgeText,
+  badgeVariant = "default"
+}: PlanCardProps) {
+  const form = useForm<PlanFormData>({
     defaultValues: {
-      agentLimit: plan.agent_limit,
-      trialDays: plan.trial_days,
-      price: plan.price
+      agentLimit,
+      trialDays,
+      price
     }
   });
+
   const [isLoading, setIsLoading] = React.useState(false);
 
-  async function handleSubmit(data: any) {
-    console.log('Enviando atualização de plano:', data, 'para plano ID:', plan.id);
+  async function handleSubmit(data: PlanFormData) {
     try {
       setIsLoading(true);
-      // Verifica se estamos usando a tabela certa
-      const table = 'plans';
-      
+
+      // Atualizar no banco de dados
       const { error } = await supabase
-        .from(table)
+        .from('plans')
         .update({
           agent_limit: data.agentLimit,
           trial_days: data.trialDays,
           price: data.price,
           updated_at: new Date().toISOString()
         })
-        .eq('id', plan.id);
-        
-      if (error) {
-        console.error(`Erro ao atualizar plano na tabela ${table}:`, error);
-        throw error;
-      }
-      
+        .eq('type', planType);
+
+      if (error) throw error;
+
+      // Atualizar no PLAN_DETAILS
+      PLAN_DETAILS[planType] = {
+        ...PLAN_DETAILS[planType],
+        agentLimit: data.agentLimit,
+        trialDays: data.trialDays,
+        price: data.price
+      };
+
       toast.success('Plano atualizado com sucesso');
-      // Chama a função de callback para atualizar a lista de planos
-      await onPlanUpdated();
-    } catch (err: any) {
+    } catch (err) {
       console.error('Erro ao atualizar plano:', err);
-      toast.error('Erro ao atualizar plano: ' + (err?.message || err?.error_description || JSON.stringify(err)));
+      toast.error('Erro ao atualizar plano');
     } finally {
       setIsLoading(false);
     }
@@ -128,59 +137,64 @@ function PlanCard({ plan, onPlanUpdated }: PlanCardProps) {
       <CardHeader>
         <div className="flex justify-between items-start">
           <div>
-            <CardTitle>{plan.name}</CardTitle>
-            <CardDescription>{plan.description}</CardDescription>
+            <CardTitle>{title}</CardTitle>
+            <CardDescription>{description}</CardDescription>
           </div>
-          {plan.type === 0 && <Badge variant="outline">Gratuito</Badge>}
-          {plan.type === 1 && <Badge variant="secondary">Popular</Badge>}
-          {plan.type === 3 && <Badge variant="default">Premium</Badge>}
+          {badgeText && (
+            <Badge variant={badgeVariant}>{badgeText}</Badge>
+          )}
         </div>
       </CardHeader>
       <CardContent className="space-y-6">
         <div className="flex items-baseline">
-          <span className="text-3xl font-bold">R$ {plan.price.toFixed(2)}</span>
-          {plan.price > 0 && <span className="text-muted-foreground ml-2">/mês</span>}
+          <span className="text-3xl font-bold">R$ {price.toFixed(2)}</span>
+          {price > 0 && <span className="text-muted-foreground ml-2">/mês</span>}
         </div>
+        
         <div className="space-y-2">
           <div className="flex justify-between">
             <span>Limite de Agentes</span>
-            <span>{plan.agent_limit}</span>
+            <span>{agentLimit}</span>
           </div>
-          {plan.trial_days !== null && (
+          {trialDays && (
             <div className="flex justify-between">
               <span>Período de Teste</span>
-              <span>{plan.trial_days} dias</span>
+              <span>{trialDays} dias</span>
             </div>
           )}
         </div>
+        
         <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4 pt-4 border-t">
           <div className="space-y-2">
-            <Label htmlFor={`agent-limit-${plan.id}`}>Limite de Agentes</Label>
-            <Input
-              id={`agent-limit-${plan.id}`}
-              type="number"
+            <Label htmlFor={`agent-limit-${planType}`}>Limite de Agentes</Label>
+            <Input 
+              id={`agent-limit-${planType}`} 
+              type="number" 
               {...form.register("agentLimit", { required: true, min: 1 })}
             />
           </div>
-          {plan.trial_days !== null && (
+          
+          {trialDays !== undefined && (
             <div className="space-y-2">
-              <Label htmlFor={`trial-days-${plan.id}`}>Dias de Teste</Label>
-              <Input
-                id={`trial-days-${plan.id}`}
-                type="number"
+              <Label htmlFor={`trial-days-${planType}`}>Dias de Teste</Label>
+              <Input 
+                id={`trial-days-${planType}`} 
+                type="number" 
                 {...form.register("trialDays", { min: 0 })}
               />
             </div>
           )}
+          
           <div className="space-y-2">
-            <Label htmlFor={`price-${plan.id}`}>Preço (R$)</Label>
-            <Input
-              id={`price-${plan.id}`}
-              type="number"
+            <Label htmlFor={`price-${planType}`}>Preço (R$)</Label>
+            <Input 
+              id={`price-${planType}`} 
+              type="number" 
               {...form.register("price", { required: true, min: 0 })}
-              step="0.01"
+              step="0.01" 
             />
           </div>
+          
           <div className="pt-2">
             <Button type="submit" className="w-full" disabled={isLoading}>
               {isLoading ? "Atualizando..." : "Atualizar Plano"}

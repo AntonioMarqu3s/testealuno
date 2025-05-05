@@ -31,9 +31,9 @@ export default function AdministratorsPage() {
     try {
       setIsLoading(true);
       const { data, error } = await supabase
-        .from('users')
+        .from('admin_users')
         .select('*')
-        .eq('role', 'admin');
+        .order('created_at', { ascending: false });
 
       if (error) throw error;
       setAdmins(data);
@@ -49,10 +49,9 @@ export default function AdministratorsPage() {
     try {
       // Verificar se o email já existe
       const { data: existingAdmin } = await supabase
-        .from('users')
+        .from('admin_users')
         .select('id')
         .eq('email', data.email)
-        .eq('role', 'admin')
         .single();
 
       if (existingAdmin) {
@@ -61,12 +60,11 @@ export default function AdministratorsPage() {
       }
 
       const { error } = await supabase
-        .from('users')
+        .from('admin_users')
         .insert({
           name: data.name,
           email: data.email,
-          level: data.level,
-          role: 'admin'
+          level: data.level
         });
 
       if (error) throw error;
@@ -77,40 +75,6 @@ export default function AdministratorsPage() {
     } catch (err) {
       console.error('Erro ao criar administrador:', err);
       toast.error('Erro ao criar administrador');
-    }
-  }
-
-  async function updateAdmin(adminId: string, updateData: Partial<Admin>) {
-    try {
-      const { error } = await supabase
-        .from('users')
-        .update({ ...updateData })
-        .eq('id', adminId);
-
-      if (error) throw error;
-
-      toast.success('Administrador atualizado com sucesso');
-      loadAdmins();
-    } catch (err) {
-      console.error('Erro ao atualizar administrador:', err);
-      toast.error('Erro ao atualizar administrador');
-    }
-  }
-
-  async function deleteAdmin(adminId: string) {
-    try {
-      const { error } = await supabase
-        .from('users')
-        .delete()
-        .eq('id', adminId);
-
-      if (error) throw error;
-
-      toast.success('Administrador removido com sucesso');
-      loadAdmins();
-    } catch (err) {
-      console.error('Erro ao remover administrador:', err);
-      toast.error('Erro ao remover administrador');
     }
   }
 
@@ -191,14 +155,6 @@ export default function AdministratorsPage() {
                         </Badge>
                       </div>
                       <p className="text-sm text-muted-foreground">{admin.email}</p>
-                      <div className="flex gap-2">
-                        <Button size="sm" variant="outline" onClick={() => updateAdmin(admin.id, { name: admin.name, email: admin.email, level: admin.level })}>
-                          Editar
-                        </Button>
-                        <Button size="sm" variant="outline" onClick={() => deleteAdmin(admin.id)}>
-                          Remover
-                        </Button>
-                      </div>
                     </div>
                   ))}
                 </div>

@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -15,7 +16,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { usePayments } from '@/hooks/admin/usePayments';
 
 // Define payment type
 interface Payment {
@@ -28,13 +28,11 @@ interface Payment {
   status: string;
 }
 
-export const RecentPaymentsTable: React.FC = () => {
-  const { payments, isLoading, loadPayments } = usePayments();
-  
-  React.useEffect(() => { 
-    loadPayments(); 
-  }, []);
-  
+interface RecentPaymentsTableProps {
+  payments: Payment[];
+}
+
+export const RecentPaymentsTable: React.FC<RecentPaymentsTableProps> = ({ payments }) => {
   return (
     <Card>
       <CardHeader>
@@ -54,18 +52,14 @@ export const RecentPaymentsTable: React.FC = () => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {isLoading ? (
-              <TableRow><TableCell colSpan={4}>Carregando...</TableCell></TableRow>
-            ) : payments.length === 0 ? (
-              <TableRow><TableCell colSpan={4}>Nenhum pagamento encontrado</TableCell></TableRow>
-            ) : payments.map((payment) => (
+            {payments.map((payment) => (
               <TableRow key={payment.id}>
-                <TableCell>{payment.email}</TableCell>
-                <TableCell>{payment.plano_nome}</TableCell>
-                <TableCell>R$ {payment.valor.toFixed(2)}</TableCell>
+                <TableCell>{payment.userEmail}</TableCell>
+                <TableCell>{payment.planName}</TableCell>
+                <TableCell>R$ {payment.amount.toFixed(2)}</TableCell>
                 <TableCell>
-                  <Badge variant={payment.status === 'completed' ? 'success' : payment.status === 'pending' ? 'secondary' : 'destructive'}>
-                    {payment.status === 'completed' ? 'Pago' : payment.status === 'pending' ? 'Pendente' : 'Falhou'}
+                  <Badge variant="success">
+                    Pago
                   </Badge>
                 </TableCell>
               </TableRow>

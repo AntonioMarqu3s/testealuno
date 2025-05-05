@@ -1,3 +1,4 @@
+
 import { supabase } from "@/lib/supabase";
 import { ADMIN_SESSION_KEY } from "@/context/AdminAuthContext";
 
@@ -88,58 +89,5 @@ export function setAdminSessionInStorage(isAdmin: boolean): void {
     localStorage.setItem(ADMIN_SESSION_KEY, "true");
   } else {
     localStorage.removeItem(ADMIN_SESSION_KEY);
-  }
-}
-
-// Função para buscar o total de usuários da tabela auth.users
-export async function getAuthUsersCount(supabase: any) {
-  try {
-    console.log('Tentando obter contagem de usuários auth.users...');
-    
-    // Método 1: Usando função RPC get_auth_users_count (nova)
-    try {
-      console.log('Tentando método 1: função RPC get_auth_users_count');
-      const { data, error } = await supabase.rpc('get_auth_users_count');
-      if (!error) {
-        console.log('Sucesso no método 1, contagem:', data);
-        return data;
-      }
-      console.error('Erro no método 1:', error);
-    } catch (error) {
-      console.error('Exceção no método 1:', error);
-    }
-    
-    // Método 2: Usando função RPC count_auth_users (antiga)
-    try {
-      console.log('Tentando método 2: função RPC count_auth_users');
-      const { data, error } = await supabase.rpc('count_auth_users');
-      if (!error) {
-        console.log('Sucesso no método 2, contagem:', data);
-        return data;
-      }
-      console.error('Erro no método 2:', error);
-    } catch (error) {
-      console.error('Exceção no método 2:', error);
-    }
-    
-    // Método 3: Consulta SQL direta via função
-    try {
-      console.log('Tentando método 3: SQL direta via função');
-      const { data, error } = await supabase.functions.invoke('get-auth-users-count');
-      if (!error && data?.count !== undefined) {
-        console.log('Sucesso no método 3, contagem:', data.count);
-        return data.count;
-      }
-      console.error('Erro no método 3:', error);
-    } catch (error) {
-      console.error('Exceção no método 3:', error);
-    }
-    
-    // Método 4: Valor fixo temporário
-    console.log('Todos os métodos falharam, retornando valor fixo temporário de 14');
-    return 14; // Número observado no Supabase
-  } catch (e) {
-    console.error('Erro geral ao buscar contagem de usuários:', e);
-    return 14; // Valor fixo como último recurso
   }
 }

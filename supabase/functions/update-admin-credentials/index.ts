@@ -1,3 +1,4 @@
+
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 Deno.serve(async (req) => {
@@ -99,17 +100,6 @@ Deno.serve(async (req) => {
         throw updatePasswordError
       }
     }
-    
-    // Atualizar dados do admin na tabela 'users'
-    const { error: updateError } = await supabaseClient
-      .from('users')
-      .update({
-        email: email,
-        admin_level: adminData.admin_level,
-        role: 'admin'
-      })
-      .eq('id', targetAdmin.user_id);
-    if (updateError) throw updateError;
     
     return new Response(
       JSON.stringify({ 

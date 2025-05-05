@@ -1,117 +1,17 @@
+import { UserPlanInfo } from './UserPlanInfo';
 
-import React from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { useAdminUserDrawer } from "@/hooks/admin/useAdminUserDrawer";
-import { AdminDetailFields } from "./AdminDetailFields";
-import { AdminUserForm } from "./AdminUserForm";
-import { UserAgentsList } from "./UserAgentsList";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { UserPlanInfo } from "./UserPlanInfo";
-import { Loader2 } from "lucide-react";
-import { AdminUser, UserPlan } from "@/types/admin";
-
-interface AdminUserDetailDrawerProps {
-  adminId: string | null;
-  open: boolean;
-  onClose: () => void;
-  onAdminUpdated: () => void;
-}
-
-export function AdminUserDetailDrawer({ adminId, open, onClose, onAdminUpdated }: AdminUserDetailDrawerProps) {
-  const {
-    adminUser,
-    isLoading,
-    isUpdating,
-    showPasswordFields,
-    handlePasswordToggle,
-    handleUpdateAdmin,
-    canEditAdminLevel,
-    isCurrentAdmin
-  } = useAdminUserDrawer(adminId, onClose, onAdminUpdated);
-  
-  // Create a user plan object from admin user data
-  const getUserPlan = (user: AdminUser | null): UserPlan | undefined => {
-    if (!user) return undefined;
-    
-    // Only create plan object if we have necessary data
-    if (user.id && (user.plan !== undefined || user.agent_limit !== undefined)) {
-      return {
-        id: user.id,
-        name: user.plan_name || 'Teste Gratuito',
-        agent_limit: user.agent_limit || 1,
-        plan: user.plan || 0,
-        payment_status: user.payment_status,
-        payment_date: user.payment_date,
-        subscription_ends_at: user.subscription_ends_at,
-        trial_ends_at: user.trial_ends_at,
-        connect_instancia: user.connect_instancia
-      };
-    }
-    
-    return undefined;
-  };
-  
-  return (
-    <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden">
-        <DialogHeader>
-          <DialogTitle className="text-2xl font-bold">
-            {isLoading ? "Carregando..." : `Editar Usuário: ${adminUser?.email || ""}`}
-          </DialogTitle>
-        </DialogHeader>
-        
-        <div className="overflow-y-auto flex-1">
-          <Tabs defaultValue="informacoes" className="space-y-6">
-            <TabsList>
-              <TabsTrigger value="informacoes">Informações</TabsTrigger>
-              <TabsTrigger value="plano">Plano</TabsTrigger>
-              <TabsTrigger value="agentes">Agentes</TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="informacoes" className="space-y-6">
-              <AdminDetailFields 
-                adminUser={adminUser} 
-                isLoading={isLoading} 
-              />
-              
-              {!isLoading && adminUser && (
-                <AdminUserForm
-                  adminUser={adminUser}
-                  isUpdating={isUpdating}
-                  showPasswordFields={showPasswordFields}
-                  handlePasswordToggle={handlePasswordToggle}
-                  onSubmit={handleUpdateAdmin}
-                  canEditAdminLevel={canEditAdminLevel}
-                  isCurrentAdmin={isCurrentAdmin}
-                />
-              )}
-            </TabsContent>
-            
-            <TabsContent value="plano" className="space-y-4">
-              {isLoading ? (
-                <div className="flex justify-center items-center h-32">
-                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                </div>
-              ) : (
-                <UserPlanInfo plan={getUserPlan(adminUser)} />
-              )}
-            </TabsContent>
-            
-            <TabsContent value="agentes">
-              {adminUser && adminUser.user_id && (
-                <UserAgentsList userId={adminUser.user_id} />
-              )}
-            </TabsContent>
-          </Tabs>
-        </div>
-        
-        <DialogFooter>
-          <Button variant="outline" onClick={onClose}>
-            Fechar
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
-}
+      <TabsContent value="plano" className="space-y-4">
+        <UserPlanInfo 
+          plan={adminUser?.plan || 0} 
+          planName={adminUser?.plan_name || 'Teste Gratuito'} 
+        />
+        <AdminUserForm
+          adminUser={adminUser}
+          isUpdating={isUpdating}
+          showPasswordFields={showPasswordFields}
+          handlePasswordToggle={handlePasswordToggle}
+          onSubmit={handleUpdateAdmin}
+          canEditAdminLevel={canEditAdminLevel}
+          isCurrentAdmin={isCurrentAdmin}
+        />
+      </TabsContent> 

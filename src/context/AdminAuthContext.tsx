@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext } from "react";
 import { useAdminAuthentication } from "@/hooks/admin/useAdminAuthentication";
 import { useAdminSession } from "@/hooks/admin/useAdminSession";
@@ -47,7 +48,6 @@ export const AdminAuthProvider = ({ children }: AdminAuthProviderProps) => {
   const adminLogout = async () => {
     await logoutFn();
     setSessionIsAdmin(false);
-    localStorage.removeItem(ADMIN_SESSION_KEY);
   };
 
   // Provide combined context

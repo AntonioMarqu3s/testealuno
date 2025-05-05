@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
@@ -30,21 +31,20 @@ export function AdminUsers({ onEditAdmin }: AdminUsersProps) {
       console.log("Fetching admin users data...");
       
       // Fetch admin users
-      const { data, error } = await supabase
-        .from('users')
+      const { data: adminData, error: adminError } = await supabase
+        .from('admin_users')
         .select('*')
-        .eq('role', 'admin')
         .order('created_at', { ascending: false });
         
-      if (error) {
-        console.error("Error fetching admin users:", error);
-        throw error;
+      if (adminError) {
+        console.error("Error fetching admin users:", adminError);
+        throw adminError;
       }
       
-      console.log("Admin data fetched:", data);
+      console.log("Admin data fetched:", adminData);
       
       // Get user emails if not already in the data
-      const userIds = data.filter(admin => !admin.email).map(admin => admin.user_id);
+      const userIds = adminData.filter(admin => !admin.email).map(admin => admin.user_id);
       
       if (userIds.length > 0) {
         const { data: userData, error: userError } = await supabase.rpc("get_emails_by_ids", { 
@@ -58,7 +58,7 @@ export function AdminUsers({ onEditAdmin }: AdminUsersProps) {
         }
         
         // Map emails to admin users
-        data.forEach(admin => {
+        adminData.forEach(admin => {
           if (!admin.email) {
             const userEmail = userData?.find(user => user.id === admin.user_id)?.email;
             admin.user_email = userEmail || 'Usuário não encontrado';
@@ -68,13 +68,13 @@ export function AdminUsers({ onEditAdmin }: AdminUsersProps) {
         });
       } else {
         // If emails are already in the data
-        data.forEach(admin => {
+        adminData.forEach(admin => {
           admin.user_email = admin.email || 'Usuário não encontrado';
         });
       }
       
-      console.log("Final admin data with emails:", data);
-      setAdmins(data as AdminUserData[]);
+      console.log("Final admin data with emails:", adminData);
+      setAdmins(adminData as AdminUserData[]);
     } catch (err) {
       console.error("Error fetching admin users:", err);
       toast.error("Erro ao carregar administradores");

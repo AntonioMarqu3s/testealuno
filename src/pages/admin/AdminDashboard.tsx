@@ -1,151 +1,46 @@
-import React, { useState, useEffect } from "react";
+
+import React from "react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
-import { DashboardMetricCard } from "@/components/admin/dashboard/DashboardMetricCard";
-import { ActivityFeed } from "@/components/admin/dashboard/ActivityFeed";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, UserPlus, Bot, Calendar } from "lucide-react";
-import { useAdminDashboardMetrics } from "@/hooks/admin/useAdminDashboardMetrics";
-import { AdminQuickAction } from "@/components/admin/dashboard/AdminQuickAction";
-import { toast } from "sonner";
+import { Users, UserPlus, Settings, Calendar } from "lucide-react";
 
 export default function AdminDashboard() {
-  console.log("Renderizando AdminDashboard");
-  const {
-    metrics,
-    activities,
-    isLoading,
-    lastUpdated,
-    hasMoreActivities,
-    loadMoreActivities,
-    refreshData,
-    timeFilter,
-    changeTimeFilter,
-    exportAsCSV
-  } = useAdminDashboardMetrics();
-  
-  const [previousMetrics, setPreviousMetrics] = useState<{
-    totalUsers: number;
-    newUsers: Record<string, number>;
-    totalAgents: number;
-    activeSubscriptions: number;
-    freeTrials: number;
-  }>({
-    totalUsers: 0,
-    newUsers: { '30dias': 0, '14dias': 0, '7dias': 0, 'hoje': 0 },
-    totalAgents: 0,
-    activeSubscriptions: 0,
-    freeTrials: 0
-  });
-  
-  // Log metrics changes for debugging
-  useEffect(() => {
-    console.log("Current metrics:", metrics);
-    console.log("Previous metrics:", previousMetrics);
-  }, [metrics, previousMetrics]);
-  
-  // Save previous metrics for animation comparison
-  useEffect(() => {
-    if (!isLoading && (
-      metrics.totalUsers !== previousMetrics.totalUsers ||
-      JSON.stringify(metrics.newUsers) !== JSON.stringify(previousMetrics.newUsers) ||
-      metrics.totalAgents !== previousMetrics.totalAgents ||
-      metrics.activeSubscriptions !== previousMetrics.activeSubscriptions ||
-      metrics.freeTrials !== previousMetrics.freeTrials
-    )) {
-      setPreviousMetrics({...metrics});
-    }
-  }, [metrics, isLoading, previousMetrics]);
-
-  // Refresh data manually
-  const handleRefresh = () => {
-    refreshData();
-    toast.success('Dados atualizados com sucesso!');
-  };
-
-  // Fallback visual para loading e erro
-  if (isLoading) {
-    return <AdminLayout><div className="p-6">Carregando dashboard administrativo...</div></AdminLayout>;
-  }
-  if (!metrics) {
-    return <AdminLayout><div className="p-6 text-red-600">Erro ao carregar métricas do dashboard.</div></AdminLayout>;
-  }
-
   return (
     <AdminLayout>
       <div className="p-6 space-y-6">
-        <div className="flex justify-between items-center">
-          <h1 className="text-3xl font-bold">Dashboard Administrativo</h1>
-          <button 
-            onClick={handleRefresh}
-            className="flex items-center px-4 py-2 bg-primary text-primary-foreground hover:bg-primary/90 rounded-md transition-colors"
-          >
-            <svg
-              className="w-4 h-4 mr-2"
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-              />
-            </svg>
-            Atualizar dados
-          </button>
-        </div>
+        <h1 className="text-3xl font-bold">Dashboard Administrativo</h1>
         
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-          <DashboardMetricCard
+          <DashboardCard
             title="Total de Usuários"
-            value={metrics.totalUsers}
+            value="--"
             icon={<Users className="h-6 w-6" />}
             description="Usuários registrados"
             colorClass="bg-blue-100 text-blue-700"
-            isLoading={isLoading}
-            previousValue={previousMetrics.totalUsers}
           />
           
-          <DashboardMetricCard
+          <DashboardCard
             title="Novos Usuários"
-            value={metrics.newUsers?.['30dias'] || 0}
+            value="--"
             icon={<UserPlus className="h-6 w-6" />}
             description="Últimos 30 dias"
             colorClass="bg-green-100 text-green-700"
-            isLoading={isLoading}
-            previousValue={previousMetrics.newUsers?.['30dias'] || 0}
           />
           
-          <DashboardMetricCard
+          <DashboardCard
             title="Total de Agentes"
-            value={metrics.totalAgents}
-            icon={<Bot className="h-6 w-6" />}
+            value="--"
+            icon={<Settings className="h-6 w-6" />}
             description="Agentes criados"
             colorClass="bg-purple-100 text-purple-700"
-            isLoading={isLoading}
-            previousValue={previousMetrics.totalAgents}
           />
           
-          <DashboardMetricCard
+          <DashboardCard
             title="Assinaturas Ativas"
-            value={metrics.activeSubscriptions}
+            value="--"
             icon={<Calendar className="h-6 w-6" />}
             description="Planos pagos"
             colorClass="bg-amber-100 text-amber-700"
-            isLoading={isLoading}
-            previousValue={previousMetrics.activeSubscriptions}
-          />
-          
-          <DashboardMetricCard
-            title="Testes Gratuitos"
-            value={metrics.freeTrials}
-            icon={<UserPlus className="h-6 w-6 text-cyan-700" />}
-            description="Usuários em teste gratuito"
-            colorClass="bg-cyan-100 text-cyan-700"
-            isLoading={isLoading}
-            previousValue={previousMetrics.freeTrials}
           />
         </div>
         
@@ -181,19 +76,63 @@ export default function AdminDashboard() {
             </CardContent>
           </Card>
           
-          <ActivityFeed 
-            activities={activities}
-            isLoading={isLoading}
-            lastUpdated={lastUpdated}
-            hasMore={hasMoreActivities}
-            onLoadMore={loadMoreActivities}
-            onRefresh={refreshData}
-            timeFilter={timeFilter}
-            onChangeTimeFilter={changeTimeFilter}
-            onExport={exportAsCSV}
-          />
+          <Card>
+            <CardHeader>
+              <CardTitle>Atividade Recente</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-muted-foreground text-center py-8">
+                Dados de atividade serão exibidos aqui
+              </p>
+            </CardContent>
+          </Card>
         </div>
       </div>
     </AdminLayout>
+  );
+}
+
+interface DashboardCardProps {
+  title: string;
+  value: string;
+  icon: React.ReactNode;
+  description: string;
+  colorClass: string;
+}
+
+function DashboardCard({ title, value, icon, description, colorClass }: DashboardCardProps) {
+  return (
+    <Card>
+      <CardContent className="p-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-sm font-medium text-muted-foreground">{title}</p>
+            <p className="text-3xl font-bold mt-1">{value}</p>
+            <p className="text-xs text-muted-foreground mt-1">{description}</p>
+          </div>
+          <div className={`p-3 rounded-full ${colorClass}`}>
+            {icon}
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+interface AdminQuickActionProps {
+  label: string;
+  description: string;
+  href: string;
+}
+
+function AdminQuickAction({ label, description, href }: AdminQuickActionProps) {
+  return (
+    <a 
+      href={href} 
+      className="block p-4 rounded-lg border border-border hover:bg-muted transition-colors"
+    >
+      <div className="font-medium">{label}</div>
+      <div className="text-sm text-muted-foreground">{description}</div>
+    </a>
   );
 }

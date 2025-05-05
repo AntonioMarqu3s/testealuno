@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -6,12 +7,12 @@ import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 import { updateCurrentUserEmail } from "@/services/user/userService";
 import { PlanType, updateUserPlan } from "@/services/plan/userPlanService";
+import { PlanSelector } from "./PlanSelector";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { PromoCodeInput } from "./PromoCodeInput";
 import { RegisterFormValues, registerSchema } from "./RegisterFormSchema";
-import { PlanSelectorV2 } from "./PlanSelectorV2";
 
 interface RegisterFormProps {
   email: string;
@@ -111,41 +112,6 @@ export function RegisterForm({
         hasValidPromo
       );
       
-      // Novo: inserir usuário na tabela public.users
-      if (data?.user) {
-        const { error: userError } = await supabase
-          .from('users')
-          .insert({
-            id: data.user.id,
-            email: data.user.email,
-            nome: values.nome || '',
-            telefone: values.telefone || '',
-            empresa_nome: '',
-            empresa_dados: '',
-            script: '',
-            google_docs_id: '',
-            google_sheet_id: '',
-            objecoes: '',
-            faqs: '',
-            instancia_nome: '',
-            instancia_telefone: '',
-            plano_id: planToApply,
-            plano_nome: 'Teste Gratuito',
-            plano_valor: 0,
-            plano_status: 'trial',
-            data_pagamento: null,
-            data_expiracao: null,
-            agentes_limite: 1,
-            conect: false,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-          });
-        if (userError) {
-          toast.error('Erro ao criar dados extras do usuário: ' + userError.message);
-          return;
-        }
-      }
-      
       // Success message - different messages based on promo code
       toast.success("Conta criada com sucesso!", { 
         description: hasValidPromo 
@@ -174,32 +140,6 @@ export function RegisterForm({
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)}>
         <CardContent className="space-y-4">
-          <FormField
-            control={form.control}
-            name="nome"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Nome</FormLabel>
-                <FormControl>
-                  <Input {...field} type="text" placeholder="Seu nome completo" required />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="telefone"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Telefone</FormLabel>
-                <FormControl>
-                  <Input {...field} type="tel" placeholder="(99) 99999-9999" required />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
           <EmailPasswordFields form={form} setEmail={setEmail} />
           
           <div className="space-y-2">
@@ -211,7 +151,7 @@ export function RegisterForm({
             />
           </div>
           
-          <PlanSelectorV2 
+          <PlanSelector 
             selectedPlan={selectedPlan}
             onSelectPlan={setSelectedPlan}
             showTrialInfo={promoApplied}

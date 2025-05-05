@@ -35,9 +35,9 @@ export default function GroupsPage() {
       
       // Carregar admins de grupo
       const { data: adminsData, error: adminsError } = await supabase
-        .from('users')
+        .from('admin_users')
         .select('*')
-        .eq('role', 'admin');
+        .eq('level', 'group');
       
       if (adminsError) throw adminsError;
       setAdmins(adminsData);

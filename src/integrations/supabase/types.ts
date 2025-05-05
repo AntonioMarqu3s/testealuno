@@ -311,45 +311,10 @@ export type Database = {
         }
         Relationships: []
       }
-      plans: {
-        Row: {
-          agent_limit: number
-          created_at: string | null
-          description: string
-          id: string
-          name: string
-          price: number
-          trial_days: number | null
-          type: number
-          updated_at: string | null
-        }
-        Insert: {
-          agent_limit?: number
-          created_at?: string | null
-          description: string
-          id?: string
-          name: string
-          price?: number
-          trial_days?: number | null
-          type: number
-          updated_at?: string | null
-        }
-        Update: {
-          agent_limit?: number
-          created_at?: string | null
-          description?: string
-          id?: string
-          name?: string
-          price?: number
-          trial_days?: number | null
-          type?: number
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
       user_plans: {
         Row: {
           agent_limit: number
+          connect_instancia: boolean | null
           id: string
           name: string
           payment_date: string | null
@@ -363,6 +328,7 @@ export type Database = {
         }
         Insert: {
           agent_limit?: number
+          connect_instancia?: boolean | null
           id?: string
           name: string
           payment_date?: string | null
@@ -376,6 +342,7 @@ export type Database = {
         }
         Update: {
           agent_limit?: number
+          connect_instancia?: boolean | null
           id?: string
           name?: string
           payment_date?: string | null
@@ -479,10 +446,6 @@ export type Database = {
           email: string
         }[]
       }
-      get_user_details: {
-        Args: { p_user_id: string }
-        Returns: Json
-      }
       is_admin: {
         Args: Record<PropertyKey, never> | { checking_user_id?: string }
         Returns: boolean
@@ -499,10 +462,6 @@ export type Database = {
           p_message: string
         }
         Returns: string
-      }
-      update_user_details: {
-        Args: { p_user_id: string; p_email: string; p_password?: string }
-        Returns: undefined
       }
     }
     Enums: {

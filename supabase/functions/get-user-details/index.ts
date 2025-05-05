@@ -1,3 +1,4 @@
+
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 Deno.serve(async (req) => {
@@ -51,14 +52,32 @@ Deno.serve(async (req) => {
       throw new Error('Unauthorized: Only admins can view user details')
     }
 
-    // Buscar detalhes do usuário na tabela 'users'
-    const { data, error } = await supabaseClient
-      .from('users')
+    // Fetch the requested user's data
+    const { data: userData, error: userDataError } = await supabaseClient.auth.admin.getUserById(userId)
+    
+    if (userDataError || !userData) {
+      throw new Error(`User not found: ${userDataError?.message || 'Unknown error'}`)
+    }
+    
+    // Fetch the user's plan data
+    const { data: planData, error: planError } = await supabaseClient
+      .from('user_plans')
       .select('*')
-      .eq('id', userId)
-      .single();
-    if (error) throw error;
-    return new Response(JSON.stringify(data), { headers: corsHeaders });
+      .eq('user_id', userId)
+      .maybeSingle()
+    
+    if (planError && planError.code !== 'PGRST116') {
+      console.error('Error fetching user plan:', planError)
+    }
+
+    // Return the combined user data
+    return new Response(
+      JSON.stringify({
+        ...userData,
+        plan: planData || null
+      }), 
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    )
   } catch (error) {
     console.error('Error in get-user-details:', error.message)
     

@@ -1,3 +1,4 @@
+
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -13,7 +14,7 @@ interface AgentCardProps {
   path?: string;
 }
 
-export function AgentCard({ title, description, type, icon }: AgentCardProps) {
+export function AgentCard({ title, description, type, icon, path = "/create-agent" }: AgentCardProps) {
   const navigate = useNavigate();
   
   const colorMap: Record<AgentType, string> = {
@@ -26,7 +27,7 @@ export function AgentCard({ title, description, type, icon }: AgentCardProps) {
   };
 
   const handleClick = () => {
-    navigate(`/create-agent?type=${type}`);
+    navigate(`${path}?type=${type}`);
   };
 
   return (

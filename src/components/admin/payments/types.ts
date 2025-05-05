@@ -1,13 +1,10 @@
+
 export interface Payment {
   id: string;
-  user_id?: string;
-  email: string;
-  plano_id?: number;
-  plano_nome: string;
-  valor: number;
-  data_pagamento: string;
-  data_expiracao: string | null;
+  userEmail: string;
+  planName: string;
+  amount: number;
+  paymentDate: string;
+  expirationDate: string;
   status: string;
-  is_temp?: boolean;
-  notes?: string;
 }

@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.43.1";
 
@@ -25,12 +26,30 @@ serve(async (req) => {
       }
     );
 
-    // Buscar todos os usuários na tabela 'users'
-    const { data, error } = await supabaseAdmin
-      .from('users')
-      .select('*');
-    if (error) throw error;
-    return new Response(JSON.stringify(data), { headers: corsHeaders });
+    // Get all users using the admin API
+    const { data, error } = await supabaseAdmin.auth.admin.listUsers();
+
+    if (error) {
+      console.error('Error fetching users:', error);
+      return new Response(
+        JSON.stringify({ error: error.message }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const users = data.users.map(user => ({
+      id: user.id,
+      email: user.email,
+      created_at: user.created_at,
+      last_sign_in_at: user.last_sign_in_at,
+      app_metadata: user.app_metadata,
+      user_metadata: user.user_metadata
+    }));
+
+    return new Response(
+      JSON.stringify(users),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
   } catch (err) {
     console.error('Unexpected error:', err);
     return new Response(

@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
@@ -19,7 +20,7 @@ export function useAdminUserDelete() {
       console.log("Deleting admin user:", adminId);
       
       const { error } = await supabase
-        .from('users')
+        .from('admin_users')
         .delete()
         .eq('id', adminId);
       

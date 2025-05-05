@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerFooter } from "@/components/ui/drawer";
 import { Button } from "@/components/ui/button";
@@ -19,13 +18,11 @@ interface UserDetailDrawerProps {
 export function UserDetailDrawer({ userId, open, onClose, onUserUpdated }: UserDetailDrawerProps) {
   const {
     userData,
-    setUserData,
     isLoading,
     isUpdating,
     showPasswordFields,
     handlePasswordToggle,
     handleUpdateUser,
-    fetchUserData
   } = useUserDetailDrawer(userId, onClose, onUserUpdated);
 
   const handleSavePlanDetails = async (data: any) => {
@@ -40,27 +37,11 @@ export function UserDetailDrawer({ userId, open, onClose, onUserUpdated }: UserD
           payment_status: data.plan.payment_status,
           payment_date: data.plan.payment_date,
           subscription_ends_at: data.plan.subscription_ends_at,
-          trial_ends_at: data.plan.trial_ends_at,
-          connect_instancia: data.plan.connect_instancia
+          trial_ends_at: data.plan.trial_ends_at
         })
         .eq('user_id', userId);
 
       if (error) throw error;
-      
-      // Update local state with new data
-      setUserData(prevData => {
-        if (!prevData) return null;
-        return {
-          ...prevData,
-          plan: {
-            ...prevData.plan,
-            ...data.plan
-          }
-        };
-      });
-      
-      // Refresh user data to ensure we have the latest from the server
-      fetchUserData();
       
       toast.success("Plano atualizado com sucesso");
       onUserUpdated();

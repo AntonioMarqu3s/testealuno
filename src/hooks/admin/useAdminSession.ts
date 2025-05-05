@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { checkAdminStatus, getAdminSessionFromStorage, setAdminSessionInStorage } from "@/utils/adminAuthUtils";
@@ -34,22 +35,18 @@ export function useAdminSession() {
           const userId = session.user.id;
           console.log("Found authenticated user:", userId);
           
-          // First check metadata for admin role
-          if (session.user.user_metadata?.role === 'admin') {
-            console.log("User confirmado como admin via metadata");
-            setIsAdmin(true);
-            setCurrentUserAdminLevel(session.user.user_metadata?.adminLevel || 'standard');
-            setIsLoading(false);
-            return;
-          }
+          const adminStatus = await checkAdminStatus(userId);
           
-          // Se não for admin, limpa tudo
-          setAdminSessionInStorage(false);
-          setIsAdmin(false);
-          setCurrentUserAdminId(null);
-          setCurrentUserAdminLevel(null);
-          setIsLoading(false);
-          return;
+          if (adminStatus.isAdmin) {
+            console.log("User confirmed as admin");
+            setIsAdmin(true);
+            setCurrentUserAdminId(adminStatus.adminId || null);
+            setCurrentUserAdminLevel(adminStatus.adminLevel || null);
+          } else {
+            console.log("User is not an admin");
+            setAdminSessionInStorage(false);
+            setIsAdmin(false);
+          }
         }
       } catch (err) {
         console.error("Error in admin session check:", err);
@@ -78,8 +75,8 @@ export function useAdminSession() {
           return;
         }
         
-        // Only process sign in events when we have a session
-        if (event === 'SIGNED_IN' && session?.user) {
+        // Delay admin check to avoid recursive policies
+        if (session?.user) {
           // Check user metadata first for admin flag
           if (session.user.user_metadata?.role === 'admin') {
             console.log("User confirmed as admin via metadata");
@@ -87,9 +84,6 @@ export function useAdminSession() {
             setAdminSessionInStorage(true);
             return;
           }
-          
-          // Otherwise, we don't make assumptions - the admin login flow
-          // will check admin status and set the flag if needed
         }
       }
     );
