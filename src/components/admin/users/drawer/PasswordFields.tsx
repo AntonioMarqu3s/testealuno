@@ -1,16 +1,18 @@
+
 import React from "react";
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Control } from "react-hook-form";
+import { Control, FieldErrors } from "react-hook-form";
 import { UserFormData } from "@/hooks/admin/useUserDetailDrawer";
 
 // Generic interface that works with both user and admin forms
 interface PasswordFieldsProps {
-  control: Control<UserFormData>;
+  control: Control<any>;
+  errors?: FieldErrors<any>;
   disabled?: boolean;
 }
 
-export function PasswordFields({ control, disabled }: PasswordFieldsProps) {
+export function PasswordFields({ control, errors, disabled }: PasswordFieldsProps) {
   return (
     <div className="space-y-4">
       <FormField

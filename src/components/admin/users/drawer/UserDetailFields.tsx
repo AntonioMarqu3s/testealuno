@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -265,7 +264,7 @@ export function UserDetailFields({ userData, isLoading, onSave }: UserDetailFiel
                   <Badge 
                     variant={
                       userPlan?.payment_status === 'completed' ? 'success' : 
-                      userPlan?.payment_status === 'pending' ? 'warning' : 'default'
+                      userPlan?.payment_status === 'pending' ? 'secondary' : 'default'
                     }
                   >
                     {userPlan?.payment_status === 'completed' ? 'Pago' : 

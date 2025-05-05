@@ -1,4 +1,3 @@
-
 // Export from existing modules
 export * from './agent';
 export * from './plan';
@@ -16,3 +15,17 @@ export { getCurrentUserEmailFromSupabase, forceSyncUserPlanWithSupabase } from '
 
 // Re-export local storage functions for backward compatibility
 export { getStorageItem, setStorageItem } from './storage/localStorageService';
+
+/**
+ * Get the current user ID from localStorage or another source
+ * @returns The current user's ID or null
+ */
+export const getCurrentUserId = (): string | null => {
+  try {
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    return user.id || null;
+  } catch (e) {
+    console.error('Error getting current user ID:', e);
+    return null;
+  }
+};

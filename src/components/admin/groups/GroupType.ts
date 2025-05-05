@@ -8,6 +8,7 @@ export interface Group {
   updated_at?: string;
   total_users?: number;
   total_admins?: number;
+  admin_id?: string; // Adding this property that's required by the Group type
 }
 
 export interface GroupUser {

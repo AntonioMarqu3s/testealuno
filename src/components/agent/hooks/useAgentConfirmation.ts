@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Agent } from "../AgentTypes";
-import { generateAgentInstanceId, getCurrentUserEmail } from "@/services";
+import { generateAgentInstanceId, getCurrentUserEmail, getCurrentUserId } from "@/services";
 
 export const useAgentConfirmation = (agentType: string) => {
   const [showConfirmation, setShowConfirmation] = useState(false);
@@ -36,6 +36,7 @@ export const useAgentConfirmation = (agentType: string) => {
 
   const prepareAgentConfirmation = (values: any, agentId?: string) => {
     const userEmail = getCurrentUserEmail() || "user@example.com";
+    const userId = getCurrentUserId(); // Make sure this function exists and returns a string
     const instanceId = generateAgentInstanceId(userEmail, values.agentName);
     
     // Create agent object for confirmation panel
@@ -45,7 +46,8 @@ export const useAgentConfirmation = (agentType: string) => {
       type: agentType,
       isConnected: false,
       createdAt: new Date(),
-      instanceId
+      instanceId,
+      userId: userId || `user-${Date.now()}` // Add the required userId property
     };
     
     setCreatedAgent(agent);

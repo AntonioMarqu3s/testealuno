@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { AgentFormValues } from "@/components/agent/form/agentSchema";
 import { 
   getCurrentUserEmail,
+  getCurrentUserId, // Make sure this function exists and returns a string
   incrementAgentCount,
   canCreateAgent,
   generateAgentInstanceId,
@@ -18,8 +19,9 @@ export const useAgentCreation = (agentType: string) => {
     setIsSubmitting(true);
     
     try {
-      // Get actual user email
+      // Get actual user email and ID
       const userEmail = getCurrentUserEmail() || "user@example.com";
+      const userId = getCurrentUserId() || "user-id"; // Make sure this function exists
       
       // Check if the user can create more agents
       if (!canCreateAgent(userEmail)) {
@@ -48,6 +50,7 @@ export const useAgentCreation = (agentType: string) => {
         createdAt: new Date(),
         instanceId,
         clientIdentifier,
+        userId, // Add required userId property
         // Store all agent form data
         personality: values.personality,
         customPersonality: values.customPersonality,

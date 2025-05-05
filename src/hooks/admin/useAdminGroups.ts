@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { Group } from '@/types/admin';
+import { Group } from '@/components/admin/groups/GroupType'; // Updated import path
 import { toast } from 'sonner';
 
 export function useAdminGroups() {
@@ -21,7 +21,20 @@ export function useAdminGroups() {
         return;
       }
       
-      setGroups(data || []);
+      // Transform the data to match our Group interface if needed
+      const transformedGroups: Group[] = data ? data.map((group: any) => ({
+        id: group.id,
+        name: group.name,
+        description: group.description,
+        created_at: group.created_at,
+        created_by: group.created_by,
+        updated_at: group.updated_at,
+        total_users: group.total_users,
+        total_admins: group.total_admins,
+        admin_id: group.admin_id || null
+      })) : [];
+      
+      setGroups(transformedGroups);
     } catch (err) {
       console.error('Exception fetching groups:', err);
       toast.error('Erro ao buscar grupos');
