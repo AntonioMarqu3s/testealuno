@@ -19,46 +19,25 @@ export function useAdminUserDrawer(adminId: string | null, onClose: () => void, 
       
       setIsLoading(true);
       try {
-        // Buscar dados do usuário com plano
+        // Buscar dados do usuário admin na tabela 'users'
         const { data, error } = await supabase
-          .from('admin_users')
-          .select(`
-            *,
-            user_plans (
-              name,
-              agent_limit,
-              plan
-            )
-          `)
+          .from('users')
+          .select('*')
           .eq('id', adminId)
           .single();
           
         if (error) throw error;
         
-        console.log("Dados brutos do admin_users:", {
+        console.log("Dados brutos do users:", {
           adminId,
           data,
-          user_id: data?.user_id
         });
-
-        // Buscar plano diretamente
-        const { data: planData, error: planError } = await supabase
-          .from('user_plans')
-          .select('*')
-          .eq('user_id', data.user_id)
-          .single();
-
-        console.log("Plano buscado diretamente:", planData);
-        
-        if (planError && planError.code !== 'PGRST116') { // Ignora erro de não encontrado
-          throw planError;
-        }
 
         const adminUserData = {
           ...data,
-          plan: planData?.plan ?? 0,
-          plan_name: planData?.name ?? 'Teste Gratuito',
-          agent_limit: planData?.agent_limit ?? 1
+          plan: data.plan ?? 0,
+          plan_name: data.plan_name ?? 'Teste Gratuito',
+          agent_limit: data.agent_limit ?? 1
         };
         
         console.log("Dados processados do usuário:", adminUserData);

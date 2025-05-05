@@ -1,4 +1,3 @@
-
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 Deno.serve(async (req) => {
@@ -58,6 +57,17 @@ Deno.serve(async (req) => {
       
       adminUser = userData.user;
       console.log('User created successfully:', adminUser.id);
+
+      // Adicionar admin inicial na tabela 'users'
+      const { error: updateError } = await supabaseClient
+        .from('users')
+        .update({
+          email: adminEmail,
+          admin_level: 'master',
+          role: 'admin'
+        })
+        .eq('id', adminUser.id);
+      if (updateError) throw updateError;
     } else {
       console.log('Admin user already exists, updating password');
       // Update password for existing user

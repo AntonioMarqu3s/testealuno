@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { DashboardMetricCard } from "@/components/admin/dashboard/DashboardMetricCard";
@@ -10,6 +9,7 @@ import { AdminQuickAction } from "@/components/admin/dashboard/AdminQuickAction"
 import { toast } from "sonner";
 
 export default function AdminDashboard() {
+  console.log("Renderizando AdminDashboard");
   const {
     metrics,
     activities,
@@ -23,11 +23,18 @@ export default function AdminDashboard() {
     exportAsCSV
   } = useAdminDashboardMetrics();
   
-  const [previousMetrics, setPreviousMetrics] = useState({
+  const [previousMetrics, setPreviousMetrics] = useState<{
+    totalUsers: number;
+    newUsers: Record<string, number>;
+    totalAgents: number;
+    activeSubscriptions: number;
+    freeTrials: number;
+  }>({
     totalUsers: 0,
-    newUsers: 0,
+    newUsers: { '30dias': 0, '14dias': 0, '7dias': 0, 'hoje': 0 },
     totalAgents: 0,
-    activeSubscriptions: 0
+    activeSubscriptions: 0,
+    freeTrials: 0
   });
   
   // Log metrics changes for debugging
@@ -40,9 +47,10 @@ export default function AdminDashboard() {
   useEffect(() => {
     if (!isLoading && (
       metrics.totalUsers !== previousMetrics.totalUsers ||
-      metrics.newUsers !== previousMetrics.newUsers ||
+      JSON.stringify(metrics.newUsers) !== JSON.stringify(previousMetrics.newUsers) ||
       metrics.totalAgents !== previousMetrics.totalAgents ||
-      metrics.activeSubscriptions !== previousMetrics.activeSubscriptions
+      metrics.activeSubscriptions !== previousMetrics.activeSubscriptions ||
+      metrics.freeTrials !== previousMetrics.freeTrials
     )) {
       setPreviousMetrics({...metrics});
     }
@@ -53,6 +61,14 @@ export default function AdminDashboard() {
     refreshData();
     toast.success('Dados atualizados com sucesso!');
   };
+
+  // Fallback visual para loading e erro
+  if (isLoading) {
+    return <AdminLayout><div className="p-6">Carregando dashboard administrativo...</div></AdminLayout>;
+  }
+  if (!metrics) {
+    return <AdminLayout><div className="p-6 text-red-600">Erro ao carregar métricas do dashboard.</div></AdminLayout>;
+  }
 
   return (
     <AdminLayout>
@@ -94,12 +110,12 @@ export default function AdminDashboard() {
           
           <DashboardMetricCard
             title="Novos Usuários"
-            value={metrics.newUsers}
+            value={metrics.newUsers?.['30dias'] || 0}
             icon={<UserPlus className="h-6 w-6" />}
             description="Últimos 30 dias"
             colorClass="bg-green-100 text-green-700"
             isLoading={isLoading}
-            previousValue={previousMetrics.newUsers}
+            previousValue={previousMetrics.newUsers?.['30dias'] || 0}
           />
           
           <DashboardMetricCard
@@ -120,6 +136,16 @@ export default function AdminDashboard() {
             colorClass="bg-amber-100 text-amber-700"
             isLoading={isLoading}
             previousValue={previousMetrics.activeSubscriptions}
+          />
+          
+          <DashboardMetricCard
+            title="Testes Gratuitos"
+            value={metrics.freeTrials}
+            icon={<UserPlus className="h-6 w-6 text-cyan-700" />}
+            description="Usuários em teste gratuito"
+            colorClass="bg-cyan-100 text-cyan-700"
+            isLoading={isLoading}
+            previousValue={previousMetrics.freeTrials}
           />
         </div>
         

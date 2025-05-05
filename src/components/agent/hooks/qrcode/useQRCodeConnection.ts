@@ -35,20 +35,10 @@ export const useQRCodeConnection = () => {
   }, []);
 
   const startConnectionStatusCheck = useCallback((instanceId: string, onConnected: ConnectionCallbackFunction) => {
-    // For now, we'll assume the user manually confirms the connection
-    // This prevents loops caused by continuous status checking
+    // Interface mantida, mas não realiza mais simulação automática
     console.log("Connection status checks disabled to prevent loops");
-    
-    // We still keep the interface but don't perform automatic checks
     setConnectionCheckAttempts(1);
-    
-    // Just call onConnected directly after a suitable QR scanning time
-    connectionTimeoutRef.current = window.setTimeout(() => {
-      console.log("Assuming connection was successful");
-      onConnected();
-      toast.success("Agente conectado com sucesso!");
-    }, 5000); // Give a few seconds to simulate QR scanning
-    
+    // Não fecha o modal automaticamente. Só fecha por ação do usuário ou conexão real.
     return () => {
       if (connectionTimeoutRef.current) {
         window.clearTimeout(connectionTimeoutRef.current);

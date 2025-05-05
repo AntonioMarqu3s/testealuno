@@ -1,50 +1,15 @@
 export interface Agent {
   id: string;
   name: string;
-  type: string;
-  isConnected: boolean;
+  type: string; // nome do tipo de agente (ex: vendedor, sdr, etc)
+  group: string; // nome do grupo
+  status: string;
   createdAt: Date;
-  instanceId: string;
-  instanceName?: string;
-  clientIdentifier?: string;
-  connectInstancia?: boolean;
-  userId?: string; // Add userId for better type safety
-  // Form data fields
-  personality?: string;
-  customPersonality?: string;
-  companyName?: string;
-  companyDescription?: string;
-  segment?: string;
-  mission?: string;
-  vision?: string;
-  mainDifferentials?: string;
-  competitors?: string;
-  commonObjections?: string;
-  productName?: string;
-  productDescription?: string;
-  problemsSolved?: string;
-  benefits?: string;
-  differentials?: string;
-  // For Supabase integration - contains all form fields
-  agent_data?: {
-    personality?: string;
-    customPersonality?: string;
-    companyName?: string;
-    companyDescription?: string;
-    segment?: string;
-    mission?: string;
-    vision?: string;
-    mainDifferentials?: string;
-    competitors?: string;
-    commonObjections?: string;
-    productName?: string;
-    productDescription?: string;
-    problemsSolved?: string;
-    benefits?: string;
-    differentials?: string;
-  };
-  // Extended data (from agents_extended table)
-  extended?: AgentExtended;
+  updatedAt?: Date;
+  userId: string;
+  typeId: number;
+  groupId: string;
+  isConnected?: boolean;
 }
 
 // New interface for the agents_extended table

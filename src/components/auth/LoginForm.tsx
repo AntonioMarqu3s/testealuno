@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -30,6 +29,8 @@ export function LoginForm({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    // Limpa o flag de admin do localStorage ao tentar login de usuário comum
+    localStorage.removeItem('admin_authenticated');
     setIsLoading(true);
 
     try {
@@ -55,6 +56,20 @@ export function LoginForm({
         
         // Update local storage with email for backward compatibility
         updateCurrentUserEmail(email);
+
+        // Buscar dados completos do usuário na tabela users
+        const { data: userData, error: userDataError } = await supabase
+          .from('users')
+          .select('*')
+          .eq('id', data.user.id)
+          .single();
+
+        if (userDataError) {
+          toast.error("Erro ao buscar dados do usuário: " + userDataError.message);
+          return;
+        }
+        // Aqui você pode salvar userData no contexto global, state, etc.
+        // Exemplo: setUser(userData);
 
         toast.success("Login realizado com sucesso!");
         

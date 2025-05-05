@@ -4,6 +4,8 @@ import { Card } from "@/components/ui/card";
 import { getCurrentUserEmail } from "@/services";
 import { toast } from "sonner";
 import { AlertDialog } from "@/components/ui/alert-dialog";
+import { fetchAgentById } from '@/services/agent/supabase/agents';
+import { supabase } from '@/lib/supabase';
 
 import { Agent } from "./AgentTypes";
 import { AgentHeader } from "./panels/AgentHeader";
@@ -14,6 +16,7 @@ import { QRCodeDialog } from "./panels/QRCodeDialog";
 import { useQRCodeGeneration } from "./hooks/useQRCodeGeneration";
 import { useAgentConnection } from "./hooks/useAgentConnection";
 import { useAgentDelete } from "@/hooks/agent/useAgentDelete";
+import { useAgentContext } from '@/context/AgentContext';
 
 interface AgentPanelProps {
   agent: Agent;
@@ -72,6 +75,7 @@ export const AgentPanel: React.FC<AgentPanelProps> = ({
   
   const { isDisconnecting, isCheckingStatus, handleDisconnect } = useAgentConnection();
   const { handleDeleteAgent: defaultDeleteHandler } = useAgentDelete();
+  const { connections, setAgentConnected } = useAgentContext();
 
   // Keep local deleting state in sync with prop
   useEffect(() => {
@@ -86,6 +90,49 @@ export const AgentPanel: React.FC<AgentPanelProps> = ({
       setTimeout(() => handleShowQRCode(), 300);
     }
   }, [autoShowQR, processedAgent.name, showQRCodeDialog, handleShowQRCode, hasAutoShowQRTriggered]);
+
+  // Atualizar status de conexão ao receber QR code com sucesso
+  useEffect(() => {
+    if (isConnected && !connections[processedAgent.id]) {
+      setAgentConnected(processedAgent.id, true);
+    }
+  }, [isConnected, processedAgent.id, setAgentConnected, connections]);
+
+  // Função utilitária para chamar o webhook de verificação de instância
+  async function callVerificaInstanciaWebhook(instanceName: string) {
+    try {
+      await fetch('https://n8n-n8n.31kvca.easypanel.host/webhook/verificainstancia', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ instanceName })
+      });
+    } catch (e) {
+      console.error('Erro ao chamar webhook de verificação de instância:', e);
+    }
+  }
+
+  // Hook para auto-fechar QRCode após 3 minutos se conectado
+  useEffect(() => {
+    let timer: NodeJS.Timeout | null = null;
+    async function checkConnectionAndClose() {
+      const { data, error } = await supabase
+        .from('users')
+        .select('conect, isConnected')
+        .eq('id', processedAgent.userId)
+        .single();
+      await callVerificaInstanciaWebhook(processedAgent.instanceName);
+      if (!error && (data?.conect === true || data?.isConnected === true)) {
+        setAgentConnected(processedAgent.id, true);
+        setShowQRCodeDialog(false);
+      }
+    }
+    if (showQRCodeDialog) {
+      timer = setTimeout(checkConnectionAndClose, 180000); // 3 minutos
+    }
+    return () => {
+      if (timer) clearTimeout(timer);
+    };
+  }, [showQRCodeDialog, processedAgent.userId, processedAgent.id, processedAgent.instanceName, setAgentConnected]);
 
   const handleEdit = () => {
     // Prepare agent data for editing and navigate
@@ -156,10 +203,30 @@ export const AgentPanel: React.FC<AgentPanelProps> = ({
     setShowQRCodeDialog(false);
   };
 
+  // Usar status do contexto global
+  const isAgentConnected = connections[processedAgent.id] || false;
+
+  // Função para buscar status atualizado ao fechar o modal do QR Code
+  const handleQRCodeDialogChange = async (open: boolean) => {
+    if (!open) {
+      const { data, error } = await supabase
+        .from('users')
+        .select('conect, isConnected')
+        .eq('id', processedAgent.userId)
+        .single();
+      await callVerificaInstanciaWebhook(processedAgent.instanceName);
+      if (!error && (data?.conect === true || data?.isConnected === true)) {
+        setAgentConnected(processedAgent.id, true);
+      }
+      handleCloseQRCode();
+    }
+    setShowQRCodeDialog(open);
+  };
+
   return (
     <Card className="flex flex-col h-full overflow-hidden">
       <AgentHeader 
-        agent={{...processedAgent, isConnected: isConnected}}
+        agent={{...processedAgent, isConnected: isAgentConnected}}
         onEdit={handleEdit}
         onOpenDeleteDialog={() => setShowDeleteDialog(true)}
       />
@@ -170,7 +237,7 @@ export const AgentPanel: React.FC<AgentPanelProps> = ({
       />
       
       <AgentFooter
-        agent={{...processedAgent, isConnected: isConnected}}
+        agent={{...processedAgent, isConnected: isAgentConnected}}
         onGenerateQR={handleConnectClick}
         onDisconnect={handleDisconnectClick}
         isGeneratingQR={isGeneratingQRCode}
@@ -189,12 +256,7 @@ export const AgentPanel: React.FC<AgentPanelProps> = ({
       {/* QR Code Dialog */}
       <QRCodeDialog
         open={showQRCodeDialog}
-        onOpenChange={(open) => {
-          if (!open) {
-            handleCloseQRCode();
-          }
-          setShowQRCodeDialog(open);
-        }}
+        onOpenChange={handleQRCodeDialogChange}
         qrCodeImage={qrCodeImage}
         timerCount={timerCount}
         connectionCheckAttempts={connectionCheckAttempts}

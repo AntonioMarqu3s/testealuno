@@ -1,4 +1,3 @@
-
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 Deno.serve(async (req) => {
@@ -35,11 +34,12 @@ Deno.serve(async (req) => {
       throw new Error('Unauthorized')
     }
     
-    // Verify if the user is an admin with master privileges
+    // Verificar se o usuário é admin master na tabela 'users'
     const { data: adminCheck, error: adminCheckError } = await supabaseClient
-      .from('admin_users')
+      .from('users')
       .select('*')
-      .eq('user_id', user.id)
+      .eq('id', user.id)
+      .eq('role', 'admin')
       .single()
       
     if (adminCheckError) {
@@ -77,19 +77,20 @@ Deno.serve(async (req) => {
       throw new Error('Failed to create user')
     }
     
-    // Add user to admin_users table
-    const { error: insertError } = await supabaseClient
-      .from('admin_users')
-      .insert({
-        user_id: newUser.user.id,
+    // Adicionar usuário na tabela 'users' (já criado no auth)
+    const { error: updateError } = await supabaseClient
+      .from('users')
+      .update({
         email: email,
-        admin_level: adminLevel
+        admin_level: adminLevel,
+        role: 'admin'
       })
+      .eq('id', newUser.user.id)
     
-    if (insertError) {
-      // If insertion fails, attempt to delete the created auth user
+    if (updateError) {
+      // Se falhar, deletar usuário criado no auth
       await supabaseClient.auth.admin.deleteUser(newUser.user.id)
-      throw insertError
+      throw updateError
     }
 
     return new Response(

@@ -1,4 +1,3 @@
-
 import React from "react";
 import { CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -49,6 +48,12 @@ export const AgentContent: React.FC<AgentContentProps> = ({
 
   return (
     <CardContent className="pb-2 flex-grow">
+      {agent.isConnected && (
+        <div className="mb-4 flex items-center gap-2">
+          <Badge variant="success" className="bg-green-100 text-green-800">Conectado</Badge>
+          <span className="text-green-700 text-sm">Seu agente está conectado!</span>
+        </div>
+      )}
       <p className="text-sm mb-2">Tipo: <span className="font-medium">{agentTypeName}</span></p>
       
       {userEmail && (

@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
@@ -44,8 +43,7 @@ export function useAdminAuthentication() {
       console.log("User authenticated:", data.user.id);
       
       // Check metadata first
-      if (data.user.user_metadata?.role === 'admin') {
-        console.log("User confirmed as admin via metadata");
+      if (data.user.user_metadata?.role === 'admin' || data.user.role === 'admin') {
         localStorage.setItem(ADMIN_SESSION_KEY, "true");
         setIsAdmin(true);
         toast.success("Login administrativo bem-sucedido");
@@ -53,41 +51,11 @@ export function useAdminAuthentication() {
         return true;
       }
       
-      // Check admin status using is_admin_user edge function
-      try {
-        const { data: adminCheck, error: adminCheckError } = 
-          await supabase.functions.invoke("is_admin_user", {
-            body: { user_id: data.user.id }
-          });
-        
-        if (adminCheckError) {
-          console.error("Error verifying admin status:", adminCheckError);
-          await supabase.auth.signOut();
-          setIsAdmin(false);
-          return false;
-        }
-        
-        if (adminCheck?.isAdmin) {
-          localStorage.setItem(ADMIN_SESSION_KEY, "true");
-          setIsAdmin(true);
-          toast.success("Login administrativo bem-sucedido");
-          navigate("/admin/dashboard");
-          return true;
-        } else {
-          console.error("User is not an admin");
-          toast.error("Acesso negado", { 
-            description: "Este usuário não tem permissão de administrador" 
-          });
-          await supabase.auth.signOut();
-          setIsAdmin(false);
-          return false;
-        }
-      } catch (err) {
-        console.error("Error during admin verification:", err);
-        await supabase.auth.signOut();
-        setIsAdmin(false);
-        return false;
-      }
+      // Se não for admin, faz logout e bloqueia
+      toast.error("Acesso negado", { description: "Este usuário não tem permissão de administrador" });
+      await supabase.auth.signOut();
+      setIsAdmin(false);
+      return false;
     } catch (err: any) {
       console.error("Error during admin login:", err);
       toast.error(`Erro ao fazer login: ${err.message}`);

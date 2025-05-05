@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
@@ -17,20 +16,13 @@ export function useAdminGroups() {
     setIsLoading(true);
     try {
       const { data, error } = await supabase
-        .from('groups')
+        .from('grupos')
         .select('*')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
 
-      // Convert the data to include the optional total_users and total_admins fields
-      const groupsWithOptionalFields = data.map(group => ({
-        ...group,
-        total_users: group.total_users || 0,
-        total_admins: group.total_admins || 0,
-      })) as Group[];
-
-      setGroups(groupsWithOptionalFields);
+      setGroups(data as Group[]);
     } catch (error: any) {
       console.error("Error fetching groups:", error);
       toast.error("Falha ao carregar grupos", {
@@ -41,32 +33,28 @@ export function useAdminGroups() {
     }
   }
 
-  async function createGroup(name: string, description: string) {
+  async function createGroup(nome: string, descricao: string, adminId?: string) {
     try {
       // Get current user
       const { data: { user } } = await supabase.auth.getUser();
-      
       if (!user) {
         throw new Error("Usuário não autenticado");
       }
-      
+      const insertData: any = {
+        nome,
+        descricao,
+        user_id: user.id,
+        created_at: new Date().toISOString(),
+      };
+      if (adminId) insertData.admin_id = adminId;
       const { data, error } = await supabase
-        .from('groups')
-        .insert({
-          name,
-          description,
-          created_by: user.id
-        })
+        .from('grupos')
+        .insert(insertData)
         .select()
         .single();
-        
       if (error) throw error;
-      
       toast.success("Grupo criado com sucesso");
-      
-      // Refresh groups list
       fetchGroups();
-      
       return data as Group;
     } catch (error: any) {
       console.error("Error creating group:", error);
@@ -77,20 +65,17 @@ export function useAdminGroups() {
     }
   }
 
-  async function updateGroup(id: string, name: string, description: string) {
+  async function updateGroup(id: string, nome: string, descricao: string, adminId?: string) {
     try {
+      const updateData: any = { nome, descricao };
+      if (adminId) updateData.admin_id = adminId;
       const { error } = await supabase
-        .from('groups')
-        .update({ name, description })
+        .from('grupos')
+        .update(updateData)
         .eq('id', id);
-        
       if (error) throw error;
-      
       toast.success("Grupo atualizado com sucesso");
-      
-      // Refresh groups list
       fetchGroups();
-      
       return true;
     } catch (error: any) {
       console.error("Error updating group:", error);
@@ -104,20 +89,15 @@ export function useAdminGroups() {
   async function deleteGroup(id: string) {
     try {
       const { error } = await supabase
-        .from('groups')
+        .from('grupos')
         .delete()
         .eq('id', id);
-        
       if (error) throw error;
-      
       toast.success("Grupo excluído com sucesso");
-      
-      // Refresh groups list and reset selection
       fetchGroups();
       if (selectedGroup?.id === id) {
         setSelectedGroup(null);
       }
-      
       return true;
     } catch (error: any) {
       console.error("Error deleting group:", error);

@@ -36,26 +36,20 @@ export function useAdminSession() {
           
           // First check metadata for admin role
           if (session.user.user_metadata?.role === 'admin') {
-            console.log("User confirmed as admin via metadata");
+            console.log("User confirmado como admin via metadata");
             setIsAdmin(true);
             setCurrentUserAdminLevel(session.user.user_metadata?.adminLevel || 'standard');
             setIsLoading(false);
             return;
           }
           
-          // If not in metadata, check with admin status function
-          const adminStatus = await checkAdminStatus(userId);
-          
-          if (adminStatus.isAdmin) {
-            console.log("User confirmed as admin");
-            setIsAdmin(true);
-            setCurrentUserAdminId(adminStatus.adminId || null);
-            setCurrentUserAdminLevel(adminStatus.adminLevel || null);
-          } else {
-            console.log("User is not an admin");
-            setAdminSessionInStorage(false);
-            setIsAdmin(false);
-          }
+          // Se não for admin, limpa tudo
+          setAdminSessionInStorage(false);
+          setIsAdmin(false);
+          setCurrentUserAdminId(null);
+          setCurrentUserAdminLevel(null);
+          setIsLoading(false);
+          return;
         }
       } catch (err) {
         console.error("Error in admin session check:", err);

@@ -1,4 +1,3 @@
-
 import { supabase } from '@/lib/supabase';
 import { AgentFormValues } from '@/components/agent/form/agentSchema';
 import { saveExtendedAgentData } from './extended';
@@ -50,10 +49,9 @@ export const saveAgentToSupabase = async (
   agentId: string, 
   userEmail: string, 
   values: AgentFormValues,
-  agentType: string,
-  instanceId: string,
-  clientIdentifier: string,
-  isConnected: boolean = false
+  tipoId: number,
+  grupoId: string,
+  status: string = 'ativo'
 ): Promise<boolean> => {
   try {
     // Get the actual user ID from Supabase auth
@@ -67,31 +65,13 @@ export const saveAgentToSupabase = async (
     // Create an agent object with all values to be saved in Supabase
     const agentData = {
       id: agentId,
-      user_id: userId, // Use UUID, not email
-      name: values.agentName,
-      type: agentType,
-      is_connected: isConnected,
-      connect_instancia: isConnected,
-      instance_id: instanceId,
-      client_identifier: clientIdentifier,
-      agent_data: {
-        // Store all form data in agent_data
-        personality: values.personality,
-        customPersonality: values.customPersonality,
-        companyName: values.companyName,
-        companyDescription: values.companyDescription,
-        segment: values.segment,
-        mission: values.mission,
-        vision: values.vision,
-        mainDifferentials: values.mainDifferentials,
-        competitors: values.competitors,
-        commonObjections: values.commonObjections,
-        productName: values.productName,
-        productDescription: values.productDescription,
-        problemsSolved: values.problemsSolved,
-        benefits: values.benefits,
-        differentials: values.differentials
-      }
+      user_id: userId,
+      nome: values.agentName,
+      tipo_id: tipoId,
+      grupo_id: grupoId,
+      status: status,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
     };
 
     // Log the data we're saving
@@ -99,39 +79,12 @@ export const saveAgentToSupabase = async (
     
     // Use upsert to create or update the agent
     const { error } = await supabase
-      .from('agents')
+      .from('agentes')
       .upsert(agentData);
-      
+    
     if (error) {
       console.error('Error saving agent to Supabase:', error);
       return false;
-    }
-    
-    // Now save extended agent data
-    // Calculate some default dates for extended info
-    const startDate = new Date();
-    const trialEndDate = new Date();
-    trialEndDate.setDate(trialEndDate.getDate() + 5); // 5 day trial period
-    
-    // Create extended data
-    const extendedSaved = await saveExtendedAgentData({
-      id: agentId,
-      name: values.agentName,
-      userId,
-      type: agentType,
-      isConnected,
-      createdAt: startDate,
-      instanceId,
-      clientIdentifier
-    }, {
-      startDate,
-      trialEndDate,
-      email: userEmail, // Use email for the email field
-      instance_name: instanceId
-    });
-    
-    if (!extendedSaved) {
-      console.warn('Extended agent data could not be saved');
     }
     
     console.log('Successfully saved agent data to Supabase');

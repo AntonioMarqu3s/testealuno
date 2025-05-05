@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Form } from "@/components/ui/form";
 import FormProgress from "./FormProgress";
@@ -18,6 +17,7 @@ interface AgentFormContentProps {
   onSubmit: (values: AgentFormValues) => void;
   isSubmitting: boolean;
   isEditing: boolean;
+  agentType?: string;
 }
 
 const AgentFormContent: React.FC<AgentFormContentProps> = ({
@@ -29,11 +29,12 @@ const AgentFormContent: React.FC<AgentFormContentProps> = ({
   onSubmit,
   isSubmitting,
   isEditing,
+  agentType,
 }) => {
   const renderStepContent = () => {
     switch (step) {
       case 1:
-        return <AgentBasicInfoForm control={form.control} watch={form.watch} />;
+        return <AgentBasicInfoForm control={form.control} watch={form.watch} agentType={agentType} />;
       case 2:
         return <CompanyInfoForm control={form.control} />;
       case 3:

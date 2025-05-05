@@ -1,4 +1,3 @@
-
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 Deno.serve(async (req) => {
@@ -22,45 +21,31 @@ Deno.serve(async (req) => {
     )
 
     // Parse request body
-    const { user_id } = await req.json()
+    const { userId } = await req.json()
     
-    if (!user_id) {
-      throw new Error('Missing user_id in request body')
+    if (!userId) {
+      throw new Error('Missing userId in request body')
     }
     
-    console.log('Checking admin status for user:', user_id)
+    console.log('Checking admin status for user:', userId)
 
-    // Query admin_users table 
-    const { data: adminUser, error: queryError } = await supabaseClient
-      .from('admin_users')
-      .select('id, admin_level, email')
-      .eq('user_id', user_id)
+    // Query users table (nova)
+    const { data, error } = await supabaseClient
+      .from('users')
+      .select('*')
+      .eq('id', userId)
+      .eq('role', 'admin')
       .single()
 
-    if (queryError) {
-      // Log the error but don't expose details to client
-      console.error('Database query error:', queryError)
-      
-      // If it's a not-found error, return false but don't treat it as a system error
-      if (queryError.code === 'PGRST116') {
-        return new Response(
-          JSON.stringify({ isAdmin: false }), 
-          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        )
-      }
-      
-      throw new Error('Error checking admin status')
-    }
-
-    // If found in admin_users, user is an admin
-    if (adminUser) {
-      console.log('User is an admin with level:', adminUser.admin_level)
+    if (error) throw error;
+    if (data && (data.admin_level === 'master' || data.admin_level === 'standard')) {
+      console.log('User is an admin with level:', data.admin_level)
       return new Response(
         JSON.stringify({ 
           isAdmin: true, 
-          adminId: adminUser.id,
-          adminLevel: adminUser.admin_level || 'standard',
-          email: adminUser.email
+          adminId: data.id,
+          adminLevel: data.admin_level || 'standard',
+          email: data.email
         }), 
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )

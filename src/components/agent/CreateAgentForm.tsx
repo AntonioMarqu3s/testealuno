@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -65,15 +64,15 @@ const CreateAgentForm = ({
 
   const onSubmit = (values: AgentFormValues) => {
     console.log("Form submitted with values:", values);
-    
+    // Forçar o tipo de agente vindo do painel
+    const finalValues = { ...values, type: agentType };
     // Create agent object and show confirmation dialog
-    const agent = prepareAgentConfirmation(values, isEditing ? agentId : undefined);
-    
+    const agent = prepareAgentConfirmation(finalValues, isEditing ? agentId : undefined);
     // Actually save or update the agent
     if (isEditing && agentId) {
-      handleUpdateAgent(values, agentId);
+      handleUpdateAgent(finalValues, agentId);
     } else {
-      handleSubmitAgent(values);
+      handleSubmitAgent(finalValues);
     }
   };
 
@@ -116,6 +115,7 @@ const CreateAgentForm = ({
         onSubmit={onSubmit}
         isSubmitting={isSubmitting}
         isEditing={isEditing}
+        agentType={agentType}
       />
 
       {/* Agent Confirmation Dialog */}
