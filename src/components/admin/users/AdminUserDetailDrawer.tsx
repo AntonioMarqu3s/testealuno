@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -48,7 +49,7 @@ export function AdminUserDetailDrawer({ adminId, open, onClose, onAdminUpdated }
                 isLoading={isLoading} 
               />
               
-              {!isLoading && (
+              {!isLoading && adminUser && (
                 <AdminUserForm
                   adminUser={adminUser}
                   isUpdating={isUpdating}
@@ -62,7 +63,6 @@ export function AdminUserDetailDrawer({ adminId, open, onClose, onAdminUpdated }
             </TabsContent>
             
             <TabsContent value="agentes">
-              {console.log("AdminUser data:", adminUser)}
               {adminUser && <UserAgentsList userId={adminUser.user_id} />}
             </TabsContent>
           </Tabs>

@@ -1,75 +1,61 @@
-import React from "react";
-import { useRouter, usePathname } from "next/navigation";
-import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
-import { 
-  LayoutDashboard, 
-  Users, 
-  CreditCard, 
-  Receipt, 
-  UserCog,
-  UsersRound
-} from "lucide-react";
 
+import React from "react";
+import { useLocation, Link } from "react-router-dom";
+import { useAdminAuth } from "@/context/AdminAuthContext";
+
+// Replace this with your own implementation based on what you need
 export function Sidebar() {
-  const router = useRouter();
-  const pathname = usePathname();
+  const location = useLocation();
+  const { currentUserAdminLevel } = useAdminAuth();
+  
+  const isActive = (path: string) => {
+    return location.pathname === path;
+  };
 
   const menuItems = [
-    {
-      title: "Dashboard",
-      icon: LayoutDashboard,
-      href: "/admin/dashboard"
+    { path: "/admin/dashboard", label: "Dashboard", icon: "📊" },
+    { path: "/admin/users", label: "Usuários", icon: "👥" },
+    { path: "/admin/agents", label: "Agentes", icon: "🤖" },
+    { path: "/admin/payments", label: "Pagamentos", icon: "💰" },
+    { path: "/admin/plans", label: "Planos", icon: "📝" },
+    { 
+      path: "/admin/administrators", 
+      label: "Administradores", 
+      icon: "👮‍♂️",
+      requiresMasterAdmin: true
     },
-    {
-      title: "Usuários",
-      icon: Users,
-      href: "/admin/users"
+    { 
+      path: "/admin/groups", 
+      label: "Grupos", 
+      icon: "👨‍👩‍👧‍👦",
+      requiresMasterAdmin: true
     },
-    {
-      title: "Grupos",
-      icon: UsersRound,
-      href: "/admin/groups"
-    },
-    {
-      title: "Administradores",
-      icon: UserCog,
-      href: "/admin/administrators"
-    },
-    {
-      title: "Planos",
-      icon: CreditCard,
-      href: "/admin/plans"
-    },
-    {
-      title: "Pagamentos",
-      icon: Receipt,
-      href: "/admin/payments"
-    }
+    { path: "/admin/settings", label: "Configurações", icon: "⚙️" },
   ];
 
   return (
-    <div className="pb-12 min-h-screen">
-      <div className="space-y-4 py-4">
-        <div className="px-3 py-2">
-          <div className="space-y-1">
-            {menuItems.map((item) => (
-              <Button
-                key={item.href}
-                variant={pathname === item.href ? "secondary" : "ghost"}
-                className={cn(
-                  "w-full justify-start",
-                  pathname === item.href && "bg-muted"
-                )}
-                onClick={() => router.push(item.href)}
-              >
-                <item.icon className="mr-2 h-4 w-4" />
-                {item.title}
-              </Button>
-            ))}
-          </div>
-        </div>
-      </div>
-    </div>
+    <nav className="space-y-1 px-2 py-5">
+      {menuItems.map((item) => {
+        // Skip items that require master admin level if user is not a master admin
+        if (item.requiresMasterAdmin && currentUserAdminLevel !== 'master') {
+          return null;
+        }
+        
+        return (
+          <Link
+            key={item.path}
+            to={item.path}
+            className={`flex items-center px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+              isActive(item.path)
+                ? "bg-primary text-primary-foreground"
+                : "text-muted-foreground hover:bg-muted"
+            }`}
+          >
+            <span className="mr-3">{item.icon}</span>
+            {item.label}
+          </Link>
+        );
+      })}
+    </nav>
   );
-} 
+}

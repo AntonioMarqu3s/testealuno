@@ -9,11 +9,44 @@ export interface Agent {
   clientIdentifier?: string;
   connectInstancia?: boolean;
   userId: string;
-  // Added optional properties to avoid TypeScript errors
   group?: string;
   status?: string;
   typeId?: number;
   groupId?: string;
+  agent_data?: {
+    personality?: string;
+    customPersonality?: string;
+    companyName?: string;
+    companyDescription?: string;
+    segment?: string;
+    mission?: string;
+    vision?: string;
+    mainDifferentials?: string;
+    competitors?: string;
+    commonObjections?: string;
+    productName?: string;
+    productDescription?: string;
+    problemsSolved?: string;
+    benefits?: string;
+    differentials?: string;
+    [key: string]: any;
+  };
+  // Convenience getters for agent_data properties
+  personality?: string;
+  customPersonality?: string;
+  companyName?: string;
+  companyDescription?: string;
+  segment?: string;
+  mission?: string;
+  vision?: string;
+  mainDifferentials?: string;
+  competitors?: string;
+  commonObjections?: string;
+  productName?: string;
+  productDescription?: string;
+  problemsSolved?: string;
+  benefits?: string;
+  differentials?: string;
 }
 
 export enum AgentTypeEnum {
