@@ -6,12 +6,12 @@ import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 import { updateCurrentUserEmail } from "@/services/user/userService";
 import { PlanType, updateUserPlan } from "@/services/plan/userPlanService";
-import { PlanSelector } from "./PlanSelector";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { PromoCodeInput } from "./PromoCodeInput";
 import { RegisterFormValues, registerSchema } from "./RegisterFormSchema";
+import { PlanSelectorV2 } from "./PlanSelectorV2";
 
 interface RegisterFormProps {
   email: string;
@@ -211,7 +211,7 @@ export function RegisterForm({
             />
           </div>
           
-          <PlanSelector 
+          <PlanSelectorV2 
             selectedPlan={selectedPlan}
             onSelectPlan={setSelectedPlan}
             showTrialInfo={promoApplied}

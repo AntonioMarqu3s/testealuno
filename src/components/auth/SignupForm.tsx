@@ -6,6 +6,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
 import { PlanType } from "@/services/plan/planTypes";
 import { supabase } from "@/lib/supabase";
+import { CheckCircle2 } from "lucide-react";
+import { PlanSelectorV2 } from "./PlanSelectorV2";
 
 // Código promocional padrão
 const PROMO_CODE = "ofertamdf";
@@ -55,7 +57,7 @@ export const SignupForm: React.FC = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [promoCode, setPromoCode] = useState("");
   const [isPromoCodeApplied, setIsPromoCodeApplied] = useState(false);
-  const [selectedPlan, setSelectedPlan] = useState<number | null>(null);
+  const [selectedPlan, setSelectedPlan] = useState<number | null>(1); // Definindo como 1 (Inicial) por padrão
   const [loading, setLoading] = useState(false);
   const [plans, setPlans] = useState(DEFAULT_PLANS);
   const [filteredPlans, setFilteredPlans] = useState(DEFAULT_PLANS.filter(p => p.type !== 0));
@@ -70,8 +72,9 @@ export const SignupForm: React.FC = () => {
       // Auto-selecionar plano gratuito
       setSelectedPlan(0);
     } else {
-      setFilteredPlans(plans.filter(p => p.type !== 0));
-      if (selectedPlan === 0) {
+      // Filtrar planos gratuitos de forma mais completa
+      setFilteredPlans(plans.filter(p => p.type !== 0 && Number(p.price) > 0));
+      if (selectedPlan === 0 || selectedPlan === null) {
         setSelectedPlan(1); // Seleciona Inicial se o gratuito não está visível
       }
     }
@@ -92,9 +95,19 @@ export const SignupForm: React.FC = () => {
       if (data && data.length > 0) {
         setPlans(data);
         if (!isPromoCodeApplied) {
-          setFilteredPlans(data.filter(p => p.type !== 0));
+          // Filtrar planos gratuitos de forma mais completa
+          setFilteredPlans(data.filter(p => p.type !== 0 && Number(p.price) > 0));
         } else {
           setFilteredPlans(data);
+        }
+      } else {
+        console.log('Usando planos padrão, pois não foram encontrados no banco de dados');
+        // Filtrar planos gratuitos também nos planos padrão
+        setPlans(DEFAULT_PLANS);
+        if (!isPromoCodeApplied) {
+          setFilteredPlans(DEFAULT_PLANS.filter(p => p.type !== 0 && Number(p.price) > 0));
+        } else {
+          setFilteredPlans(DEFAULT_PLANS);
         }
       }
     } catch (err) {
@@ -111,7 +124,7 @@ export const SignupForm: React.FC = () => {
     if (promoCode.toLowerCase() === PROMO_CODE.toLowerCase()) {
       setIsPromoCodeApplied(true);
       toast.success("Código promocional válido!", {
-        description: `${TRIAL_DAYS} dias de teste gratuito.`
+        description: `Você recebeu ${TRIAL_DAYS} dias de teste gratuito no plano básico. O plano foi selecionado automaticamente.`
       });
     } else {
       toast.error("Código promocional inválido");
@@ -131,7 +144,7 @@ export const SignupForm: React.FC = () => {
       return;
     }
     
-    if (!selectedPlan && !isPromoCodeApplied) {
+    if (selectedPlan === null) {
       toast.error("Selecione um plano");
       return;
     }
@@ -202,88 +215,42 @@ export const SignupForm: React.FC = () => {
           <div className="space-y-2">
             <Label htmlFor="promo-code">Código Promocional</Label>
             <div className="flex gap-2">
-              <Input
-                id="promo-code"
-                placeholder="Código promocional (opcional)"
-                value={promoCode}
-                onChange={(e) => setPromoCode(e.target.value)}
-                disabled={isPromoCodeApplied}
-                className="flex-1"
-              />
+              <div className="relative flex-1">
+                <Input
+                  id="promo-code"
+                  placeholder="Código promocional (opcional)"
+                  value={promoCode}
+                  onChange={(e) => setPromoCode(e.target.value)}
+                  disabled={isPromoCodeApplied}
+                  className={isPromoCodeApplied ? "pr-10 border-green-500" : "flex-1"}
+                />
+                {isPromoCodeApplied && (
+                  <CheckCircle2 className="absolute right-3 top-1/2 transform -translate-y-1/2 text-green-500 h-5 w-5 animate-in fade-in duration-300" />
+                )}
+              </div>
               <Button 
                 type="button" 
                 variant={isPromoCodeApplied ? "default" : "outline"}
                 onClick={applyPromoCode}
                 disabled={!promoCode || isPromoCodeApplied}
-                className={isPromoCodeApplied ? "bg-green-500 hover:bg-green-600" : ""}
+                className={isPromoCodeApplied ? "bg-green-500 hover:bg-green-600 transition-colors duration-300" : ""}
               >
                 {isPromoCodeApplied ? "Aplicado" : "Aplicar"}
               </Button>
             </div>
             {isPromoCodeApplied && (
-              <p className="text-xs text-green-600">
+              <p className="text-xs text-green-600 animate-in fade-in slide-in-from-bottom-2 duration-300">
                 Código promocional válido! {TRIAL_DAYS} dias de teste gratuito.
               </p>
             )}
           </div>
           
-          <div className="space-y-3">
-            <Label>Selecione um Plano</Label>
-            
-            <div className="space-y-2 pt-1">
-              {filteredPlans.map((plan) => {
-                const isFree = plan.type === 0;
-                const isSelected = selectedPlan === plan.type;
-                
-                return (
-                  <div 
-                    key={plan.id}
-                    className={`border rounded-md p-3 ${
-                      isSelected ? 'border-indigo-600 bg-indigo-50' : 'border-gray-200'
-                    } hover:border-indigo-300 transition-colors cursor-pointer`}
-                    onClick={() => setSelectedPlan(plan.type)}
-                  >
-                    <div className="flex items-center gap-2">
-                      <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${
-                        isSelected ? 'border-indigo-600' : 'border-gray-300'
-                      }`}>
-                        {isSelected && (
-                          <div className="w-2 h-2 rounded-full bg-indigo-600" />
-                        )}
-                      </div>
-                      <div className="flex-1">
-                        <div className="flex items-center justify-between">
-                          <span className="font-medium text-gray-900">
-                            {plan.name}
-                            {isFree && (
-                              <span className="ml-2 text-xs bg-yellow-100 text-yellow-800 px-1 py-0.5 rounded">
-                                {plan.trial_days} dias
-                              </span>
-                            )}
-                          </span>
-                          <span className="font-semibold text-gray-900">
-                            {isFree ? 'Gratuito' : `R$ ${plan.price.toFixed(2)}`}
-                          </span>
-                        </div>
-                        <div className="text-xs text-gray-500 mt-1">
-                          {isFree 
-                            ? `Comece a testar com ${plan.agent_limit} agente` 
-                            : `Até ${plan.agent_limit} ${plan.agent_limit === 1 ? 'agente' : 'agentes'}`
-                          }
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-          
-          {isPromoCodeApplied && (
-            <p className="text-sm text-green-600">
-              Com o código promocional você terá {TRIAL_DAYS} dias de teste gratuito do plano básico.
-            </p>
-          )}
+          <PlanSelectorV2
+            selectedPlan={selectedPlan || 1}
+            onSelectPlan={setSelectedPlan}
+            showTrialInfo={isPromoCodeApplied}
+            promoApplied={isPromoCodeApplied}
+          />
           
           <Button 
             type="submit" 

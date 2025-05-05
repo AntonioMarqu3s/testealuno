@@ -71,3 +71,41 @@ Yes, you can!
 To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
 
 Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+
+## Sistema de Código Promocional
+
+O sistema de código promocional foi implementado para permitir que novos usuários tenham acesso ao plano "Teste Gratuito" por 5 dias utilizando o código `ofertamdf`.
+
+### Componentes Principais:
+
+1. **SignupForm.tsx**: Formulário de cadastro que inclui campo para código promocional e exibição de planos disponíveis. Quando o código promocional é aplicado com sucesso, o plano gratuito é automaticamente selecionado.
+
+2. **PromoCodeInput.tsx**: Componente reutilizável para entrada e validação do código promocional.
+
+3. **PaymentRegistrationForm.tsx**: Formulário administrativo para registrar pagamentos, incluindo suporte a códigos promocionais.
+
+4. **usePayments.ts**: Hook que gerencia a lógica de pagamentos, incluindo processamento de códigos promocionais.
+
+### Banco de Dados:
+
+As tabelas `pagamentos` e `temp_pagamentos` foram modificadas para incluir:
+- Campo `promo_code`: Armazena o código promocional aplicado
+- Campo `is_promo_applied`: Indica se um código promocional foi aplicado
+- Campo `data_expiracao`: Data de expiração do plano (especialmente relevante para planos promocionais)
+
+### Funcionalidades:
+
+- Validação do código promocional "ofertamdf"
+- Exibição de mensagem confirmando a validade do código
+- Seleção automática do plano "Teste Gratuito" (5 dias)
+- Atualização visual do botão "Aplicar" para "Aplicado" quando o código é válido
+- Integração com o sistema de pagamentos existente
+
+### Fluxo de Usuário:
+
+1. Usuário acessa a página de cadastro
+2. Preenche o formulário e opcionalmente insere o código promocional
+3. Se o código for válido, o sistema libera o plano gratuito e exibe mensagem de confirmação
+4. Usuário conclui o cadastro com o plano de teste gratuito por 5 dias
+
+Esta implementação simplifica o processo de cadastro e oferece uma abordagem clara para os usuários experimentarem o sistema antes de escolher um plano pago.
