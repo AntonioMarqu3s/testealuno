@@ -1,4 +1,3 @@
-
 -- Add agent_data column to agents table if it doesn't exist
 DO $$ 
 BEGIN 

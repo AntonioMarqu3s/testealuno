@@ -41,9 +41,9 @@ const PLAN_FEATURES = {
 
 // Payment links for each plan
 export const PAYMENT_LINKS = {
-  [PlanType.BASIC]: "https://pay.kiwify.com.br/LK39fRl",
-  [PlanType.STANDARD]: "https://pay.kiwify.com.br/GUuGlZ4",
-  [PlanType.PREMIUM]: "https://pay.kiwify.com.br/DkDchr3",
+  [PlanType.BASIC]: "https://pay.kiwify.com.br/hv0OUjP",
+  [PlanType.STANDARD]: "https://pay.kiwify.com.br/hv0OUjP",
+  [PlanType.PREMIUM]: "https://pay.kiwify.com.br/hv0OUjP",
 };
 
 export function PlanCard({ 
