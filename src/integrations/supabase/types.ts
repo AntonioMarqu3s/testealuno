@@ -101,6 +101,61 @@ export type Database = {
         }
         Relationships: []
       }
+      agentes: {
+        Row: {
+          created_at: string | null
+          grupo_id: string | null
+          id: string
+          nome: string
+          status: string | null
+          tipo_id: number | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          grupo_id?: string | null
+          id?: string
+          nome: string
+          status?: string | null
+          tipo_id?: number | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          grupo_id?: string | null
+          id?: string
+          nome?: string
+          status?: string | null
+          tipo_id?: number | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agentes_grupo_id_fkey"
+            columns: ["grupo_id"]
+            isOneToOne: false
+            referencedRelation: "grupos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "agentes_tipo_id_fkey"
+            columns: ["tipo_id"]
+            isOneToOne: false
+            referencedRelation: "tipos_agente"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "agentes_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       agents: {
         Row: {
           agent_data: Json | null
@@ -311,6 +366,267 @@ export type Database = {
         }
         Relationships: []
       }
+      grupos: {
+        Row: {
+          admin_id: string | null
+          created_at: string | null
+          descricao: string | null
+          id: string
+          nome: string
+          user_id: string | null
+        }
+        Insert: {
+          admin_id?: string | null
+          created_at?: string | null
+          descricao?: string | null
+          id?: string
+          nome: string
+          user_id?: string | null
+        }
+        Update: {
+          admin_id?: string | null
+          created_at?: string | null
+          descricao?: string | null
+          id?: string
+          nome?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "grupos_admin_id_fkey"
+            columns: ["admin_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "grupos_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pagamentos: {
+        Row: {
+          data_expiracao: string | null
+          data_pagamento: string
+          id: string
+          is_promo_applied: boolean | null
+          plano_id: number | null
+          promo_code: string | null
+          status: string
+          user_id: string | null
+          valor: number
+        }
+        Insert: {
+          data_expiracao?: string | null
+          data_pagamento: string
+          id?: string
+          is_promo_applied?: boolean | null
+          plano_id?: number | null
+          promo_code?: string | null
+          status: string
+          user_id?: string | null
+          valor: number
+        }
+        Update: {
+          data_expiracao?: string | null
+          data_pagamento?: string
+          id?: string
+          is_promo_applied?: boolean | null
+          plano_id?: number | null
+          promo_code?: string | null
+          status?: string
+          user_id?: string | null
+          valor?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pagamentos_plano_id_fkey"
+            columns: ["plano_id"]
+            isOneToOne: false
+            referencedRelation: "planos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pagamentos_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payment_logs: {
+        Row: {
+          created_at: string | null
+          details: Json | null
+          email: string | null
+          error: string | null
+          id: string
+          status: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          details?: Json | null
+          email?: string | null
+          error?: string | null
+          id?: string
+          status?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          details?: Json | null
+          email?: string | null
+          error?: string | null
+          id?: string
+          status?: string | null
+        }
+        Relationships: []
+      }
+      planos: {
+        Row: {
+          agentes: number
+          descricao: string | null
+          id: number
+          nome: string
+          valor: number
+        }
+        Insert: {
+          agentes: number
+          descricao?: string | null
+          id?: number
+          nome: string
+          valor: number
+        }
+        Update: {
+          agentes?: number
+          descricao?: string | null
+          id?: number
+          nome?: string
+          valor?: number
+        }
+        Relationships: []
+      }
+      plans: {
+        Row: {
+          agent_limit: number
+          created_at: string | null
+          description: string
+          id: string
+          name: string
+          price: number
+          trial_days: number | null
+          type: number
+          updated_at: string | null
+        }
+        Insert: {
+          agent_limit?: number
+          created_at?: string | null
+          description: string
+          id?: string
+          name: string
+          price?: number
+          trial_days?: number | null
+          type: number
+          updated_at?: string | null
+        }
+        Update: {
+          agent_limit?: number
+          created_at?: string | null
+          description?: string
+          id?: string
+          name?: string
+          price?: number
+          trial_days?: number | null
+          type?: number
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      system_logs: {
+        Row: {
+          created_at: string | null
+          data: Json | null
+          id: string
+          type: string
+        }
+        Insert: {
+          created_at?: string | null
+          data?: Json | null
+          id?: string
+          type: string
+        }
+        Update: {
+          created_at?: string | null
+          data?: Json | null
+          id?: string
+          type?: string
+        }
+        Relationships: []
+      }
+      temp_pagamentos: {
+        Row: {
+          created_at: string | null
+          data_expiracao: string | null
+          data_pagamento: string | null
+          error: string | null
+          id: string
+          is_promo_applied: boolean | null
+          plano_id: number | null
+          promo_code: string | null
+          status: string
+          user_email: string
+          user_id: string | null
+          valor: number
+        }
+        Insert: {
+          created_at?: string | null
+          data_expiracao?: string | null
+          data_pagamento?: string | null
+          error?: string | null
+          id?: string
+          is_promo_applied?: boolean | null
+          plano_id?: number | null
+          promo_code?: string | null
+          status: string
+          user_email: string
+          user_id?: string | null
+          valor: number
+        }
+        Update: {
+          created_at?: string | null
+          data_expiracao?: string | null
+          data_pagamento?: string | null
+          error?: string | null
+          id?: string
+          is_promo_applied?: boolean | null
+          plano_id?: number | null
+          promo_code?: string | null
+          status?: string
+          user_email?: string
+          user_id?: string | null
+          valor?: number
+        }
+        Relationships: []
+      }
+      tipos_agente: {
+        Row: {
+          id: number
+          nome: string
+        }
+        Insert: {
+          id?: number
+          nome: string
+        }
+        Update: {
+          id?: number
+          nome?: string
+        }
+        Relationships: []
+      }
       user_plans: {
         Row: {
           agent_limit: number
@@ -356,9 +672,172 @@ export type Database = {
         }
         Relationships: []
       }
+      users: {
+        Row: {
+          admin_level: string | null
+          agentes_limite: number | null
+          avatar_url: string | null
+          benefits: string | null
+          clientidentifier: string | null
+          commonobjections: string | null
+          companydescription: string | null
+          companyname: string | null
+          competitors: string | null
+          conect: boolean | null
+          created_at: string | null
+          custompersonality: string | null
+          data_expiracao: string | null
+          data_pagamento: string | null
+          differentials: string | null
+          email: string
+          empresa_dados: string | null
+          empresa_nome: string | null
+          faqs: string | null
+          full_name: string | null
+          google_docs_id: string | null
+          google_sheet_id: string | null
+          id: string
+          instanceid: string | null
+          instancename: string | null
+          instancia_nome: string | null
+          instancia_telefone: string | null
+          last_payment_amount: number | null
+          last_payment_date: string | null
+          maindifferentials: string | null
+          mission: string | null
+          nome: string | null
+          objecoes: string | null
+          personality: string | null
+          plano_id: number | null
+          plano_nome: string | null
+          plano_status: string | null
+          plano_valor: number | null
+          problemssolved: string | null
+          productdescription: string | null
+          productname: string | null
+          script: string | null
+          segment: string | null
+          telefone: string | null
+          updated_at: string | null
+          vision: string | null
+        }
+        Insert: {
+          admin_level?: string | null
+          agentes_limite?: number | null
+          avatar_url?: string | null
+          benefits?: string | null
+          clientidentifier?: string | null
+          commonobjections?: string | null
+          companydescription?: string | null
+          companyname?: string | null
+          competitors?: string | null
+          conect?: boolean | null
+          created_at?: string | null
+          custompersonality?: string | null
+          data_expiracao?: string | null
+          data_pagamento?: string | null
+          differentials?: string | null
+          email: string
+          empresa_dados?: string | null
+          empresa_nome?: string | null
+          faqs?: string | null
+          full_name?: string | null
+          google_docs_id?: string | null
+          google_sheet_id?: string | null
+          id: string
+          instanceid?: string | null
+          instancename?: string | null
+          instancia_nome?: string | null
+          instancia_telefone?: string | null
+          last_payment_amount?: number | null
+          last_payment_date?: string | null
+          maindifferentials?: string | null
+          mission?: string | null
+          nome?: string | null
+          objecoes?: string | null
+          personality?: string | null
+          plano_id?: number | null
+          plano_nome?: string | null
+          plano_status?: string | null
+          plano_valor?: number | null
+          problemssolved?: string | null
+          productdescription?: string | null
+          productname?: string | null
+          script?: string | null
+          segment?: string | null
+          telefone?: string | null
+          updated_at?: string | null
+          vision?: string | null
+        }
+        Update: {
+          admin_level?: string | null
+          agentes_limite?: number | null
+          avatar_url?: string | null
+          benefits?: string | null
+          clientidentifier?: string | null
+          commonobjections?: string | null
+          companydescription?: string | null
+          companyname?: string | null
+          competitors?: string | null
+          conect?: boolean | null
+          created_at?: string | null
+          custompersonality?: string | null
+          data_expiracao?: string | null
+          data_pagamento?: string | null
+          differentials?: string | null
+          email?: string
+          empresa_dados?: string | null
+          empresa_nome?: string | null
+          faqs?: string | null
+          full_name?: string | null
+          google_docs_id?: string | null
+          google_sheet_id?: string | null
+          id?: string
+          instanceid?: string | null
+          instancename?: string | null
+          instancia_nome?: string | null
+          instancia_telefone?: string | null
+          last_payment_amount?: number | null
+          last_payment_date?: string | null
+          maindifferentials?: string | null
+          mission?: string | null
+          nome?: string | null
+          objecoes?: string | null
+          personality?: string | null
+          plano_id?: number | null
+          plano_nome?: string | null
+          plano_status?: string | null
+          plano_valor?: number | null
+          problemssolved?: string | null
+          productdescription?: string | null
+          productname?: string | null
+          script?: string | null
+          segment?: string | null
+          telefone?: string | null
+          updated_at?: string | null
+          vision?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "users_plano_id_fkey"
+            columns: ["plano_id"]
+            isOneToOne: false
+            referencedRelation: "planos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
-      [_ in never]: never
+      dashboard_metrics: {
+        Row: {
+          active_subscriptions: number | null
+          free_trials: number | null
+          total_agents: number | null
+          total_users: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       add_admin_audit_log: {
@@ -368,6 +847,30 @@ export type Database = {
           p_details?: Json
         }
         Returns: string
+      }
+      admin_count_active_subscriptions: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          count: number
+        }[]
+      }
+      admin_count_agents: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          count: number
+        }[]
+      }
+      admin_count_new_users: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          count: number
+        }[]
+      }
+      admin_count_total_users: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          count: number
+        }[]
       }
       admin_create_admin_user: {
         Args: { p_email: string; p_password: string }
@@ -435,8 +938,48 @@ export type Database = {
         Args: { p_user_id: string; p_plan_type: number; p_agent_limit: number }
         Returns: boolean
       }
+      buscar_pagamentos_por_email: {
+        Args: { email_busca: string }
+        Returns: {
+          id: string
+          email: string
+          nome: string
+          plano: number
+          status_pagamento: string
+          valor: number
+          data_pagamento: string
+          validade_assinatura: string
+        }[]
+      }
+      count_auth_users: {
+        Args: Record<PropertyKey, never>
+        Returns: number
+      }
+      create_admin_audit_logs_if_not_exists: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       get_admin_level: {
         Args: { checking_user_id?: string }
+        Returns: string
+      }
+      get_auth_user_emails: {
+        Args: { user_ids: string[] }
+        Returns: {
+          id: string
+          email: string
+        }[]
+      }
+      get_auth_users_count: {
+        Args: Record<PropertyKey, never>
+        Returns: number
+      }
+      get_dashboard_metrics: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
+      get_plan_name: {
+        Args: { p_plano_id: number }
         Returns: string
       }
       get_user_by_email: {
@@ -446,13 +989,58 @@ export type Database = {
           email: string
         }[]
       }
+      get_user_details: {
+        Args: { p_user_id: string }
+        Returns: Json
+      }
+      get_user_id_by_email: {
+        Args: { user_email: string }
+        Returns: string
+      }
       is_admin: {
-        Args: Record<PropertyKey, never> | { checking_user_id?: string }
+        Args: Record<PropertyKey, never> | { checking_user_id: string }
         Returns: boolean
       }
       is_master_admin: {
         Args: Record<PropertyKey, never>
         Returns: boolean
+      }
+      register_payment_with_log: {
+        Args: {
+          p_email: string
+          p_plano_id: number
+          p_valor: number
+          p_promo_code?: string
+        }
+        Returns: Json
+      }
+      registrar_pagamento: {
+        Args:
+          | {
+              p_email: string
+              p_plano_id: number
+              p_valor: number
+              p_data_pagamento: string
+              p_data_expiracao?: string
+              p_promo_code?: string
+              p_is_promo_applied?: boolean
+              p_status?: string
+            }
+          | {
+              p_email: string
+              p_plano_id: number
+              p_valor: number
+              p_data_pagamento: string
+              p_data_expiracao?: string
+              p_promo_code?: string
+              p_is_promo_applied?: boolean
+              p_status?: string
+            }
+        Returns: Json
+      }
+      registrar_pagamento_simples: {
+        Args: { p_email: string; p_plano_id: number; p_valor: number }
+        Returns: Json
       }
       send_admin_notification: {
         Args: {
@@ -462,6 +1050,14 @@ export type Database = {
           p_message: string
         }
         Returns: string
+      }
+      test_payment_registration: {
+        Args: { p_email: string; p_plano_id: number; p_valor: number }
+        Returns: Json
+      }
+      update_user_details: {
+        Args: { p_user_id: string; p_email: string; p_password?: string }
+        Returns: undefined
       }
     }
     Enums: {

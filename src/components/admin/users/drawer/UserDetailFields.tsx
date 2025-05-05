@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -239,13 +240,21 @@ export function UserDetailFields({ userData, isLoading, onSave }: UserDetailFiel
     setEditedData({
       ...editedData,
       plan: {
-        ...(editedData.plan || userData.plan),
+        ...(editedData.plan || (userData.plan || {})),
         plan: numPlanId,
         name: selectedPlan.name,
         agent_limit: selectedPlan.agent_limit,
         trial_ends_at: trialEndsAt
       }
     });
+  };
+
+  // Fix: Safely look up the plan type name
+  const getPlanTypeName = (planId: number | undefined) => {
+    if (planId === undefined) return "Desconhecido";
+    
+    const foundPlan = Object.values(PLAN_TYPES).find(p => p.id === planId);
+    return foundPlan ? foundPlan.name : "Desconhecido";
   };
 
   return (
@@ -341,7 +350,7 @@ export function UserDetailFields({ userData, isLoading, onSave }: UserDetailFiel
                   <div className="flex items-center gap-2">
                     {isEditing ? (
                       <Select
-                        value={String(editedData.plan?.plan ?? userData.plan.plan)}
+                        value={String(editedData.plan?.plan ?? (userData.plan?.plan ?? 0))}
                         onValueChange={handlePlanChange}
                       >
                         <SelectTrigger className="w-full h-8 text-sm">
@@ -365,9 +374,7 @@ export function UserDetailFields({ userData, isLoading, onSave }: UserDetailFiel
                     ) : (
                       <div className="flex items-center gap-2">
                         <Badge className="h-5 text-xs">
-                          {PLAN_TYPES[Object.keys(PLAN_TYPES).find(
-                            key => PLAN_TYPES[key as keyof typeof PLAN_TYPES].id === userData.plan.plan
-                          ) as keyof typeof PLAN_TYPES]?.name || "Desconhecido"}
+                          {userData.plan ? getPlanTypeName(userData.plan.plan) : "Desconhecido"}
                         </Badge>
                         {isTrialActive && (
                           <Badge variant="secondary" className="h-5 text-xs">Trial Ativo</Badge>
@@ -381,10 +388,10 @@ export function UserDetailFields({ userData, isLoading, onSave }: UserDetailFiel
                   <Label className="text-sm">Status do Pagamento</Label>
                   {isEditing ? (
                     <Select
-                      value={editedData.plan?.payment_status || userData.plan.payment_status}
+                      value={editedData.plan?.payment_status || (userData.plan?.payment_status || "pending")}
                       onValueChange={(value) => setEditedData({
                         ...editedData,
-                        plan: { ...(editedData.plan || userData.plan), payment_status: value }
+                        plan: { ...(editedData.plan || (userData.plan || {})), payment_status: value }
                       })}
                     >
                       <SelectTrigger className="h-8 text-sm">
@@ -397,9 +404,9 @@ export function UserDetailFields({ userData, isLoading, onSave }: UserDetailFiel
                       </SelectContent>
                     </Select>
                   ) : (
-                    <Badge variant={userData.plan.payment_status === "completed" ? "success" : "destructive"} className="h-5 text-xs">
-                      {userData.plan.payment_status === "completed" ? "Completo" : 
-                       userData.plan.payment_status === "pending" ? "Pendente" : "Teste"}
+                    <Badge variant={userData.plan?.payment_status === "completed" ? "success" : "destructive"} className="h-5 text-xs">
+                      {userData.plan?.payment_status === "completed" ? "Completo" : 
+                       userData.plan?.payment_status === "pending" ? "Pendente" : "Teste"}
                     </Badge>
                   )}
                 </div>
@@ -431,7 +438,7 @@ export function UserDetailFields({ userData, isLoading, onSave }: UserDetailFiel
                               undefined}
                             onSelect={(date) => setEditedData({
                               ...editedData,
-                              plan: { ...(editedData.plan || userData.plan), payment_date: date?.toISOString() }
+                              plan: { ...(editedData.plan || (userData.plan || {})), payment_date: date?.toISOString() }
                             })}
                             initialFocus
                           />
@@ -440,7 +447,7 @@ export function UserDetailFields({ userData, isLoading, onSave }: UserDetailFiel
                     ) : (
                       <p className="flex items-center gap-2 text-sm">
                         <Calendar className="h-3 w-3 text-primary" />
-                        {userData.plan.payment_date ? formatDate(userData.plan.payment_date) : "N/A"}
+                        {userData.plan?.payment_date ? formatDate(userData.plan.payment_date) : "N/A"}
                       </p>
                     )}
                   </div>
@@ -471,7 +478,7 @@ export function UserDetailFields({ userData, isLoading, onSave }: UserDetailFiel
                               undefined}
                             onSelect={(date) => setEditedData({
                               ...editedData,
-                              plan: { ...(editedData.plan || userData.plan), subscription_ends_at: date?.toISOString() }
+                              plan: { ...(editedData.plan || (userData.plan || {})), subscription_ends_at: date?.toISOString() }
                             })}
                             initialFocus
                           />
@@ -480,7 +487,7 @@ export function UserDetailFields({ userData, isLoading, onSave }: UserDetailFiel
                     ) : (
                       <p className="flex items-center gap-2 text-sm">
                         <Calendar className="h-3 w-3 text-primary" />
-                        {userData.plan.subscription_ends_at ? 
+                        {userData.plan?.subscription_ends_at ? 
                           formatDate(userData.plan.subscription_ends_at) : 
                           "N/A"}
                       </p>
@@ -513,7 +520,7 @@ export function UserDetailFields({ userData, isLoading, onSave }: UserDetailFiel
                               undefined}
                             onSelect={(date) => setEditedData({
                               ...editedData,
-                              plan: { ...(editedData.plan || userData.plan), trial_ends_at: date?.toISOString() }
+                              plan: { ...(editedData.plan || (userData.plan || {})), trial_ends_at: date?.toISOString() }
                             })}
                             initialFocus
                           />
@@ -522,7 +529,7 @@ export function UserDetailFields({ userData, isLoading, onSave }: UserDetailFiel
                     ) : (
                       <div className="flex items-center gap-2 text-sm">
                         <Calendar className="h-3 w-3 text-primary" />
-                        <span>{userData.plan.trial_ends_at ? 
+                        <span>{userData.plan?.trial_ends_at ? 
                           formatDate(userData.plan.trial_ends_at) : 
                           "N/A"}</span>
                         {isTrialActive && (
